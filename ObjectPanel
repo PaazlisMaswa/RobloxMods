@@ -32,10 +32,9 @@ local AnchoredButton=Window:AddContext({Type='TextButton',Name='Anchored',Callba
         instance=ReplicatedStorage
      end
      if not instance then return end
-     for i,v in instance:GetDescendants() do
+     for i,v in ipairs(instance:GetDescendants()) do
          if v:IsA('BasePart') then 
              v.Anchored=true
          end
      end
-     warn('Anchored Complete')
 end})
