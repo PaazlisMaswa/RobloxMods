@@ -39,6 +39,3 @@ local AnchoredButton=Window:AddContext({Type='TextButton',Name='Anchored',Callba
      end
      warn('Anchored Complete')
 end})
-
-local DestroyButton=Window:AddContext({Type='TextButton',Name='Destroy',Callback=function() Window:Destroy() end})
-local VersionLabel=Window:AddContext({Type='TextLabel',Name='v'..VERSION})
