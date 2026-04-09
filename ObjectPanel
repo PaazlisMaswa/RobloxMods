@@ -32,9 +32,13 @@ local AnchoredButton=Window:AddContext({Type='TextButton',Name='Anchored',Callba
         instance=ReplicatedStorage
      end
      if not instance then return end
-     for i,v in instance:GetDecendants() do
+     for i,v in instance:GetDescendants() do
          if v:IsA('BasePart') then 
              v.Anchored=true
          end
      end
+     warn('Anchored Complete')
 end})
+
+local DestroyButton=Window:AddContext({Type='TextButton',Name='Destroy',Callback=function() Window:Destroy() end
+local VersionLabel=Window:AddContext({Type='TextLabel',Name='v'..VERSION})
