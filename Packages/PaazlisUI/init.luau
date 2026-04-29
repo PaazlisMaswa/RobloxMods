@@ -24,7 +24,7 @@ local LocalPlayer=Players.LocalPlayer
 local Mouse=LocalPlayer:GetMouse()
 local OFFSET=UDim2.new(0,100,0,50) -- geser 100px kanan, 50px bawah
 
-local baseX,baseY=1366,768
+local baseX,baseY=1024,768 -- 1366,768
 
 local function CreateCanvas(Gui)
 	local Frame=Instance.new("Frame")
