@@ -1,11 +1,14 @@
 -- Create by @Paazlis
 -- Version: 1.1
 
-if not game:IsLoaded() then game.Loaded:Wait() end
-
 if type(_G.PaazlisUI)=="table" then return _G.PaazlisUI end
 
-local RunService=game:GetService("RunService")
+local function getService(name)
+    local service=game:GetService(name)
+    if cloneref then return cloneref(service) else return service end
+end
+
+local RunService=getService("RunService")
 
 if not RunService:IsClient() then
 	error("[PaazlisUI] only works on client")
@@ -15,7 +18,7 @@ end
 local Library={Loaded=false}
 _G.PaazlisUI=Library
 
-local Players,UserInputService,TweenService,StarterGui=game:GetService("Players"),game:GetService("UserInputService"),game:GetService("TweenService"),game:GetService("StarterGui")
+local Players,UserInputService,TweenService,StarterGui=getService("Players"),getService("UserInputService"),getService("TweenService"),getService("StarterGui")
 
 local LocalPlayer=Players.LocalPlayer
 local Mouse=LocalPlayer:GetMouse()
@@ -350,26 +353,28 @@ local function CreateCanvas(Gui)
 	}
 end
 
-local ParentGui=nil
+local IsStudio=RunService:IsStudio() or false
 
-local IsStudio=RunService:IsStudio()
-if IsStudio then
-	ParentGui=LocalPlayer:WaitForChild("PlayerGui")
-elseif Players.Name==Players.ClassName then
-	ParentGui=game.CoreGui
-else
-	for i,v in ipairs(LocalPlayer:GetChildren()) do if v.ClassName=="PlayerGui" then ParentGui=v break end end
-	if not ParentGui then error("Fatal Error UI") end
-end
+local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
+local CoreGui=IsStudio and getService("CoreGui") or nil
 
-local Gui=ParentGui:FindFirstChild("PaazlisGui")
-if not Gui then Gui=Instance.new("ScreenGui") end
-Gui.DisplayOrder=1000
+local Gui=Instance.new("ScreenGui")
 Gui.Name="PaazlisGui"
+Gui.DisplayOrder=1000
 Gui.ResetOnSpawn=false
 Gui.AutoLocalize=false
 Gui.ZIndexBehavior=Enum.ZIndexBehavior.Global
-Gui.Parent=ParentGui
+
+if gethui then
+	Gui.Parent=gethui()
+elseif syn and syn.protect_gui then 
+	syn.protect_gui(Rayfield)
+	Gui.Parent=CoreGui
+elseif not IsStudio then
+    Gui.Parent=CoreGui:FindFirstChild("RobloxGui") or CoreGui
+elseif IsStudio and script and script.Parent then
+    Gui.Parent=PlayerGui
+end
 
 local function GrabUI(frame)
 	task.spawn(function()
