@@ -265,7 +265,6 @@ local function CreateCanvas(Gui)
 	
 	Selector.Parent=nil
 	
-	
 	-- Select
 	local Select=Instance.new("Frame")
 	Select.Name="Select"
@@ -379,21 +378,26 @@ end
 local function GrabUI(frame)
 	task.spawn(function()
 		local dragging,dragInput,dragStart,startPos
-		frame.InputBegan:Connect(function(input)
+		local connection1=frame.InputBegan:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
 				dragging=true dragStart=input.Position startPos=frame.Position
 				input.Changed:Connect(function() if input.UserInputState==Enum.UserInputState.End then dragging=false end end)
 			end
 		end)
-		frame.InputChanged:Connect(function(input)
+		local connection2=frame.InputChanged:Connect(function(input)
 			if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then dragInput=input end
 		end)
-		UserInputService.InputChanged:Connect(function(input)
+		local connection3=UserInputService.InputChanged:Connect(function(input)
 			if input==dragInput and dragging then
 				local delta=input.Position-dragStart
 				frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
 			end
 		end)
+        frame.Destroying:Connect(function()
+            connection1:Disconnect()
+            connection2:Disconnect()
+            connection3:Disconnect()
+        end
 	end)
 end
 
@@ -459,7 +463,7 @@ local function CreateWindow(WindowSettings)
 	Window.Parent=true
 
     if WindowSettings then
-       Window.Title.Text=type(WindowSettings.Title)=='string' and WindowSettings.Title or Window.Title.Text
+       Window.Title.Text=WindowSettings.Title or Window.Title.Text
     end
      
 	local Frm=Window.Frame
@@ -862,11 +866,13 @@ do
 		return CreateWindow()
 	end
 	
-	function Library:Notify(title,description,duration)
-		StarterGui:SetCore("SendNotification",{
+	function Library:Notify(Data)
+        local title,description,duration=Data.Title or Data.Name or 'Title',Data.Description or "Description",Data.Duration or 5
+        duration=type(duration)=="number" and duration or 5
+        StarterGui:SetCore("SendNotification",{
 			Title=title,
 			Text=description,
-			Duration=type(duration)=="number" and duration or 5
+			Duration=duration
 		})
 	end
 
