@@ -5,13 +5,11 @@ local MAX_CAP=math.huge
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 
-local function GetService(name)
+local Missing,GetService=function(t,v,f)
+	return type(v)==t and v or f
+end,function(name)
 	local service = game:GetService(name)
 	return if cloneref then cloneref(service) else service
-end
-	
-local function Missing(t,v,f)
-	return type(v)==t and v or f
 end
 
 setclipboard=Missing('function',setclipboard,function(text) warn(text) end)
