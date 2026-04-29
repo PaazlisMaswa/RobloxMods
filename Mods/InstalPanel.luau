@@ -18,11 +18,10 @@ setclipboard=Missing('function',setclipboard,function(text) warn(text) end)
 
 local Services={}
 
-for _,name in ipairs({'Workspace','Players','UserInputService','RunService','ReplicatedFirst','ReplicatedStorage','SoundService','Lighting','Teams','InsertService','StarterGui','StarterPack','HttpService'}) do 
+for i,v in ipairs({'Workspace','Players','UserInputService','RunService','ReplicatedFirst','ReplicatedStorage','SoundService','Lighting','Teams','InsertService','StarterGui','StarterPack','HttpService'}) do 
 	if not Services[v] then 
-		local success,service=pcall(GetService,name) 
+		local success,service=pcall(GetService,v) 
 		if success and service then 
-			
 			Services[v]=service 
 		end 
 	end 
@@ -2435,4 +2434,5 @@ ResetButton.BackgroundColor3=Color3FromRGB(255,89,89)
 DestroyButton=Window:AddContext({Type='TextButton',Name='Destroy',Callback=function() Module:Destroy() end})
 DestroyButton.BackgroundColor3=Color3FromRGB(255,124,16)
 local VersionLabel=Window:AddContext({Type='TextLabel',Name='Version: '..VERSION})
+if UI.LoadConfiguration then UI:LoadConfiguration() end
 Module.Parent=true
