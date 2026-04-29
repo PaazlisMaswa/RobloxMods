@@ -44,9 +44,13 @@ local Window=UI:CreateWindow({
 })
 
 -- Variables
-local IsEnums,IsStrings,GetLines,ToNumberString,ToPersentase,GetProperties,IsAs,CopyInstanceWith,GetInstanceProperty,CreateVariable,ConvertMeshPartToSpecialMesh,GetAncestorsAndSelf,SetChildrenParent,GetBones,GetMotors,GetAnimators,AddPose=nil,Strs.IsStrings,Strs.GetLines,Strs.ToNumberString,Strs.ToPersentase,Tabler.GetProperties,Instancer.IsAs,Instancer.CopyInstanceWith,Instancer.GetInstanceProperty,Instancer.CreateVariable,Instancer.ConvertMeshPartToSpecialMesh,Instancer.GetAncestorsAndSelf,Instancer.SetChildrenParent,nil,nil,nil,nil
+local Notify,IsEnums,IsStrings,GetLines,ToNumberString,ToPersentase,GetProperties,IsAs,CopyInstanceWith,GetInstanceProperty,CreateVariable,ConvertMeshPartToSpecialMesh,GetAncestorsAndSelf,SetChildrenParent,GetBones,GetMotors,GetAnimators,AddPose=nil,nil,Strs.IsStrings,Strs.GetLines,Strs.ToNumberString,Strs.ToPersentase,Tabler.GetProperties,Instancer.IsAs,Instancer.CopyInstanceWith,Instancer.GetInstanceProperty,Instancer.CreateVariable,Instancer.ConvertMeshPartToSpecialMesh,Instancer.GetAncestorsAndSelf,Instancer.SetChildrenParent,nil,nil,nil,nil
 local MathHuge,MathFloor,MathMax,StringFormat,StringSplit,StringSub,StringFind,StringGmatch,TableInsert,TableRemove,TableConcat,TableFind,TableClear,Color3FromRGB,InstanceNew=math.huge,math.floor,math.max,string.format,string.split,string.sub,string.find,string.gmatch,table.insert,table.remove,table.concat,table.find,table.clear,Color3.fromRGB,Instance.new
 local StatusLabel,LoaderLabel,ResetButton,DestroyButton,TextBox,SelectorButton,SelectorAnimationButton,SelectorFPSButton,AddButton,InitializeButton,InstalButton,RecordButton,StopButton
+
+Notify=function(name,description,duration,mode)
+   UI:Notify({Name=name,Description=description,Duration=duration,Mode=mode})
+end
 
 IsEnums=function(enum1,enum2)
 	for i,v in ipairs(enum2) do if enum1==v then return true end end return false
@@ -2434,3 +2438,4 @@ DestroyButton.BackgroundColor3=Color3FromRGB(255,124,16)
 local VersionLabel=Window:AddContext({Type='TextLabel',Name='Version: '..VERSION})
 if UI.LoadConfiguration then UI:LoadConfiguration() end
 Module.Parent=true
+Notify(PLUGIN_NAME,PLUGIN_NAME..' Loaded')
