@@ -451,18 +451,22 @@ end)
 
 local LastFrm=nil
 
-local function CreateWindow()
+local function CreateWindow(WindowSettings)
 	local Contexts={}
 	
 	local Window=CreateCanvas(Gui)
 	Window.Order=0
 	Window.Parent=true
-	
+
+    if WindowSettings then
+       Window.Title.Text=type(WindowSettings.Title)=='string' and WindowSettings.Title or Window.Title.Text
+    end
+     
 	local Frm=Window.Frame
 	if LastFrm and LastFrm.Position==Frm.Position then
 		LastFrm.Position=Frm.Position+OFFSET
 	end
-
+    
 	LastFrm=Frm
 
 	-- Recalculate the window height
