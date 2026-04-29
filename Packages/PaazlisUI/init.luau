@@ -3,12 +3,12 @@
 
 if type(_G.PaazlisUI)=="table" then return _G.PaazlisUI end
 
-local function getService(name)
+local GetService=function(name)
     local service=game:GetService(name)
     if cloneref then return cloneref(service) else return service end
 end
 
-local RunService=getService("RunService")
+local RunService=GetService("RunService")
 
 if not RunService:IsClient() then
 	error("[PaazlisUI] only works on client")
@@ -18,7 +18,7 @@ end
 local Library={Loaded=false}
 _G.PaazlisUI=Library
 
-local Players,UserInputService,TweenService,StarterGui=getService("Players"),getService("UserInputService"),getService("TweenService"),getService("StarterGui")
+local Players,UserInputService,TweenService,StarterGui=GetService("Players"),GetService("UserInputService"),GetService("TweenService"),GetService("StarterGui")
 
 local LocalPlayer=Players.LocalPlayer
 local Mouse=LocalPlayer:GetMouse()
@@ -393,11 +393,6 @@ local function GrabUI(frame)
 				frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
 			end
 		end)
-        frame.Destroying:Connect(function()
-            connection1:Disconnect()
-            connection2:Disconnect()
-            connection3:Disconnect()
-        end
 	end)
 end
 
