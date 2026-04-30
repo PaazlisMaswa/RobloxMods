@@ -1553,7 +1553,7 @@ function Module:SetUpdate(mode,...)
 			TextBox.Template.Visible=isBuilding
 			TextBox.PlaceholderText=if isBuilding then 'Building Index' else ''
 		end
-        if IsAlive(AddButton) then AddButton.Template.Visible=GrabType=='None' end
+        if IsAlive(AddButton) then AddButton.Template.Visible=GrabType=='None' warn('yes',GrabType=='None') end
 		if IsAlive(MainLabel) then
 			if isBuilding then
 				MainLabel.Text=`Total Building: {BuildingIndex}`
