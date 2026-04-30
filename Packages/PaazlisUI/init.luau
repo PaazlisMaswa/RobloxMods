@@ -551,7 +551,7 @@ do
 		-- Hide the visibility of the window
 		function Window:Hide()
 			self:SetVisible(false)
-		end
+		end 
 
 		-- Add a context to the window
 		function Window:AddContext(ContextSettings)
@@ -580,13 +580,13 @@ do
 			end
 
 			if not template then return ContextSettings end
-
-			template.Name=NameTypes[typeName] and typeName or "Unknown"
+            
+            typeName=NameTypes[typeName] and typeName or "Unknown"
+			template.Name=typeName
+            ContextSettings.Type=typeName
 
 			if not NameTypes[typeName] then
-				if template then
-					template:Destroy()
-				end
+				if template then template:Destroy() end
 				return ContextSettings
 			end
 
@@ -835,15 +835,16 @@ do
 				textBox=nil
 				emptyFrame=nil
 			end
+            
+            contextClass.Template=template
+            ContextSettings.Template=template
 
-			if template and template.Parent~=container then
+			if template then
+                template.Parent=container
 				self.Order+=1
 				template.LayoutOrder=self.Order
 				uiListLayout:ApplyLayout()
-				template.Parent=container
-				ContextSettings.Template=template
 				ContextSettings.Parent=true
-				template.Name=`{typeName} | {tostring(self.Order)}`
 			end
 
 			local funcs={}
@@ -916,56 +917,42 @@ do
 				__index=function(this,key)
 					local resolve=funcs[key]
 					if resolve then
+                        if Window.UseDebug then
+                           warn(Window.Title.Text.."."..typeName..":"..key.."()"
+                        end
 						return function(_,...)
 							return resolve(this,...)
 						end
-                    elseif key=="Visible" then
-                        local thisTemp=ContextSettings.Template
+                    end
+                    if Window.UseDebug then
+                       warn(Window.Title.Text.."."..typeName.."."..key
+                    end
+                    local value=ContextSettings[key]
+                    if value~=nil then return value end
+                    if key=="Visible" then
+                        local thisTemp=template
                         if thisTemp and thisTemp.Parent then
                             return thisTemp.Visible
                         end
                         return false
-					elseif key=="Type" then
-						return typeName
-                    elseif key=="Template" then
-                        return ContextSettings.Template
-					elseif key=="Value" then
-						return ContextSettings.Value
-					elseif key=="Active" then
-						return ContextSettings.Active
-					elseif key=="Index" then
-						return ContextSettings.Index
-					elseif key=="Parent" then
-						return ContextSettings.Parent
-					elseif key=="CanVisibleWhenParent" then
-						return ContextSettings.CanVisibleWhenParent
-					elseif key=="Children" then
-						return ContextSettings.Children
-					elseif key=="Mode" then
-						return ContextSettings.Mode
-					else
-						local success,result=pcall(function()
-							if typeName=="TextLabel" then
-								return textLabel[key]
-							elseif typeName=="TextBox" then
-								return textBox[key]
-							elseif typeName=="TextButton" or typeName=="Select" then
-								return textButton[key]
-							elseif typeName=="Selector" then
-								return ContextSettings[key]
-							end
-							return nil
-						end)
-						if success then
-							return result
-						end
 					end
-					return nil
+                    local objs={
+                       ["TextLabel"]=textLabel,["TextBox"]=textBox,["TextButton"]=textButton,["Button"]=textButton,["Select"]=textButton
+                    }
+                    local success,result=pcall(function()
+                        local instance=objs[typeName]
+                        if instance then return instance[key] end
+						return nil
+					end)
+					if success then return result end return nil
 				end,
 				
 				__newindex=function(this,key,value)
+                    if Window.UseDebug then
+                       warn(Window.Title.Text.."."..typeName.."."..key.."=".. tostring(value))
+                    end
                     if key=="Visible" then
-                        local thisTemp=ContextSettings.Template
+                        local thisTemp=template
                         if thisTemp and thisTemp.Parent then
                             thisTemp.Visible=value
                         end
