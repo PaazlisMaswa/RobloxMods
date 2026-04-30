@@ -4,14 +4,12 @@ local Window=UI:CreateWindow({
 	Title='Panel',
 })
 
-local TextLabel=Window:CreateWindow({
-	Title='Panel',
-})
-
-local Button=Window:AddContext({Type='TextButton',Name='Button',Callback=function() end})
+local Button=Window:AddContext({Type='Button',Name='Button'})
 
 task.delay(10,function()
-    Button.BackgroundColor3=Color3FromRGB(255,89,89)
+    Button.BackgroundColor3=Color3.fromRGB(255,89,89)
     Button.Template.Visible=false
     warn("Button.Template.Visible=",Button.Template.Visible)
 end
+
+UI:Notify("Panel","Panel Loaded",10)
