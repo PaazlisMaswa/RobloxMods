@@ -917,15 +917,9 @@ do
 				__index=function(this,key)
 					local resolve=funcs[key]
 					if resolve then
-                        if Window.UseDebug then
-                           warn(Window.Title.Text.."."..typeName..":"..key.."()"
-                        end
 						return function(_,...)
 							return resolve(this,...)
 						end
-                    end
-                    if Window.UseDebug then
-                       warn(Window.Title.Text.."."..typeName.."."..key
                     end
                     local value=ContextSettings[key]
                     if value~=nil then return value end
@@ -948,9 +942,6 @@ do
 				end,
 				
 				__newindex=function(this,key,value)
-                    if Window.UseDebug then
-                       warn(Window.Title.Text.."."..typeName.."."..key.."=".. tostring(value))
-                    end
                     if key=="Visible" then
                         local thisTemp=template
                         if thisTemp and thisTemp.Parent then
