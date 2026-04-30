@@ -79,7 +79,7 @@ function Module:CreateCanvas(Gui)
 	Frame.Position=UDim2.new(0.1,0,0.38,0)
 	Frame.Size=UDim2.new(0,180,0,34)
 	Frame.Parent=Gui
-	
+
 	local Title=Instance.new("TextLabel")
 	Title.Name="Title"
 	Title.BackgroundTransparency=1
@@ -129,7 +129,7 @@ function Module:CreateCanvas(Gui)
 	UIPadding.PaddingRight=UDim.new(0,5)
 	UIPadding.PaddingTop=UDim.new(0,5)
 	UIPadding.Parent=Container
-	
+
 	-- TextButton, TextLabel, TextBox
 	local Template=Instance.new("Frame")
 	Template.Name="Template"
@@ -138,7 +138,7 @@ function Module:CreateCanvas(Gui)
 	Template.Position=UDim2.new(0,0,0,0)
 	Template.Size=UDim2.new(1,0,0,30)
 	Template.Parent=Container
-	
+
 	local TextButton=Instance.new("TextButton")
 	TextButton.Name="TextButton"
 	TextButton.BackgroundColor3=Color3.fromRGB(163,162,165)
@@ -183,9 +183,9 @@ function Module:CreateCanvas(Gui)
 	TextLabel.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel.TextSize=18
 	TextLabel.Parent=Template
-	
+
 	Template.Parent=nil
-	
+
 	-- Toggle
 	local Toggle=Instance.new("Frame")
 	Toggle.Name="Toggle"
@@ -223,9 +223,9 @@ function Module:CreateCanvas(Gui)
 	TextButton2.TextColor3=Color3.fromRGB(248,248,248)
 	TextButton2.TextScaled=true
 	TextButton2.Parent=Toggle
-	
+
 	Toggle.Parent=nil
-	
+
 	-- Selector
 	local Selector=Instance.new("Frame")
 	Selector.Name="Selector"
@@ -234,7 +234,7 @@ function Module:CreateCanvas(Gui)
 	Selector.Position=UDim2.new(0,0,0,0)
 	Selector.Size=UDim2.new(1,0,0,30)
 	Selector.Parent=Container
-	
+
 	local TextLabel3=Instance.new("TextLabel")
 	TextLabel3.Name="TextLabel"
 	TextLabel3.BackgroundTransparency=1
@@ -261,7 +261,7 @@ function Module:CreateCanvas(Gui)
 	Next.TextTransparency=1
 	Next.Text=""
 	Next.Parent=Selector
-	
+
 	local TextLabel4=Instance.new("TextLabel")
 	TextLabel4.Name="TextLabel"
 	TextLabel4.AnchorPoint=Vector2.new(0.5,0.5)
@@ -276,7 +276,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel4.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel4.TextScaled=true
 	TextLabel4.Parent=Next
-	
+
 	local Previous=Instance.new("TextButton")
 	Previous.Name="Previous"
 	Previous.AutoButtonColor=false
@@ -290,7 +290,7 @@ function Module:CreateCanvas(Gui)
 	Previous.TextTransparency=1
 	Previous.Text=""
 	Previous.Parent=Selector
-	
+
 	local TextLabel5=Instance.new("TextLabel")
 	TextLabel5.Name="TextLabel"
 	TextLabel5.AnchorPoint=Vector2.new(0.5,0.5)
@@ -306,10 +306,10 @@ function Module:CreateCanvas(Gui)
 	TextLabel5.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel5.TextScaled=true
 	TextLabel5.Parent=Previous
-	
+
 	Selector.Parent=nil
-	
-	
+
+
 	-- Select
 	local Select=Instance.new("Frame")
 	Select.Name="Select"
@@ -318,7 +318,7 @@ function Module:CreateCanvas(Gui)
 	Select.Position=UDim2.new(0,0,0,0)
 	Select.Size=UDim2.new(1,0,0,30)
 	Select.Parent=Container
-	
+
 	local Frame2=Instance.new("Frame")
 	Frame2.Name="Frame"
 	Frame2.BackgroundColor3=Color3.fromRGB(200,200,200)
@@ -340,9 +340,9 @@ function Module:CreateCanvas(Gui)
 	TextButton3.TextColor3=Color3.fromRGB(248,248,248)
 	TextButton3.Text="Select"
 	TextButton3.Parent=Select
-	
+
 	Select.Parent=nil
-	
+
 
 	-- Dropdown
 	local Dropdown=Instance.new("Frame")
@@ -366,7 +366,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel6.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel6.TextSize=18
 	TextLabel6.Parent=Dropdown
-	
+
 	local TextLabel7=Instance.new("TextLabel")
 	TextLabel7.Name="Subtitle"
 	TextLabel7.BackgroundTransparency=1
@@ -380,7 +380,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel7.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel7.TextSize=18
 	TextLabel7.Parent=Dropdown
-	
+
 	local TextButton4=Instance.new("TextButton")
 	TextButton4.Name="TextButton"
 	TextButton4.AutoButtonColor=false
@@ -394,7 +394,7 @@ function Module:CreateCanvas(Gui)
 	TextButton4.Parent=Dropdown
 
 	Dropdown.Parent=nil
-	
+
 	return {
 		["Frame"]=Frame,
 		["Title"]=Title,
@@ -473,15 +473,15 @@ function Module:ResizeUIScale(ui,screenSize)
 	local scaleX=screenSize.X / baseX
 	local scaleY=screenSize.Y / baseY
 	local scale=math.min(scaleX, scaleY)
-	
+
 	local minAxis=math.min(screenSize.X, screenSize.Y)
 	local isSmallScreen=minAxis <= 500
-	
+
 	local uiScale=ui:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
 	uiScale.Parent=ui
-	
+
 	local result=1
-	
+
 	if scale < 1 then
 		result=scale*1.5
 	elseif scale > 1 then
@@ -489,7 +489,7 @@ function Module:ResizeUIScale(ui,screenSize)
 	else
 		result=1
 	end
-	
+
 	uiScale.Scale=result
 end
 
@@ -517,14 +517,14 @@ do
 		function Window:SetTitle(Text)
 			self.Title.Text=Text
 		end
-		
+
 		local Frm=Window.Frame
 		if LastFrame and LastFrame.Position==Frm.Position then
 			LastFrame.Position=Frm.Position+OFFSET
 		end
-		
+
 		local GrabUIClean=nil
-		
+
 		LastFrame=Frm
 
 		-- Recalculate the window height
@@ -556,9 +556,8 @@ do
 		-- Add a context to the window
 		function Window:AddContext(ContextSettings)
 			ContextSettings=Missing("table",ContextSettings,{})
-			
 			local setCallback,applyCallback,cleanCallback
-			
+
 			local saveContext=Module:DeepCopy(ContextSettings)
 			local typeName=ContextSettings.Type
 			local template=nil
@@ -580,10 +579,10 @@ do
 			end
 
 			if not template then return ContextSettings end
-            
-            typeName=NameTypes[typeName] and typeName or "Unknown"
+
+			typeName=NameTypes[typeName] and typeName or "Unknown"
 			template.Name=typeName
-            ContextSettings.Type=typeName
+			ContextSettings.Type=typeName
 
 			if not NameTypes[typeName] then
 				if template then template:Destroy() end
@@ -595,9 +594,9 @@ do
 			local textBox:TextBox=template:FindFirstChild("TextBox")
 			local emptyFrame:Frame=template:FindFirstChild("Frame")
 			local subtitleLabel:TextLabel=template:FindFirstChild("Subtitle")
-			
+
 			local contextClass={Type=typeName}
-			
+
 			local function SafeCallback(...)
 				if ContextSettings.Callback then pcall(ContextSettings.Callback,...) end
 			end
@@ -651,12 +650,13 @@ do
 				end
 				ContextSettings.Index=type(ContextSettings.Index)=="number" and ContextSettings.Index or 0
 				ContextSettings.Value=type(ContextSettings.Value)=="string" and ContextSettings.Value or ContextSettings.Options[1]
+				
 				if ContextSettings.Mode==2 then
 					template:Destroy() template=nil
 					self.Order-=1
-					
+
 					local newSection,newDropdown
-					
+
 					if type(ContextSettings.Title)=="string" then
 						self.Order-=1
 						newSection=Window:AddContext({
@@ -664,17 +664,17 @@ do
 							Name=ContextSettings.Title,
 						})
 					end
-					
+
 					newDropdown=Window:AddContext({
 						Type="Dropdown",
 						Name=tostring(ContextSettings.Value),
 						Active=false
 					})
-					
+
 					template=newDropdown.Template
 					textLabel=template:FindFirstChildOfClass("TextLabel") :: TextLabel
 					textLabel.Text=tostring(ContextSettings.Value)
-					
+
 					setCallback=function(value,index)
 						if ContextSettings.Value~=value then
 							ContextSettings.Value=value
@@ -683,7 +683,12 @@ do
 							SafeCallback(value,index)
 						end
 					end
-
+					
+					if ContextSettings.ApplyOnInit then
+						textLabel.Text=tostring(ContextSettings.Value)
+						SafeCallback(ContextSettings.Value,ContextSettings.Index)
+					end
+					
 					for i,v in ipairs(ContextSettings.Options) do
 						local newButton=Window:AddContext({
 							Type="Button",
@@ -700,16 +705,18 @@ do
 					end
 
 					uiListLayout:ApplyLayout()
-					
+
 					ContextSettings.Dropdown=newDropdown
 					ContextSettings.Section=newSection
-					
+
 					cleanCallback=function()
 						ContextSettings.Dropdown=nil
 						ContextSettings.Section=nil
 						if newDropdown then newDropdown:Destroy() end
 						if newSection then newSection:Destroy() end
 					end
+					
+
 				else
 					setCallback=function(value,index)
 						if ContextSettings.Value~=value then
@@ -720,22 +727,31 @@ do
 						end
 					end
 					textLabel.Text=tostring(ContextSettings.Value)
-
+					
+					if ContextSettings.ApplyOnInit then
+						textLabel.Text=tostring(ContextSettings.Value)
+						SafeCallback(ContextSettings.Value,ContextSettings.Index)
+					end
+					
 					local selectorTweenInfo=TweenInfo.new(1,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out)
 					local selectorPropertys1,selectorPropertys2={["Size"]=UDim2.new(0.8,0,0.8,0)},{["Size"]=UDim2.new(1,0,1,0)}
 
-					local previousButton=template:FindFirstChild("Previous") :: TextButton
-
-					cache.PreviousActivated=previousButton.Activated:Connect(function()
+					local previousButton=template:FindFirstChild("Previous")
+					
+					local function PreviousFunc()
+						local index,optionList=ContextSettings.Index,ContextSettings.Options
 						if ContextSettings.NoCap then
-							if ContextSettings.Index<=0 then ContextSettings.Index=1 end
-							ContextSettings.Index=ContextSettings.Index<=1 and #ContextSettings.Options or ContextSettings.Index-1
+							if index<=0 then index=1 end
+							index=index<=1 and #optionList or index-1
 						else
-							ContextSettings.Index=ContextSettings.Index<=0 and 1 or ContextSettings.Index-1
-							if ContextSettings.Index<=0 then ContextSettings.Index=1 end
+							index=index<=0 and 1 or index-1
+							if index<=0 then index=1 end
 						end
-						setCallback(tostring(ContextSettings.Options[ContextSettings.Index]),ContextSettings.Index)
-					end)
+						ContextSettings.Index=index
+						setCallback(tostring(optionList[index]),index)		
+					end
+					
+					cache.PreviousActivated=previousButton.Activated:Connect(PreviousFunc)
 
 					local previousLabel=previousButton:FindFirstChild("TextLabel")
 
@@ -747,17 +763,21 @@ do
 						TweenService:Create(previousLabel,selectorTweenInfo,selectorPropertys2):Play()
 					end)
 
-					local nextButton=template:FindFirstChild("Next") :: TextButton
-
-					cache.NextActivated=nextButton.Activated:Connect(function()
-						if ContextSettings.Index<=0 then ContextSettings.Index=1 end
-						if ContextSettings.Index>=#ContextSettings.Options then
-							ContextSettings.Index=ContextSettings.Index and 1 or #ContextSettings.Options
+					local nextButton=template:FindFirstChild("Next")
+					
+					local function NextFunc()
+						local index,optionList=ContextSettings.Index,ContextSettings.Options
+						if index<=0 then index=1 end
+						if index>=#optionList then
+							index=index and 1 or #optionList
 						else
-							ContextSettings.Index+=1
+							index+=1
 						end
-						setCallback(tostring(ContextSettings.Options[ContextSettings.Index]),ContextSettings.Index)
-					end)
+						ContextSettings.Index=index
+						setCallback(tostring(optionList[index]),index)
+					end
+					
+					cache.NextActivated=nextButton.Activated:Connect(NextFunc)
 
 					local nextLabel=nextButton:FindFirstChild("TextLabel")
 
@@ -781,10 +801,10 @@ do
 						SafeCallback(value)
 					end
 				end
-
+				
 				ContextSettings.Value=ContextSettings.Value or nil
 				ContextSettings.Active=type(ContextSettings.Active)=="boolean" and ContextSettings.Active or false
-				
+
 				textButton.BackgroundColor3=TurnColors[not ContextSettings.Active]
 				
 				cache.ButtonActivated=textButton.Activated:Connect(function()
@@ -835,16 +855,15 @@ do
 				textBox=nil
 				emptyFrame=nil
 			end
-            
-            contextClass.Template=template
-            ContextSettings.Template=template
 
+			ContextSettings.Template=template
+			ContextSettings.Parent=true
+			
 			if template then
-                template.Parent=container
+				template.Parent=container
 				self.Order+=1
 				template.LayoutOrder=self.Order
 				uiListLayout:ApplyLayout()
-				ContextSettings.Parent=true
 			end
 
 			local funcs={}
@@ -876,10 +895,11 @@ do
 				template:Destroy()
 				funcs={}
 				ContextSettings={}
+				if getmetatable(this) then setmetatable(this,nil) end
 				table.clear(this)
 				if cleanCallback then cleanCallback() cleanCallback=nil end
 			end
-			
+
 			funcs.Set=function(this,value)
 				local thisType=this.Type
 				local valueType=type(value)
@@ -908,87 +928,97 @@ do
 					setCallback(not ContextSettings.Active)
 				end
 			end
-			
+
 			funcs.Apply=function(this)
 				if applyCallback then applyCallback() end
 			end
 			
+			local instances={
+				["TextLabel"]=textLabel,["Toggle"]=textLabel,["TextBox"]=textBox,["TextButton"]=textButton,["Button"]=textButton,["Select"]=textButton
+			}
+			
 			local newMetaTable=setmetatable(contextClass,{
 				__index=function(this,key)
+					warn(`Window.{typeName}.{key}`)
 					local resolve=funcs[key]
 					if resolve then
 						return function(_,...)
 							return resolve(this,...)
 						end
-                    end
-                    local value=ContextSettings[key]
-                    if value~=nil then return value end
-                    if key=="Visible" then
-                        local thisTemp=template
-                        if thisTemp and thisTemp.Parent then
-                            return thisTemp.Visible
-                        end
-                        return false
 					end
-                    local objs={
-                       ["TextLabel"]=textLabel,["TextBox"]=textBox,["TextButton"]=textButton,["Button"]=textButton,["Select"]=textButton
-                    }
-                    local success,result=pcall(function()
-                        local instance=objs[typeName]
-                        if instance then return instance[key] end
+					local value=ContextSettings[key]
+					if value~=nil then return value end
+					if key=="Visible" then
+						local thisTemp=template
+						if thisTemp and thisTemp.Parent then
+							return thisTemp.Visible
+						end
+						return false
+					end
+					
+					local success,result=pcall(function()
+						local instance=instances[typeName]
+						if instance then return instance[key] end
 						return nil
 					end)
 					if success then return result end return nil
 				end,
-				
+
 				__newindex=function(this,key,value)
-                    if key=="Visible" then
-                        local thisTemp=template
-                        if thisTemp and thisTemp.Parent then
-                            thisTemp.Visible=value
-                        end
+					warn(`Window.{typeName}.{key}={value}`)
+					
+					if key=="Visible" then
+						local thisTemp=template
+						if thisTemp and thisTemp.Parent then
+							thisTemp.Visible=value
+						end
 					elseif key=="Value" then
 						if next(funcs) then funcs.Set(this,value) end
 					elseif key=="Parent" then
-						if type(value)=="table" then
-							if type(value.Children)=="table" and value.Parent then
-								ContextSettings.Parent=value
-								table.insert(value.Children,this)
-								if value.Type=="Dropdown" and value.CanVisibleWhenParent then
-									if value.Active then
-										value.Active=false
-									else
-										value.Active=true
+						if ContextSettings.Parent~=nil then
+							if type(value)=="table" then
+								if type(value.Children)=="table" and value.Parent then
+									ContextSettings.Parent=value
+									table.insert(value.Children,this)
+									if value.Type=="Dropdown" and value.CanVisibleWhenParent then
+										if value.Active then
+											value.Active=false
+										else
+											value.Active=true
+										end
 									end
+								end
+							else
+								local lastParent=ContextSettings.Parent
+								ContextSettings.Parent=value
+								if lastParent and type(lastParent)=="table" then
+									local foundIndex=table.find(lastParent.Children,this)
+									if foundIndex then
+										table.remove(lastParent.Children,foundIndex)
+									end
+									lastParent=nil
 								end
 							end
 						else
-							local lastParent=ContextSettings.Parent
-							ContextSettings.Parent=value
-							if lastParent and type(lastParent)=="table" then
-								local foundIndex=table.find(lastParent.Children,this)
-								if foundIndex then
-									table.remove(lastParent.Children,foundIndex)
-								end
-								lastParent=nil
+							if getmetatable(this) then
+								ContextSettings.Parent=true
 							end
 						end
 					elseif key=="Active" and this.Type=="Dropdown" then
 						if next(funcs) then funcs.Set(this,value) end
+					elseif ContextSettings[key] then
+						ContextSettings[key]=value
 					else
-						if typeName=="TextLabel" then
-							textLabel[key]=value
-						elseif typeName=="TextBox" then
-							textBox[key]=value
-						elseif typeName=="TextButton" or typeName=="Select" then
-							textButton[key]=value
-						elseif typeName=="Toggle" then
-							textLabel[key]=value
+						local instance=instances[typeName]
+						if instance then
+							local success,result=pcall(function()
+								instance[key]=value
+							end)
 						end
 					end
 				end,
 			})
-			newMetaTable.Parent=true
+
 			table.insert(Contexts,newMetaTable)
 			return newMetaTable
 		end
@@ -1011,10 +1041,10 @@ do
 		Window.Open.Activated:Connect(function()
 			Window:SetVisible(not Window:IsVisible())
 		end)
-		
+
 		return Window
 	end
-	
+
 	function Library:Notify(...)
 		local title,description,duration,barColor,mode
 		local Data={}
@@ -1110,7 +1140,7 @@ do
 			end
 		end)
 	end
-	
+
 	function Library:GrabUI(frame)
 		return Module:GrabUI(frame)
 	end
