@@ -1,16 +1,20 @@
-warn("load example PaazlisUI")
+local SeverHopEnd=false
+
 local UI=loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/PaazlisUI/init.luau'))()
-warn("example PaazlisUI success")
+
 local Window=UI:CreateWindow({
 	Title='Panel',
 })
 
-local Button=Window:AddContext({Type='Button',Name='Button'})
+local Dropdown=Window:AddContext({Type='Dropdown',Name='Local',Active=false})
 
-task.delay(10,function()
-    Button.BackgroundColor3=Color3.fromRGB(255,89,89)
-    Button.Template.Visible=false
-    warn("Button.Template.Visible=",Button.Template.Visible)
-end)
+local Button=Window:AddContext({Type='Button',Name='Server Hop',Callback=function()
+     if not SeverHopEnd then
+        SeverHopEnd=true
+     end
+end})
 
-UI:Notify("Panel","Panel Loaded",10)
+Button.Template.Visible=false
+Button.Parent=Dropdown
+
+UI:Notify({Title='Panel',Description='Panel Loaded',Duration=10})
