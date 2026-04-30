@@ -11,6 +11,6 @@ task.delay(10,function()
     Button.BackgroundColor3=Color3.fromRGB(255,89,89)
     Button.Template.Visible=false
     warn("Button.Template.Visible=",Button.Template.Visible)
-end
+end)
 
 UI:Notify("Panel","Panel Loaded",10)
