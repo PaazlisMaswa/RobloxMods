@@ -35,7 +35,7 @@ local SaveMouseIcon=Mouse.Icon
 local Window=UI:CreateWindow({
 	Title='Instal',
 })
-
+Window.UseDebug=true
 -- Variables
 local IsEnums,IsEmpty,IsStrings,GetLines,ToNumberString,ToPersentase,GetProperties,IsAlive,IsAs,AddInstance,CopyInstanceWith,GetInstanceProperty,CreateVariable,ConvertMeshPartToSpecialMesh,GetAncestorsAndSelf,SetChildrenParent,AddPose=nil,Strs.IsEmpty,Strs.IsStrings,Strs.GetLines,Strs.ToNumberString,Strs.ToPersentase,Tabler.GetProperties,Instancer.IsAlive,Instancer.IsAs,Instancer.AddInstance,Instancer.CopyInstanceWith,Instancer.GetInstanceProperty,Instancer.CreateVariable,Instancer.ConvertMeshPartToSpecialMesh,Instancer.GetAncestorsAndSelf,Instancer.SetChildrenParent,nil
 local MathHuge,MathFloor,MathMax,StringFormat,StringSplit,StringSub,StringFind,StringGmatch,TableInsert,TableRemove,TableConcat,TableFind,TableClear,Color3FromRGB,InstanceNew=math.huge,math.floor,math.max,string.format,string.split,string.sub,string.find,string.gmatch,table.insert,table.remove,table.concat,table.find,table.clear,Color3.fromRGB,Instance.new
