@@ -823,28 +823,23 @@ do
 				end)
 			elseif typeName=="Dropdown" then
 				ContextSettings.Active=type(ContextSettings.Active)=="boolean" and ContextSettings.Active or false
-				subtitleLabel.Text=ContextSettings.Value and "v" or "–"
+				subtitleLabel.Text=ContextSettings.Active and "v" or "–"
 				contextClass.Children={}
-				setCallback=function(value)
-					if ContextSettings.Active~=value then
-						ContextSettings.Active=value
+				setCallback=function(active)
+					if ContextSettings.Active~=active then
+						ContextSettings.Active=active
 						for i,v in ipairs(contextClass.Children) do
 							if type(v)=="table" and v.Parent and v.Template then
-								v.Template.Visible=value
+								v.Template.Visible=active
 							end
 						end
 						Window:ApplyWindowHeight()
-						subtitleLabel.Text=value and "v" or "–"
-						SafeCallback(value)
+						subtitleLabel.Text=active and "v" or "–"
 					end
 				end
 				applyCallback=function()
-					local value=not ContextSettings.Active
-					ContextSettings.Active=value
-					for i,v in ipairs(contextClass.Children) do if type(v)=="table" and v.Parent and v.Template then v.Template.Visible=value end end
-					Window:ApplyWindowHeight()
-					subtitleLabel.Text=value and "v" or "–"
-					SafeCallback(value)
+					local active=not ContextSettings.Active
+					setCallback(active)
 				end
 				cache.ButtonActivated=textButton.Activated:Connect(applyCallback)
 			else
