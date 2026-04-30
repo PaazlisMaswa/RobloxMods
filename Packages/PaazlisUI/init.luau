@@ -25,7 +25,7 @@ for i,v in ipairs({'Players','UserInputService','TweenService','StarterGui','Run
 	end 
 end
 
-local RunService=GetService("RunService")
+local RunService=Services["RunService"]
 if not RunService:IsClient() then
 	error("PaazlisUI only works on client")
 	return
@@ -60,7 +60,7 @@ local Notifications,Module={},{}
 local Library={Loaded=false}
 _G.PaazlisUI=Library
 
-local Players,UserInputService,TweenService,StarterGui=GetService("Players"),GetService("UserInputService"),GetService("TweenService"),GetService("StarterGui")
+local Players,UserInputService,TweenService,StarterGui=Services["Players"],Services["UserInputService"],Services["TweenService"],Services["StarterGui"]
 
 local LocalPlayer=Players.LocalPlayer
 local Mouse=LocalPlayer:GetMouse()
@@ -566,29 +566,17 @@ do
 
 			local switch,toggle,selector,selec,dropDown,temp,uiListLayout,container=self.Switch,self.Toggle,self.Selector,self.Select,self.Dropdown,self.Template,self.UIListLayout,self.Container
 			if typeName=="Switch" then
-				if switch then
-					template=switch:Clone()
-				end
+				template=switch:Clone()
 			elseif typeName=="Selector" then
-				if selector then
-					template=selector:Clone()
-				end
+				template=selector:Clone()
 			elseif typeName=="Toggle" then
-				if toggle then
-					template=toggle:Clone()
-				end
+				template=toggle:Clone()
 			elseif typeName=="Select" then
-				if selec then
-					template=selec:Clone()
-				end
+				template=selec:Clone()
 			elseif typeName=="Dropdown" then
-				if dropDown then
-					template=dropDown:Clone()
-				end
+				template=dropDown:Clone()
 			else
-				if temp then
-					template=temp:Clone()
-				end
+				template=temp:Clone()
 			end
 
 			if not template then return ContextSettings end
@@ -853,7 +841,7 @@ do
 				template.LayoutOrder=self.Order
 				uiListLayout:ApplyLayout()
 				template.Parent=container
-				contextClass.Template=template
+				ContextSettings.Template=template
 				ContextSettings.Parent=true
 				template.Name=`{typeName} | {tostring(self.Order)}`
 			end
@@ -931,16 +919,22 @@ do
 						return function(_,...)
 							return resolve(this,...)
 						end
+                    elseif key=="Visible" then
+                        local thisTemp=ContextSettings.Template
+                        if thisTemp and thisTemp.Parent then
+                            return thisTemp.Visible
+                        end
+                        return false
 					elseif key=="Type" then
 						return typeName
+                    elseif key=="Template" then
+                        return ContextSettings.Template
 					elseif key=="Value" then
 						return ContextSettings.Value
 					elseif key=="Active" then
 						return ContextSettings.Active
 					elseif key=="Index" then
 						return ContextSettings.Index
-					elseif key=="Template" then 
-						return template
 					elseif key=="Parent" then
 						return ContextSettings.Parent
 					elseif key=="CanVisibleWhenParent" then
@@ -970,7 +964,12 @@ do
 				end,
 				
 				__newindex=function(this,key,value)
-					if key=="Value" then
+                    if key=="Visible" then
+                        local thisTemp=ContextSettings.Template
+                        if thisTemp and thisTemp.Parent then
+                            thisTemp.Visible=value
+                        end
+					elseif key=="Value" then
 						if next(funcs) then funcs.Set(this,value) end
 					elseif key=="Parent" then
 						if type(value)=="table" then
