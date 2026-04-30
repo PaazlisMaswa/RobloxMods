@@ -1,29 +1,22 @@
 -- Instal by @Paazlis
-local PLUGIN_NAME='Instal Object'
-local VERSION='3.0'
+local PLUGIN_NAME='Instal'
+local VERSION='3'
 local MAX_CAP=math.huge
 
-if not game:IsLoaded() then game.Loaded:Wait() end
-
-local Missing,GetService=function(t,v,f)
+local Missing=function(t,v,f)
 	return type(v)==t and v or f
-end,function(name)
-	local service = game:GetService(name)
-	return if cloneref then cloneref(service) else service
 end
 
-setclipboard=Missing('function',setclipboard,function(text) warn(text) end)
+setclipboard,cloneref=Missing('function',setclipboard,function(text) warn(text) end),Missing('function',cloneref,function(v) return v end)
+
+local GetService=function(name)
+	local service=game:GetService(name)
+	if cloneref then return cloneref(service) else return service end
+end
 
 local Services={}
 
-for i,v in ipairs({'Workspace','Players','UserInputService','RunService','ReplicatedFirst','ReplicatedStorage','SoundService','Lighting','Teams','InsertService','StarterGui','StarterPack','HttpService'}) do 
-	if not Services[v] then 
-		local success,service=pcall(GetService,v) 
-		if success and service then 
-			Services[v]=service 
-		end 
-	end 
-end
+for i,v in ipairs({'Workspace','Players','UserInputService','RunService','ReplicatedFirst','ReplicatedStorage','SoundService','Lighting','Teams','InsertService','StarterGui','StarterPack','HttpService'}) do if not Services[v] then local success,service=pcall(GetService,v) if success and service then Services[v]=service end end end
 
 -- Services
 local Workspace,Players,UserInputService,RunService,ReplicatedFirst,ReplicatedStorage,SoundService,Lighting,Teams,InsertService,StarterGui,StarterPack,HttpService=Services['Workspace'],Services['Players'],Services['UserInputService'],Services['RunService'],Services['ReplicatedFirst'],Services['ReplicatedStorage'],Services['SoundService'],Services['Lighting'],Services['Teams'],Services['InsertService'],Services['StarterGui'],Services['StarterPack'],Services['HttpService']
@@ -40,17 +33,13 @@ local Mouse=LocalPlayer:GetMouse()
 local SaveMouseIcon=Mouse.Icon
 
 local Window=UI:CreateWindow({
-   Title='Instal'
+	Title='Instal',
 })
 
 -- Variables
-local Notify,IsEnums,IsStrings,GetLines,ToNumberString,ToPersentase,GetProperties,IsAs,CopyInstanceWith,GetInstanceProperty,CreateVariable,ConvertMeshPartToSpecialMesh,GetAncestorsAndSelf,SetChildrenParent,GetBones,GetMotors,GetAnimators,AddPose=nil,nil,Strs.IsStrings,Strs.GetLines,Strs.ToNumberString,Strs.ToPersentase,Tabler.GetProperties,Instancer.IsAs,Instancer.CopyInstanceWith,Instancer.GetInstanceProperty,Instancer.CreateVariable,Instancer.ConvertMeshPartToSpecialMesh,Instancer.GetAncestorsAndSelf,Instancer.SetChildrenParent,nil,nil,nil,nil
+local IsEnums,IsEmpty,IsStrings,GetLines,ToNumberString,ToPersentase,GetProperties,IsAlive,IsAs,AddInstance,CopyInstanceWith,GetInstanceProperty,CreateVariable,ConvertMeshPartToSpecialMesh,GetAncestorsAndSelf,SetChildrenParent,AddPose=nil,Strs.IsEmpty,Strs.IsStrings,Strs.GetLines,Strs.ToNumberString,Strs.ToPersentase,Tabler.GetProperties,Instancer.IsAlive,Instancer.IsAs,Instancer.AddInstance,Instancer.CopyInstanceWith,Instancer.GetInstanceProperty,Instancer.CreateVariable,Instancer.ConvertMeshPartToSpecialMesh,Instancer.GetAncestorsAndSelf,Instancer.SetChildrenParent,nil
 local MathHuge,MathFloor,MathMax,StringFormat,StringSplit,StringSub,StringFind,StringGmatch,TableInsert,TableRemove,TableConcat,TableFind,TableClear,Color3FromRGB,InstanceNew=math.huge,math.floor,math.max,string.format,string.split,string.sub,string.find,string.gmatch,table.insert,table.remove,table.concat,table.find,table.clear,Color3.fromRGB,Instance.new
-local StatusLabel,LoaderLabel,ResetButton,DestroyButton,TextBox,SelectorButton,SelectorAnimationButton,SelectorFPSButton,AddButton,InitializeButton,InstalButton,RecordButton,StopButton
-
-Notify=function(name,description,duration,mode)
-   UI:Notify({Name=name,Description=description,Duration=duration,Mode=mode})
-end
+local StatusLabel,LoaderLabel,ResetButton,DestroyButton,TextBox,SelectorGrabTypeButton,SelectorAnimationButton,SelectorFPSButton,AddButton,InitializeButton,InstalButton,RecordButton,StopButton
 
 IsEnums=function(enum1,enum2)
 	for i,v in ipairs(enum2) do if enum1==v then return true end end return false
@@ -58,24 +47,6 @@ end
 
 AddPose=function(name,cframe,parent)
 	local pose=Instance.new('Pose') pose.Name=name pose.CFrame=cframe pose.Parent=parent
-end
-
-GetMotors=function(instance)
-	local motors={}
-	for i,v in pairs(instance:GetDescendants()) do if v:IsA('Motor6D') then table.insert(motors,v) end end
-	return motors
-end
-
-GetBones=function(instance)
-	local bones={}
-	for i,v in pairs(instance:GetDescendants()) do if v:IsA('Bone') then table.insert(bones,v) end end
-	return bones
-end
-
-GetAnimators=function(instance)
-	local animators={}
-	for i,v in ipairs(instance:GetDescendants()) do if v:IsA('Animator') then TableInsert(animators,v) end end
-	return animators
 end
 
 local Outliner=InstanceNew('SelectionBox') Outliner.Name='Selection' Outliner.Color3=Color3.fromRGB(25,153,255) Outliner.LineThickness=0.1 Outliner.SurfaceColor3=Color3.fromRGB(255,255,255) Outliner.SurfaceTransparency=1 Outliner.Transparency=0 Outliner.Adornee=nil Outliner.Visible=false Outliner.Parent=UI.Gui
@@ -268,7 +239,7 @@ local GlobalData={
 		-- GrapTypes
 		{'None','Building','Gui','Lighting','Sound','Tool','Icon','GuiIcon','MouseIcon','Animation','Team','Event','Texture','Decal','Beam','Trail','Name','GuiColor','PartColor'},
 		-- BannedGrabTypes
-		{'None'},
+		{'None','Animation'},
 		-- Record Anim Type
 		{'Motor','Bone'},
 		-- FPS Type
@@ -1448,10 +1419,10 @@ end
 
 local RegisteredClasses,ObjectClasses={},{}
 local GrabTypeList,BannedGrabTypeList,RecordAnimTypeList,FPSTypeList,NumericList,EventClasses,LightingClasses,UIClasses,ColorProperties,TextProperties,UIColorProperties,IconProperties=unpack(GlobalData.Others)
-local GrabTypeCache,BuildingCache,GuiCache,ToolCache,MouseIconCache,AnimCache,InstalCache,Cache={},{},{},{},{},{},{},{}
+local GrabTypeCache,BuildingCache,GuiCache,ToolCache,MouseIconCache,InstalCache,Cache={},{},{},{},{},{},{}
 
 local GrabType,RecordAnimType,FPSType,LastStatus=GrabTypeList[1],'','',''
-local RecordAnimConnection,PlayerGuiAdded,BuildingTarget,GuiTarget,ToolTarget,InstalTarget,RecordAnimTarget,GrabberModel=nil,nil,nil,nil,nil,nil,nil
+local RecordAnimConnection,PlayerGuiAdded,BuildingTarget,GuiTarget,ToolTarget,InstalTarget,GrabberModel=nil,nil,nil,nil,nil,nil,nil
 local Destroyed,Debounce,IsInput,IsRecordAnim=false,false,false,false
 local BuildingIndex,TotalBuilding=0,0
 
@@ -1552,13 +1523,12 @@ function Module:SetUpdate(mode,...)
 		InstalTarget=nil
 		GuiTarget=nil
 		ToolTarget=nil
-		RecordAnimTarget=nil
 		if RecordAnimConnection then RecordAnimConnection:Disconnect() RecordAnimConnection=nil end
 		RecordAnimType=RecordAnimTypeList[1]
 		IsRecordAnim=false
 		if PlayerGuiAdded then PlayerGuiAdded:Disconnect() PlayerGuiAdded=nil end
-		if SelectorButton and SelectorButton.Parent then
-			SelectorButton.Value=GrabTypeList[1]
+		if SelectorGrabTypeButton and SelectorGrabTypeButton.Parent then
+			SelectorGrabTypeButton.Value=GrabTypeList[1]
 		end
 		if GrabberModel then GrabberModel:Destroy() GrabberModel=nil end
 		if Window.Parent then
@@ -1574,17 +1544,16 @@ function Module:SetUpdate(mode,...)
 			Outliner.Adornee=target Outliner.Visible=isTarget Outliner.Parent=isTarget and workspace or UI.Gui
 		end
 	elseif mode==3 then
-		if StatusLabel and StatusLabel.Parent and not Debounce then
-			StatusLabel.Text='Status'
-		end
+		for i,v in ipairs({DestroyButton,ResetButton}) do if IsAlive(v) then v.Template.Visible=GrabType=='None' end end
+		if IsAlive(StatusLabel.Parent) then StatusLabel.Text='Status' end
 		local isAnimation,isBuilding=GrabType=='Animation',GrabType=='Building' or GrabType=='Animation'
 		self:SetUpdate(isBuilding and 2 or 0)
 		if PlayerGuiAdded then PlayerGuiAdded:Disconnect() PlayerGuiAdded=nil end
-		if TextBox and TextBox.Parent then
+		if IsAlive(TextBox) then
 			TextBox.Template.Visible=isBuilding
 			TextBox.PlaceholderText=if isBuilding then 'Building Index' else ''
 		end
-		if MainLabel and MainLabel.Parent then
+		if IsAlive(MainLabel) then
 			if isBuilding then
 				MainLabel.Text=`Total Building: {BuildingIndex}`
 			elseif GrabType=='Gui' then
@@ -1595,10 +1564,10 @@ function Module:SetUpdate(mode,...)
 						local isGui,gui=false,child.Parent
 						if gui then isGui=gui:IsA('ScreenGui') if isGui then GuiTarget=gui child:Destroy() end end
 						lastText=isGui and 'Successfully' or 'An Error Occured'
-						if MainLabel and MainLabel.Parent then
+						if IsAlive(MainLabel) then
 							MainLabel.Text=lastText
 							task.wait(2)
-							if MainLabel and MainLabel.Parent and MainLabel.Text==lastText then
+							if IsAlive(MainLabel) and MainLabel.Text==lastText then
 								MainLabel.Text=originText
 							end
 						end
@@ -1610,18 +1579,8 @@ function Module:SetUpdate(mode,...)
 			MainLabel.TextScaled=GrabType=='Gui'
 			MainLabel.Template.Visible=isBuilding or GrabType=='Gui'
 		end
-		if RecordButton and RecordButton.Parent then
-			RecordButton.Template.Visible=isAnimation
-		end
-		if StopButton and StopButton.Parent then
-			StopButton.Template.Visible=GrabType=='Building'
-		end
-		if SelectorAnimationButton and SelectorAnimationButton.Parent then
-			SelectorAnimationButton.Template.Visible=isAnimation
-		end
-		if SelectorFPSButton and SelectorFPSButton.Parent then
-			SelectorFPSButton.Template.Visible=isAnimation
-		end
+		if IsAlive(StopButton) then StopButton.Template.Visible=GrabType=='Building' end
+		for i,v in ipairs({RecordButton,SelectorAnimationButton,SelectorFPSButton}) do if IsAlive(v) then v.Template.Visible=isAnimation end end
 	end
 end
 
@@ -1806,8 +1765,6 @@ function Module:GetGrabData(mode)
 	elseif mode=='Building' then
 		BuildingTarget=nil 
 		if next(BuildingCache) then for v,k in pairs(BuildingCache) do local cv=v:Clone() if cv and cv.Parent==nil then StatusLabel.Text=mode..': '..cv.Name cv.Parent=newModel end RunService.Stepped:Wait() end TableClear(BuildingCache) end
-	elseif mode=='Animation' then
-		if next(AnimCache) then for _,v in ipairs(AnimCache) do RunService.Stepped:Wait() StatusLabel.Text=`{mode}: {v.Name}` v.Parent=newModel end TableClear(AnimCache) end
 	else
 		return false,nil
 	end
@@ -1883,21 +1840,66 @@ function Module:Initialize()
 end
 -- 
 function Module:Scan(instance,func,list)
-	if list==nil then list={Count=0,MaxCount=#instance:GetDescendants()} end
+	if list==nil then 
+		local descendants=instance:GetDescendants() 
+		list={Count=0,Max=#descendants} 
+	end
 	local children=instance:GetChildren()
-	for _,v in ipairs(children) do
+	for i,v in ipairs(children) do
 		task.wait(1/240)
 		local className,parent=v.ClassName,v.Parent
+		if v:IsA('SurfaceAppearance') then
+			task.wait(1/240)
+			local folder,dv=InstanceNew('Folder'),InstanceNew('SurfaceAppearance')
+			pcall(function()
+				folder.Name='SurfaceAppearance'
+				if v.ColorMap~=dv.ColorMap then
+					AddInstance('StringValue',{Name='ColorMap',Value=v.ColorMap,Parent=folder})
+				end
+				if v.MetalnessMap~=dv.MetalnessMap then
+					AddInstance('StringValue',{Name='MetalnessMap',Value=v.MetalnessMap,Parent=folder})
+				end
+				if v.NormalMap~=dv.NormalMap then
+					AddInstance('StringValue',{Name='NormalMap',Value=v.NormalMap,Parent=folder})
+				end
+				if v.RoughnessMap~=dv.RoughnessMap then
+					AddInstance('StringValue',{Name='RoughnessMap',Value=v.RoughnessMap,Parent=folder})
+				end
+				if v.Color~=dv.Color then
+					AddInstance('Color3Value',{Name='Color',Value=v.Color,Parent=folder})
+				end
+				if v.AlphaMode~=dv.AlphaMode then
+					AddInstance('StringValue',{Name='AlphaMode',Value=SafeData['EnumItem'](v.AlphaMode),Parent=folder})
+				end
+				if v.EmissiveStrength~=dv.EmissiveStrength then
+					AddInstance('NumberValue',{Name='EmissiveStrength',Value=v.EmissiveStrength,Parent=folder})
+				end
+				if v.EmissiveMaskContent~=dv.EmissiveMaskContent then
+					AddInstance('StringValue',{Name='EmissiveMaskContent',Value=SafeData['Content'](v.EmissiveMaskContent),Parent=folder})
+				end
+			end)
+			dv:Destroy()
+			local folderChildren=folder:GetChildren()
+			if #folderChildren<=0 then
+				folder:Destroy()
+			else
+				v:Destroy()
+				list.Count+=1
+				list.Max+=(#folderChildren+1)
+				if parent==nil then folder:Destroy() continue end
+				folder.Parent=parent
+			end
+		end
 		local info=ObjectClasses[className]
 		if not info then
-			list.MaxCount-=1
+			list.Max-=1
 			SetChildrenParent(v,parent)
 			v:Destroy()
-			func(list.Count,nil,list.MaxCount)
+			func(list.Count,nil,list.Max)
 			continue
 		end
 		list.Count+=1
-		func(list.Count,v,list.MaxCount)
+		func(list.Count,v,list.Max)
 		if #v:GetChildren()>0 then
 			self:Scan(v,func,list)
 		end
@@ -1905,7 +1907,7 @@ function Module:Scan(instance,func,list)
 end
 
 function Module:Starting(instance,func)
-    self:Scan(instance,func)
+	self:Scan(instance,func)
 	local progress,maxProgress,waitCount,meshParts=0,0,0,{}
 	local packList={instance:FindFirstChild('Building'),instance:FindFirstChild('Tool'),instance:FindFirstChild('Gui')}
 	for _,model in ipairs(packList) do if model then local descendants=model:GetDescendants() for _,value in ipairs(descendants) do if value:IsA('MeshPart') then maxProgress+=1 TableInsert(meshParts,value) end end end end
@@ -2224,11 +2226,6 @@ function Module:Add()
 		GuiCache[GuiTarget]=true 
 		GuiTarget=nil
 		if not GrabTypeCache[GrabType] then GrabTypeCache[GrabType]=true end
-	elseif GrabType=='Animation' then
-		if not RecordAnimTarget then self:SetStatus(1,'Animation Target Has Empty',2) return end
-		table.insert(AnimCache,RecordAnimTarget)
-		RecordAnimTarget=nil
-		if not GrabTypeCache[GrabType] then GrabTypeCache[GrabType]=true end
 	else
 		if GrabTypeCache[GrabType] then self:SetStatus(1,'Already Added',2) return end GrabTypeCache[GrabType]=true
 	end
@@ -2255,9 +2252,9 @@ end
 
 function Module:Stop()
 	if GrabType=='Building' then
-		local target=BuildingTarget
-		if not (target and target.Parent) then self:SetStatus(1,'No Building Target',2) return end
-		local animators=GetAnimators(target)
+		local model=BuildingTarget
+		if not IsAlive(model) then self:SetStatus(1,'No Building Target',2) return end
+		local animators=model:QueryDescendants('Animator')
 		if not next(animators) then self:SetStatus(1,'Animator not found',2) return end
 		for i,k in ipairs(animators) do local playingTracks=k:GetPlayingAnimationTracks() for j,v in ipairs(playingTracks) do v.TimePosition=0 v:Stop() end end
 		self:SetStatus(1,'Stop Complete',2)
@@ -2268,9 +2265,10 @@ function Module:Record()
 	if GrabType=='Animation' then
 		if IsRecordAnim then self:SetStatus(1,'Waiting',2) return end
 		local model=BuildingTarget
-		if not (model and model.Parent) then self:SetStatus(1,'No Building Target',2) return end
-		local animators=GetAnimators(model)
-	    local animator=animators[1]
+		if not IsAlive(model) then self:SetStatus(1,'No Building Target',2) return end
+		local animators=model:QueryDescendants('Animator')
+		if not next(animators) then self:SetStatus(1,'Animator not found',2) return end
+		local animator=animators[1]
 		if not animator then self:SetStatus(1,'Animator not found',2) return end
 		if RecordAnimType=='None' then
 			self:SetStatus(1,'An Error Occured',2)
@@ -2278,10 +2276,9 @@ function Module:Record()
 		end
 		-- 1. Cari animasi yang sedang aktif/berjalan
 		local playingTracks=animator:GetPlayingAnimationTracks()
-		if #playingTracks==0 then return end
+		if #playingTracks==0 then self:SetStatus(1,'No Animation Playing',2) return end
 		if IsRecordAnim then return end
 		IsRecordAnim=true
-		RecordAnimTarget=nil
 		local fpsMode,recordAnimMode=FPSType,RecordAnimType
 		local targetTrack=playingTracks[1]
 		local duration=targetTrack.Length
@@ -2299,21 +2296,16 @@ function Module:Record()
 		keyframeSequence.Name='Record_' .. os.time()
 		keyframeSequence.Parent=animSaves
 		local bones,motors={},{}
-		if recordAnimMode=='Bone' then
-			bones=GetBones(model)
-		else
-			motors=GetMotors(model)
-		end
+		if recordAnimMode=='Bone' then bones=model:QueryDescendants('Bone') else motors=model:QueryDescendants('Motor6D') end
 		local startTime=os.clock()
 		-- 4. Loop Perekaman sesuai durasi targetTrack
 		-- Kita reset waktu animasi ke 0 agar terekam dari awal jika perlu
 		targetTrack.TimePosition=0 
 		-- FPS untuk hasil yang lebih halus
-		local frameRate=FPSRateData[fpsMode] or 1/30
-		local elapsed=0
+		local frameRate,elapsed=FPSRateData[fpsMode] or 1/30,0
 		-- Menggunakan Heartbeat agar sinkron dengan frame game
 		RecordAnimConnection=RunService.Stepped:Connect(function()
-			if not model.Parent then if IsRecordAnim then IsRecordAnim=false if RecordAnimConnection then RecordAnimConnection:Disconnect() RecordAnimTarget=nil RecordAnimConnection=nil end Module:SetStatus(1,'Record Failed',2) end end
+			if not IsAlive(model) then if IsRecordAnim then IsRecordAnim=false if RecordAnimConnection then RecordAnimConnection:Disconnect() RecordAnimConnection=nil end Module:SetStatus(1,'Record Failed',2) end end
 			elapsed=if fpsMode=='Unlimited' then os.clock()-startTime else elapsed+frameRate
 			if elapsed<=duration then
 				StatusLabel.Text='Recording...'
@@ -2327,7 +2319,7 @@ function Module:Record()
 				keyframe.Parent=keyframeSequence
 			else
 				-- Berhenti jika durasi habis
-				if IsRecordAnim then IsRecordAnim=false if RecordAnimConnection then RecordAnimConnection:Disconnect() RecordAnimConnection=nil end RecordAnimTarget=animSaves Module:SetStatus(1,'Record Complete',2) end
+				if IsRecordAnim then IsRecordAnim=false if RecordAnimConnection then RecordAnimConnection:Disconnect() RecordAnimConnection=nil end  Module:SetStatus(1,'Record Complete',2) end
 			end
 		end)
 	end
@@ -2350,7 +2342,7 @@ end
 -- Grab Building
 do
 	Cache.MouseButton1Down=Mouse.Button1Down:Connect(function()
-		if not IsInput and GrabType=='Building' or GrabType=='Animation' then 
+		if not IsInput and IsStrings(GrabType,{'Building','Animation'}) then 
 			local target=Mouse.Target
 			if target then
 				BuildingIndex=0
@@ -2386,7 +2378,7 @@ end
 StatusLabel=Window:AddContext({Type='TextLabel',Name='Status'})
 LoaderLabel=Window:AddContext({Type='TextLabel',Name='(0/0) 0%'})
 -- Selector UI
-SelectorButton=Window:AddContext({Type='Selector',Options=GrabTypeList,Value=GrabTypeList[1],NoCap=true,Callback=function(value,key) GrabType=value Module:SetUpdate(3) end})
+SelectorGrabTypeButton=Window:AddContext({Type='Selector',Options=GrabTypeList,Value=GrabTypeList[1],NoCap=true,Callback=function(value,key) GrabType=value Module:SetUpdate(3) end})
 SelectorAnimationButton=Window:AddContext({Type='Selector',Options=RecordAnimTypeList,Value=RecordAnimTypeList[1],NoCap=true,Callback=function(value,key) RecordAnimType=value end})
 SelectorAnimationButton.Template.Visible=false
 SelectorFPSButton=Window:AddContext({Type='Selector',Options=FPSTypeList,Value=FPSTypeList[1],NoCap=true,Callback=function(value,key) FPSType=value end})
@@ -2401,7 +2393,7 @@ TextBox=Window:AddContext({
 	Callback=function(text)
 		local amount=tonumber(text)
 		if amount then
-			if GrabType=='Building' or GrabType=='Animation' then 
+			if IsStrings(GrabType,{'Building','Animation'}) then 
 				TotalBuilding=MathMax(amount,0)
 				TextBox.Text=tostring(TotalBuilding)
 			end
@@ -2419,7 +2411,8 @@ RecordButton.BackgroundColor3=Color3FromRGB(91,154,76)
 RecordButton.Template.Visible=false 
 -- Reset UI
 StopButton=Window:AddContext({Type='TextButton',Name='Stop',Callback=function() Module:Stop() end})
-StopButton.BackgroundColor3=Color3FromRGB(255,89,89) StopButton.Template.Visible=false
+StopButton.BackgroundColor3=Color3FromRGB(255,89,89) 
+StopButton.Template.Visible=false
 -- Add UI
 AddButton=Window:AddContext({Type='TextButton',Name='Add',Options=GrabTypeList,Callback=function() Module:Add() end})
 AddButton.BackgroundColor3=Color3FromRGB(108,204,255)
@@ -2432,10 +2425,14 @@ InstalButton.BackgroundColor3=Color3FromRGB(91,154,76)
 -- Reset UI
 ResetButton=Window:AddContext({Type='TextButton',Name='Reset',Callback=function() Module:Reset() end})
 ResetButton.BackgroundColor3=Color3FromRGB(255,89,89)
+ResetButton.Template.Visible=true 
 -- Destroy UI
 DestroyButton=Window:AddContext({Type='TextButton',Name='Destroy',Callback=function() Module:Destroy() end})
 DestroyButton.BackgroundColor3=Color3FromRGB(255,124,16)
+DestroyButton.Template.Visible=true 
 local VersionLabel=Window:AddContext({Type='TextLabel',Name='Version: '..VERSION})
-if UI.LoadConfiguration then UI:LoadConfiguration() end
 Module.Parent=true
-Notify(PLUGIN_NAME,PLUGIN_NAME..' Loaded')
+
+if Window.LoadConfiguration then Window:LoadConfiguration() end
+
+UI:Notify(PLUGIN_NAME,`{PLUGIN_NAME} Loaded`,10)
