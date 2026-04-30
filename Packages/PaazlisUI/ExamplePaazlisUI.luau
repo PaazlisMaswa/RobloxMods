@@ -1,5 +1,5 @@
 local UI=loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/PaazlisUI/init.luau'))()
-
+warn("load example PaazlisUI")
 local Window=UI:CreateWindow({
 	Title='Panel',
 })
