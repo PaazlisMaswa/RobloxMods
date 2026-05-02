@@ -19,7 +19,7 @@ local KeySystemUI=UILibrary:CreateKeySystem({
 	Title          ="Panel", -- The main title shown at the top of the GUI
 	Description    ="Key System", -- The text shown below the title
 	UseNonce       =true, -- To prevent replay attacks and request tampering, default: false
-	FileName       ="Mykey.txt", -- The name of the file where the valid key will be saved for auto-login
+	FileName       ="InstalKey.txt", -- The name of the file where the valid key will be saved for auto-login
 
 	-- [1] PlatoBoost Settings
 	ServiceId      =24751, -- Your PlatoBoost Service ID
