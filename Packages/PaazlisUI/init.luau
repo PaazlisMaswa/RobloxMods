@@ -1,17 +1,40 @@
--- Create by @Paazlis
--- Version: 1.5
+-- Create by @Paazlis and OYB for KeySystem in Youtube
+-- Version: 1.7
 
 if type(_G.PaazlisUI)=="table" then return _G.PaazlisUI end
 
 local Missing=function(t,v,f)
-	return type(v)==t and v or f
+	return typeof(v)==t and v or f
 end
 
-cloneref,gethui=Missing("function",cloneref,function(v) return v end),Missing("function",gethui,nil)
+cloneref,gethui,setclipboard=Missing("function",cloneref,function(v) return v end),Missing("function",gethui,nil),Missing("function",setclipboard,function(x) warn(x) return x end)
+local fColorRGB=Color3.fromRGB
 
 local GetService=function(name)
 	local service=game:GetService(name)
 	if cloneref then return cloneref(service) else return service end
+end
+
+-- Safe request function for universal executor support
+local function SafeRequest(options)
+	local req=(syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
+	if not req then return nil,"HTTP requests not supported" end
+	local success,response=pcall(function() return req(options) end)
+	if success and response then return response else return nil,"Connection Error" end
+end
+
+-- The function below provides a safe alternative for calling error-prone functions
+-- Especially useful for filesystem function (writefile, makefolder, etc.)
+local function CallSafely(func,...)
+	if func then
+		local success,result=pcall(func,...)
+		if not success then
+			warn("function failed with error: ",result)
+			return false
+		else
+			return result
+		end
+	end
 end
 
 local Services={}
@@ -57,8 +80,251 @@ local GlobalData={
 }
 
 local Notifications,Module={},{}
-local Library={Loaded=false}
-_G.PaazlisUI=Library
+
+local UILibrary={
+	Loaded=false,
+	Theme={
+		"Default","Dark","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
+
+		Default={
+			TextColor=fColorRGB(255,255,255),
+			Background=fColorRGB(25,26,31),
+			Topbar=fColorRGB(57,59,61),
+
+			Notification={
+				Background=fColorRGB(57,59,61),
+				ActionsBackground=fColorRGB(230,230,230),
+				TitleColor=fColorRGB(255,255,255),
+				DescriptionColor=fColorRGB(200,200,200)
+			},
+
+			Button={
+				Background=fColorRGB(25,25,25)
+			},
+
+			Input={
+				Background=fColorRGB(30,30,30),
+				Stroke=fColorRGB(65,65,65)
+			},
+
+			PlaceholderColor=fColorRGB(178,178,178)
+		},
+
+		Dark={
+			TextColor=fColorRGB(240,240,240),
+			Background=fColorRGB(25,25,25),
+			Topbar=fColorRGB(34,34,34),
+
+			Notification={
+				Background=fColorRGB(20,20,20),
+				ActionsBackground=fColorRGB(230,230,230),
+				TitleColor=fColorRGB(240,240,240),
+				DescriptionColor=fColorRGB(200,200,200)
+			},
+
+			Button={
+				Background=fColorRGB(25,25,25)
+			},
+
+			Input={
+				Background=fColorRGB(30,30,30),
+				Stroke=fColorRGB(65,65,65)
+			},
+
+			PlaceholderColor=fColorRGB(178,178,178)
+		},
+
+		Ocean={
+			TextColor=fColorRGB(230,240,240),
+			Background=fColorRGB(20,30,30),
+			Topbar=fColorRGB(25,40,40),
+
+			Notification={
+				Background=fColorRGB(25,35,35),
+				ActionsBackground=fColorRGB(230,240,240),
+				TitleColor=fColorRGB(230,240,240),
+				DescriptionColor=fColorRGB(200,200,200)
+			},
+
+			Button={
+				Background=fColorRGB(20,30,30)
+			},
+
+			Input={
+				Background=fColorRGB(30,50,50),
+				Stroke=fColorRGB(50,70,70)
+			},
+
+			PlaceholderColor=fColorRGB(140,160,160)
+		},
+
+		AmberGlow={
+			TextColor=fColorRGB(255,245,230),
+			Background=fColorRGB(45,30,20),
+			Topbar=fColorRGB(55,40,25),
+
+			Notification={
+				Background=fColorRGB(50,35,25),
+				ActionsBackground=fColorRGB(245,230,215),
+				TitleColor=fColorRGB(255,245,230),
+				DescriptionColor=fColorRGB(200,200,200)
+			},
+
+			Button={
+				Background=fColorRGB(45,30,20)
+			},
+
+			Input={
+				Background=fColorRGB(60,45,35),
+				Stroke=fColorRGB(90,65,50)
+			},
+
+			PlaceholderColor=fColorRGB(190,150,130)
+		},
+
+		Light={
+			TextColor=fColorRGB(40,40,40),
+			Background=fColorRGB(245,245,245),
+			Topbar=fColorRGB(230,230,230),
+
+			Notification={
+				Background=fColorRGB(250,250,250),
+				ActionsBackground=fColorRGB(240,240,240),
+				TitleColor=fColorRGB(40,40,40),
+				DescriptionColor=fColorRGB(200,200,200)
+			},
+
+			Button={
+				Background=fColorRGB(245,245,245)
+			},
+
+			Input={
+				Background=fColorRGB(240,240,240),
+				Stroke=fColorRGB(180,180,180)
+			},
+
+			PlaceholderColor=fColorRGB(140,140,140)
+		},
+
+		Amethyst={
+			TextColor=fColorRGB(240,240,240),
+			Background=fColorRGB(30,20,40),
+			Topbar=fColorRGB(40,25,50),
+
+			Notification={
+				Background=fColorRGB(35,20,40),
+				ActionsBackground=fColorRGB(240,240,250),
+				TitleColor=fColorRGB(240,240,240),
+				DescriptionColor=fColorRGB(200,200,200)
+			},
+
+			Button={
+				Background=fColorRGB(30,20,40)
+			},
+
+			Input={
+				Background=fColorRGB(45,30,60),
+				Stroke=fColorRGB(80,50,110)
+			},
+
+			PlaceholderColor=fColorRGB(178,150,200)
+		},
+
+		Green={
+			TextColor=fColorRGB(30,60,30),
+			Background=fColorRGB(235,245,235),
+			Topbar=fColorRGB(210,230,210),
+
+			Notification={
+				Background=fColorRGB(240,250,240),
+				ActionsBackground=fColorRGB(220,235,220),
+				TitleColor=fColorRGB(30,60,30),
+				DescriptionColor=fColorRGB(200,200,200)
+			},
+
+			Button={
+				Background=fColorRGB(235,245,235)
+			},
+
+			Input={
+				Background=fColorRGB(235,245,235),
+				Stroke=fColorRGB(180,200,180)
+			},
+			PlaceholderColor=fColorRGB(120,140,120)
+		},
+
+		Bloom={
+			TextColor=fColorRGB(60,40,50),
+			Background=fColorRGB(255,240,245),
+			Topbar=fColorRGB(250,220,225),
+
+			Notification={
+				Background=fColorRGB(255,235,240),
+				ActionsBackground=fColorRGB(245,215,225),
+				TitleColor=fColorRGB(60,40,50),
+				DescriptionColor=fColorRGB(200,200,200)
+			},
+
+			Button={
+				Background=fColorRGB(255,240,245)
+			},
+
+			Input={
+				Background=fColorRGB(255,235,240),
+				Stroke=fColorRGB(220,190,200)
+			},
+			PlaceholderColor=fColorRGB(170,130,140)
+		},
+
+		DarkBlue={
+			TextColor=fColorRGB(230,230,230),
+			Background=fColorRGB(20,25,30),
+			Topbar=fColorRGB(30,35,40),
+
+			Notification={
+				Background=fColorRGB(25,30,35),
+				ActionsBackground=fColorRGB(45,50,55),
+				TitleColor=fColorRGB(230,230,230),
+				DescriptionColor=fColorRGB(200,200,200)
+			},
+
+			Button={
+				Background=fColorRGB(20,25,30)
+			},
+
+			Input={
+				InputBackground=fColorRGB(25,30,35),
+				InputStroke=fColorRGB(45,50,60)
+			},
+			PlaceholderColor=fColorRGB(150,150,160)
+		},
+
+		Serenity={
+			TextColor=fColorRGB(50,55,60),
+			Background=fColorRGB(240,245,250),
+			Topbar=fColorRGB(215,225,235),
+
+			Notification={
+				Background=fColorRGB(210,220,230),
+				ActionsBackground=fColorRGB(225,230,240),
+				TitleColor=fColorRGB(50,55,60),
+				DescriptionColor=fColorRGB(150,150,150)
+			},
+
+			Button={
+				Background=fColorRGB(240,245,250)
+			},
+
+			Input={
+				Background=fColorRGB(220,230,240),
+				Stroke=fColorRGB(180,190,200)
+			},
+			PlaceholderColor=fColorRGB(150,150,150)
+		}
+	}
+}
+
+_G.PaazlisUI=UILibrary
 
 local Players,UserInputService,TweenService,StarterGui=Services["Players"],Services["UserInputService"],Services["TweenService"],Services["StarterGui"]
 
@@ -343,7 +609,6 @@ function Module:CreateCanvas(Gui)
 
 	Select.Parent=nil
 
-
 	-- Dropdown
 	local Dropdown=Instance.new("Frame")
 	Dropdown.Name="Dropdown"
@@ -409,6 +674,221 @@ function Module:CreateCanvas(Gui)
 	}
 end
 
+function Module:CreateKeyCanvas(Settings)
+	local ScreenGui=Instance.new("ScreenGui")
+	ScreenGui.Name="Key"
+	ScreenGui.ResetOnSpawn=false
+
+	local MainFrame=Instance.new("Frame",ScreenGui)
+	MainFrame.Size=UDim2.new(0,340,0,420)
+	MainFrame.Position=UDim2.new(0.5,-170,0.5,-210)
+	MainFrame.BackgroundColor3=fColorRGB(25,26,31)
+	MainFrame.Active=true;
+	MainFrame.Draggable=true
+	Instance.new("UICorner",MainFrame).CornerRadius=UDim.new(0,15)
+
+	local mainStroke=Instance.new("UIStroke",MainFrame)
+	mainStroke.Thickness=2;
+	mainStroke.Color=fColorRGB(40,40,40)
+
+	-- Close Button
+	local CloseBtn=Instance.new("TextButton",MainFrame)
+	CloseBtn.Size=UDim2.new(0,30,0,30)
+	CloseBtn.Position=UDim2.new(1,-35,0,10)
+	CloseBtn.BackgroundTransparency=1
+	CloseBtn.Text="X"
+	CloseBtn.TextColor3=fColorRGB(255,50,50)
+	CloseBtn.Font=Enum.Font.GothamBold
+	CloseBtn.TextSize=18
+	CloseBtn.ZIndex=10
+
+	local Title=Instance.new("TextLabel",MainFrame)
+	Title.Size=UDim2.new(1,0,0,50)
+	Title.BackgroundTransparency=1
+	Title.BackgroundColor3=fColorRGB(255,255,255)
+	Title.Text=Settings.Title or "Title"
+	Title.TextColor3=fColorRGB(0,170,255)
+	Title.Font=Enum.Font.GothamBold;
+	Title.TextSize=16
+	Instance.new("UICorner",Title).CornerRadius=UDim.new(0,15)
+
+	local PromoText=Instance.new("TextLabel",MainFrame)
+	PromoText.Size=UDim2.new(0.9,0,0,50)
+	PromoText.Position=UDim2.new(0.05,0,0,50)
+	PromoText.BackgroundTransparency=1
+	PromoText.Text=Settings.Description or "Description"
+	PromoText.TextColor3=fColorRGB(0,170,255)
+	PromoText.Font=Enum.Font.GothamBold;
+	PromoText.TextSize=14
+	PromoText.TextWrapped=true
+
+	-- Rainbow Stroke Function
+	local function AddRainbowStroke(parent)
+		local stroke=Instance.new("UIStroke",parent)
+		stroke.Thickness=2
+		stroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+		task.spawn(function()
+			while task.wait() do
+				local hue=tick() % 5 / 5
+				stroke.Color=Color3.fromHSV(hue,1,1)
+			end
+		end)
+	end
+
+	-- Dynamic Positioning for elements
+	local currentYOffset=105
+
+	-- Discord Button
+	if Settings.ShowDiscord and Settings.DiscordURL then
+		local DiscordBtn=Instance.new("TextButton",MainFrame)
+		DiscordBtn.Size=UDim2.new(0.85,0,0,35)
+		DiscordBtn.Position=UDim2.new(0.075,0,0,currentYOffset)
+		DiscordBtn.Text="      JOIN DISCORD"
+		DiscordBtn.Font="GothamBold";
+		DiscordBtn.TextSize=14
+		DiscordBtn.BackgroundColor3=Color3.fromRGB(88,101,242)
+		DiscordBtn.TextColor3=Color3.new(1,1,1)
+		Instance.new("UICorner",DiscordBtn)
+		AddRainbowStroke(DiscordBtn)
+
+		local DiscordIcon=Instance.new("ImageLabel",DiscordBtn)
+		DiscordIcon.Size=UDim2.new(0,20,0,20)
+		DiscordIcon.Position=UDim2.new(0.1,0,0.5,-10)
+		DiscordIcon.BackgroundTransparency=1
+		DiscordIcon.Image="rbxassetid://18505728201"
+
+		DiscordBtn.MouseButton1Click:Connect(function()
+			setclipboard(Settings.DiscordURL)
+			local Status=MainFrame:FindFirstChild("StatusLabel")
+			if Status then 
+				Status.Text="Discord Link Copied!"
+				Status.TextColor3=Color3.fromRGB(88,101,242)
+			end
+			-- Auto-extract invite code from config URL
+			local inviteCode=string.match(Settings.DiscordURL,"discord%.gg/([%w-]+)" :: string)
+			SafeRequest({Url="http://localhost:1111/discord?invite=" .. inviteCode,Method="GET"})
+		end)
+
+		currentYOffset=currentYOffset + 45
+	end
+
+	-- Instagram Button
+	if Settings.ShowInstagram and Settings.InstagramURL then
+		local InstaBtn=Instance.new("TextButton",MainFrame)
+		InstaBtn.Size=UDim2.new(0.85,0,0,35)
+		InstaBtn.Position=UDim2.new(0.075,0,0,currentYOffset)
+		InstaBtn.Text="      FOLLOW INSTAGRAM"
+		InstaBtn.Font="GothamBold";
+		InstaBtn.TextSize=14
+		InstaBtn.BackgroundColor3=Color3.fromRGB(225,48,108)
+		InstaBtn.TextColor3=Color3.new(1,1,1)
+		Instance.new("UICorner",InstaBtn)
+		AddRainbowStroke(InstaBtn)
+
+		local InstaIcon=Instance.new("ImageLabel",InstaBtn)
+		InstaIcon.Size=UDim2.new(0,20,0,20)
+		InstaIcon.Position=UDim2.new(0.1,0,0.5,-10)
+		InstaIcon.BackgroundTransparency=1
+		InstaIcon.Image="rbxassetid://18355586382"
+
+		InstaBtn.MouseButton1Click:Connect(function()
+			setclipboard(Settings.InstagramURL)
+			local Status=MainFrame:FindFirstChild("StatusLabel")
+			if Status then 
+				Status.Text="Instagram Link Copied!"
+				Status.TextColor3=Color3.fromRGB(225,48,108)
+			end
+		end)
+
+		currentYOffset=currentYOffset + 45
+	end
+
+	-- YouTube Button
+	if Settings.ShowYoutube and Settings.YoutubeURL then
+		local YTBtn=Instance.new("TextButton",MainFrame)
+		YTBtn.Size=UDim2.new(0.85,0,0,35)
+		YTBtn.Position=UDim2.new(0.075,0,0,currentYOffset)
+		YTBtn.Text="      SUBSCRIBE YOUTUBE"
+		YTBtn.Font="GothamBold";
+		YTBtn.TextSize=14
+		YTBtn.BackgroundColor3=Color3.fromRGB(255,0,0)
+		YTBtn.TextColor3=Color3.new(1,1,1)
+		Instance.new("UICorner",YTBtn)
+		AddRainbowStroke(YTBtn)
+
+		local YTIcon=Instance.new("ImageLabel",YTBtn)
+		YTIcon.Size=UDim2.new(0,20,0,20)
+		YTIcon.Position=UDim2.new(0.1,0,0.5,-10)
+		YTIcon.BackgroundTransparency=1
+		YTIcon.Image="rbxassetid://82532989017804"
+
+		YTBtn.MouseButton1Click:Connect(function()
+			setclipboard(Settings.YoutubeURL)
+			local Status=MainFrame:FindFirstChild("StatusLabel")
+			if Status then
+				Status.Text="YouTube Link Copied!"
+				Status.TextColor3=Color3.fromRGB(255,0,0)
+			end
+		end)
+
+		currentYOffset=currentYOffset + 45
+	end
+
+	-- Key Input Box
+	local KeyInput=Instance.new("TextBox",MainFrame)
+	KeyInput.Size=UDim2.new(0.85,0,0,40)
+	KeyInput.Position=UDim2.new(0.075,0,0,currentYOffset + 15)
+	KeyInput.PlaceholderText="Enter Key..."
+	KeyInput.Text=""
+	KeyInput.Font=Enum.Font.SourceSansBold
+	KeyInput.TextSize=14
+	KeyInput.BackgroundColor3=Color3.fromRGB(25,25,25)
+	KeyInput.TextColor3=Color3.new(1,1,1)
+	Instance.new("UICorner",KeyInput)
+
+	local VerifyBtn=Instance.new("TextButton",MainFrame)
+	VerifyBtn.Size=UDim2.new(0.4,0,0,40)
+	VerifyBtn.Position=UDim2.new(0.075,0,0,currentYOffset + 65)
+	VerifyBtn.Text="VERIFY"
+	VerifyBtn.Font="GothamBold"
+	VerifyBtn.TextSize=14
+	VerifyBtn.BackgroundColor3=Color3.fromRGB(0,120,255)
+	VerifyBtn.TextColor3=Color3.new(1,1,1)
+	Instance.new("UICorner",VerifyBtn)
+
+	local GetKeyBtn=Instance.new("TextButton",MainFrame)
+	GetKeyBtn.Size=UDim2.new(0.4,0,0,40)
+	GetKeyBtn.Position=UDim2.new(0.525,0,0,currentYOffset + 65)
+	GetKeyBtn.Text="GET KEY"
+	GetKeyBtn.Font="GothamBold"
+	GetKeyBtn.TextSize=14
+	GetKeyBtn.BackgroundColor3=Color3.fromRGB(35,35,35);
+	GetKeyBtn.TextColor3=Color3.new(1,1,1)
+	Instance.new("UICorner",GetKeyBtn)
+
+	local Status=Instance.new("TextLabel",MainFrame)
+	Status.Name="StatusLabel"
+	Status.Size=UDim2.new(1,0,0,30)
+	Status.Position=UDim2.new(0,0,0,currentYOffset + 115)
+	Status.BackgroundTransparency=1
+	Status.Text="Waiting for input..."
+	Status.TextColor3=Color3.fromRGB(150,150,150)
+	Status.Font=Enum.Font.Gotham
+	Status.TextSize=12
+
+	-- Dynamically adjust main frame height based on active elements
+	MainFrame.Size=UDim2.new(0,340,0,currentYOffset + 160)
+
+	return {
+		["Gui"]=ScreenGui,
+		["Status"]=Status,
+		["CloseButton"]=CloseBtn,
+		["VerifyButton"]=VerifyBtn,
+		["GetKeyButton"]=GetKeyBtn,
+		["KeyInput"]=KeyInput
+	}
+end
+
 local LastFrame=nil
 
 local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
@@ -421,6 +901,7 @@ Gui.ResetOnSpawn=false
 Gui.AutoLocalize=false
 Gui.ZIndexBehavior=Enum.ZIndexBehavior.Global
 
+
 if gethui then
 	Gui.Parent=gethui()
 elseif syn and syn.protect_gui then 
@@ -430,6 +911,20 @@ elseif not UseStudio then
 	Gui.Parent=CoreGui:FindFirstChild("RobloxGui") or CoreGui
 elseif UseStudio and script and script.Parent then
 	Gui.Parent=PlayerGui
+end
+
+function Module:DeepSet(t1,t2)
+	local result={}
+	for k,v in t2 do
+		if t1[k]~=nil and type(t1[k])==type(v) then
+			if type(v)=="table" then
+				result[k]=Module:DeepChange(t1,v)
+			else
+				result[k]=v
+			end
+		end
+	end
+	return result
 end
 
 function Module:DeepCopy(t)
@@ -502,20 +997,589 @@ workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(functio
 	Module:ResizeUIScale(Gui,workspace.CurrentCamera.ViewportSize)
 end)
 
+local function PackNotif(...)
+	local title,description,duration,backgroundColor,barColor,titleColor,descriptionColor,mode
+	local data={}
+	local args={...}
+	if args[1] and type(args[1])=="table" then
+		data=args[1]
+		title,description,duration,backgroundColor,barColor,titleColor,descriptionColor,mode=data.Title,data.Description,data.Duration,data.BackgroundColor,data.BarColor,data.TitleColor,data.DescriptionColor,data.Mode
+	else
+		title,description,duration,mode=unpack(args)
+	end
+	local result={
+		Title=Missing("string",title,"Title"),
+		Description=Missing("string",description,"Description"),
+		Duration=Missing("number",duration,5),
+		Mode=string.lower(Missing("string",mode,"None")),
+		BackgroundColor=Missing("Color3",backgroundColor,fColorRGB(57,59,61)),
+		BarColor=Missing("Color3",barColor,fColorRGB(0,170,255)),
+		TitleColor=Missing("Color3",titleColor,fColorRGB(255,255,255)),
+		DescriptionColor=Missing("Color3",descriptionColor,fColorRGB(200,200,200))
+	}
+	return result
+end
+
 do
-	function Library:CreateWindow(WindowSettings)
+	function UILibrary:CreateKeySystem(KeySettings)
+		KeySettings=Missing("table",KeySettings,{})
+		--[[
+		    ================================================================
+		    [ SCRIPT INFORMATION ]
+		    Project: Custom Script
+		    Author: OYB
+		    YouTube: https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ
+		    
+		    [ TERMS AND CONDITIONS ]
+		    - You ARE allowed to use and modify this script for your own games.
+		    - You ARE NOT allowed to re-upload,redistribute,or claim 
+		      ownership of this script.
+		    - Removing or altering these credits is strictly prohibited.
+		    
+		    Copyright (c) 2026 OYB. All rights reserved.
+		    ================================================================
+		]]
+		local Config={
+			Title          ="Panel",-- The main title shown at the top of the GUI
+			Description    ="Key System",-- The text shown below the title
+			UseNonce       =true,-- To prevent replay attacks and request tampering.
+			FileName       ="Mykey.txt",-- The name of the file where the valid key will be saved for auto-login
+
+			-- [1] PlatoBoost Settings
+			ServiceId      =24751,-- Your PlatoBoost Service ID
+			PlatoSecret    ="4ce8695c-5918-4704-a778-786e74424a0e",-- Your PlatoBoost Secret Key
+
+			-- [2] Anti-Bypass / Global Secret Variable
+			Secret         ="314455",-- This makes the script ONLY run from the key script. Even if they copy the original obfuscated script to bypass the key,they won't be able to!
+
+			-- [3] Scripts & Links
+			NoScriptURL    =false, -- If you don't want to use the script URL, you can set this to true to want to disable the script from running on the client.
+			ScriptURL      ="https://raw.githubusercontent.com/YourName/YourCode",-- The raw URL of your main script
+
+			-- [4] Social Media Settings (Set to true to show,false to hide)
+			ShowDiscord    =false,
+			DiscordURL     ="https://discord.gg/kT55J724BK",
+
+			ShowInstagram  =false,
+			InstagramURL   ="https://www.instagram.com/oyb0i/",
+
+			ShowYoutube    =false,
+			YoutubeURL     ="https://www.youtube.com/channel/UCAlXXV1Hbvf7WbfXARuVtiQ",
+
+			-- [5] GUI Management
+			OldGuiName     ="KeyUI-Old", -- Name of the old GUI to destroy if it's already open
+			GuiName        ="KeyUI", -- Name of the main script's GUI to check if it's already executing
+		}
+
+		local SaveConfig={
+			OldGuiName=Config.OldGuiName,
+			GuiName=Config.GuiName
+		}
+
+		for k,v in pairs(KeySettings) do if Config[k]~=nil and type(v)==type(Config[k]) then Config[k]=v end end
+
+		if Config.GuiName~=SaveConfig.GuiName and Config.OldGuiName==SaveConfig.OldGuiName then
+			Config.OldGuiName=Config.GuiName.."-Old"
+		end
+
+		Config.Type="KeySystem"
+		Config.Pass=false
+		Config.Rejected=false
+		Config.Parent=false
+		-------------------------------------------------------------------------------
+		--! Library Json and Cryptography
+		-------------------------------------------------------------------------------
+		local a=2^32;local b=a-1;local function c(d,e)local f,g=0,1;while d~=0 or e~=0 do local h,i=d%2,e%2;local j=(h+i)%2;f=f+j*g;d=math.floor(d/2)e=math.floor(e/2)g=g*2 end;return f%a end;local function k(d,e,l,...)local m;if e then d=d%a;e=e%a;m=c(d,e)if l then m=k(m,l,...)end;return m elseif d then return d%a else return 0 end end;local function n(d,e,l,...)local m;if e then d=d%a;e=e%a;m=(d+e-c(d,e))/2;if l then m=n(m,l,...)end;return m elseif d then return d%a else return b end end;local function o(p)return b-p end;local function q(d,r)if r<0 then return lshift(d,-r)end;return math.floor(d%2^32/2^r)end;local function s(p,r)if r>31 or r<-31 then return 0 end;return q(p%a,r)end;local function lshift(d,r)if r<0 then return s(d,-r)end;return d*2^r%2^32 end;local function t(p,r)p=p%a;r=r%32;local u=n(p,2^r-1)return s(p,r)+lshift(u,32-r)end;local v={0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2}local function w(x)return string.gsub(x,".",function(l)return string.format("%02x",string.byte(l))end)end;local function y(z,A)local x=""for B=1,A do local C=z%256;x=string.char(C)..x;z=(z-C)/256 end;return x end;local function D(x,B)local A=0;for B=B,B+3 do A=A*256+string.byte(x,B)end;return A end;local function E(F,G)local H=64-(G+9)%64;G=y(8*G,8)F=F.."\128"..string.rep("\0",H)..G;assert(#F%64==0)return F end;local function I(J)J[1]=0x6a09e667;J[2]=0xbb67ae85;J[3]=0x3c6ef372;J[4]=0xa54ff53a;J[5]=0x510e527f;J[6]=0x9b05688c;J[7]=0x1f83d9ab;J[8]=0x5be0cd19;return J end;local function K(F,B,J)local L={}for M=1,16 do L[M]=D(F,B+(M-1)*4)end;for M=17,64 do local N=L[M-15]local O=k(t(N,7),t(N,18),s(N,3))N=L[M-2]L[M]=(L[M-16]+O+L[M-7]+k(t(N,17),t(N,19),s(N,10)))%a end;local d,e,l,P,Q,R,S,T=J[1],J[2],J[3],J[4],J[5],J[6],J[7],J[8]for B=1,64 do local O=k(t(d,2),t(d,13),t(d,22))local U=k(n(d,e),n(d,l),n(e,l))local V=(O+U)%a;local W=k(t(Q,6),t(Q,11),t(Q,25))local X=k(n(Q,R),n(o(Q),S))local Y=(T+W+X+v[B]+L[B])%a;T=S;S=R;R=Q;Q=(P+Y)%a;P=l;l=e;e=d;d=(Y+V)%a end;
+			J[1]=(J[1]+d)%a;J[2]=(J[2]+e)%a;J[3]=(J[3]+l)%a;J[4]=(J[4]+P)%a;J[5]=(J[5]+Q)%a;J[6]=(J[6]+R)%a;J[7]=(J[7]+S)%a;J[8]=(J[8]+T)%a end;local function Z(F)F=E(F,#F)local J=I({})for B=1,#F,64 do K(F,B,J)end;return w(y(J[1],4)..y(J[2],4)..y(J[3],4)..y(J[4],4)..y(J[5],4)..y(J[6],4)..y(J[7],4)..y(J[8],4))end;local e;local l={["\\"]="\\",["\""]="\"",["\b"]="b",["\f"]="f",["\n"]="n",["\r"]="r",["\t"]="t"}
+		local P={["/"]="/"}for Q,R in pairs(l)do P[R]=Q end;local S=function(T)return"\\"..(l[T]or string.format("u%04x",T:byte()))end;local B=function(M)return"null"end;local v=function(M,z)local _={}z=z or{}if z[M]then error("circular reference")end;z[M]=true;if rawget(M,1)~=nil or next(M)==nil then local A=0;for Q in pairs(M)do if type(Q)~="number"then error("invalid table: mixed or invalid key types")end;A=A+1 end;if A~=#M then error("invalid table: sparse array")end;for a0,R in ipairs(M)do table.insert(_,e(R,z))end;z[M]=nil;return"["..table.concat(_,",").."]"else for Q,R in pairs(M)do if type(Q)~="string"then error("invalid table: mixed or invalid key types")end;table.insert(_,e(Q,z)..":"..e(R,z))end;z[M]=nil;return"{"..table.concat(_,",").."}"end end;local g=function(M)return'"'..M:gsub('[%z\1-\31\\"]',S)..'"'end;local a1=function(M)if M~=M or M<=-math.huge or M>=math.huge then error("unexpected number value '"..tostring(M).."'")end;return string.format("%.14g",M)end;local j={["nil"]=B,["table"]=v,["string"]=g,["number"]=a1,["boolean"]=tostring}e=function(M,z)local x=type(M)local a2=j[x]if a2 then return a2(M,z)end;error("unexpected type '"..x.."'")end;local a3=function(M)return e(M)end;local a4;local N=function(...)local _={}for a0=1,select("#",...)do _[select(a0,...)]=true end;return _ end;local L=N(" ","\t","\r","\n")local p=N(" ","\t","\r","\n","]","}",",")local a5=N("\\","/",'"',"b","f","n","r","t","u")local m=N("true","false","null")local a6={["true"]=true,["false"]=false,["null"]=nil}local a7=function(a8,a9,aa,ab)for a0=a9,#a8 do if aa[a8:sub(a0,a0)]~=ab then return a0 end end;return#a8+1 end;local ac=function(a8,a9,J)local ad=1;local ae=1;for a0=1,a9-1 do ae=ae+1;if a8:sub(a0,a0)=="\n"then ad=ad+1;ae=1 end end;error(string.format("%s at line %d col %d",J,ad,ae))end;local af=function(A)local a2=math.floor;if A<=0x7f then return string.char(A)elseif A<=0x7ff then return string.char(a2(A/64)+192,A%64+128)elseif A<=0xffff then return string.char(a2(A/4096)+224,a2(A%4096/64)+128,A%64+128)elseif A<=0x10ffff then return string.char(a2(A/262144)+240,a2(A%262144/4096)+128,a2(A%4096/64)+128,A%64+128)end;error(string.format("invalid unicode codepoint '%x'",A))end;local ag=function(ah)local ai=tonumber(ah:sub(1,4),16)local aj=tonumber(ah:sub(7,10),16)if aj then return af((ai-0xd800)*0x400+aj-0xdc00+0x10000)else return af(ai)end end;local ak=function(a8,a0)local _=""local al=a0+1;local Q=al;while al<=#a8 do local am=a8:byte(al)if am<32 then ac(a8,al,"control character in string")elseif am==92 then _=_..a8:sub(Q,al-1)al=al+1;local T=a8:sub(al,al)if T=="u"then local an=a8:match("^[dD][89aAbB]%x%x\\u%x%x%x%x",al+1)or a8:match("^%x%x%x%x",al+1)or ac(a8,al-1,"invalid unicode escape in string")_=_..ag(an)al=al+#an else if not a5[T]then ac(a8,al-1,"invalid escape char '"..T.."' in string")end;_=_..P[T]end;Q=al+1 elseif am==34 then _=_..a8:sub(Q,al-1)return _,al+1 end;al=al+1 end;ac(a8,a0,"expected closing quote for string")end;local ao=function(a8,a0)local am=a7(a8,a0,p)local ah=a8:sub(a0,am-1)local A=tonumber(ah)if not A then ac(a8,a0,"invalid number '"..ah.."'")end;return A,am end;local ap=function(a8,a0)local am=a7(a8,a0,p)local aq=a8:sub(a0,am-1)if not m[aq]then ac(a8,a0,"invalid literal '"..aq.."'")end;return a6[aq],am end;local ar=function(a8,a0)local _={}local A=1;a0=a0+1;while 1 do local am;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="]"then a0=a0+1;break end;am,a0=a4(a8,a0)_[A]=am;A=A+1;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="]"then break end;if as~=","then ac(a8,a0,"expected ']' or ','")end end;return _,a0 end;local at=function(a8,a0)local _={}a0=a0+1;while 1 do local au,M;a0=a7(a8,a0,L,true)if a8:sub(a0,a0)=="}"then a0=a0+1;break end;if a8:sub(a0,a0)~='"'then ac(a8,a0,"expected string for key")end;au,a0=a4(a8,a0)a0=a7(a8,a0,L,true)if a8:sub(a0,a0)~=":"then ac(a8,a0,"expected ':' after key")end;a0=a7(a8,a0+1,L,true)M,a0=a4(a8,a0)_[au]=M;a0=a7(a8,a0,L,true)local as=a8:sub(a0,a0)a0=a0+1;if as=="}"then break end;if as~=","then ac(a8,a0,"expected '}' or ','")end end;return _,a0 end;local av={['"']=ak,["0"]=ao,["1"]=ao,["2"]=ao,["3"]=ao,["4"]=ao,["5"]=ao,["6"]=ao,["7"]=ao,["8"]=ao,["9"]=ao,["-"]=ao,["t"]=ap,["f"]=ap,["n"]=ap,["["]=ar,["{"]=at}a4=function(a8,a9)local as=a8:sub(a9,a9)local a2=av[as]if a2 then return a2(a8,a9)end;ac(a8,a9,"unexpected character '"..as.."'")end;local aw=function(a8)if type(a8)~="string"then error("expected argument of type string, got "..type(a8))end;local _,a9=a4(a8,a7(a8,1,L,true))a9=a7(a8,a9,L,true)if a9<=#a8 then ac(a8,a9,"trailing garbage")end;return _ end;
+		local lEncode, lDecode, lDigest = a3, aw, Z;
+
+		-------------------------------------------------------------------------------
+		--! CORE FUNCTIONS (REQUESTS & VERIFICATION)
+		-------------------------------------------------------------------------------
+
+		--! configuration
+		local fileName=Config.FileName
+		local ServiceId=Config.ServiceId; -- your service id, this is used to identify your service.
+		local PlatoSecret=Config.PlatoSecret; -- make sure to obfuscate this if you want to ensure security.
+		local UseNonce=Config.UseNonce; -- Hidden from Config to avoid user confusion, but active for security and use a nonce to prevent replay attacks and request tampering.
+		local MessageChanged=Config.MessageChanged or function(message) end;
+
+		--! functions
+		local fSetClipboard,fStringChar,fToString,fStringSub,fOsTime,fMathRandom,fMathFloor,fGetHwid=setclipboard or toclipboard,string.char,tostring,string.sub,os.time,math.random,math.floor,gethwid or function() return LocalPlayer.UserId end
+		local requestSending,cachedLink,cachedTime=false,"",0;
+		local host="https://api.platoboost.com";
+		local verifyAccept,maxVerifyAccept=0,25
+		-- Check server connectivity
+		local function CheckConnectivity()
+			local response=SafeRequest({Url=host .. "/public/connectivity",Method="GET"})
+			if not response or (response.StatusCode ~= 200 and response.StatusCode ~= 429) then
+				host="https://api.platoboost.net"
+			end
+		end
+
+		CheckConnectivity( )
+
+		local GenerateNonce=function()
+			local str=""
+			for _=1,16 do
+				str=str.. fStringChar(fMathFloor(fMathRandom()*(122-97+1))+97)
+			end
+			return str
+		end
+
+		--[[
+		for _=1,5 do
+			local textNonce=GenerateNonce();
+			task.wait(0.2)
+			if GenerateNonce()==textNonce then
+				MessageChanged("platoboost nonce error.");
+				return
+			end
+		end
+		]]
+
+		-- Get player's key link
+		local function CacheLink()
+			if cachedTime+(10*60)<fOsTime() then
+				local response=SafeRequest({
+					Url=host.."/public/start",
+					Method="POST",
+					Body=lEncode({
+						service=ServiceId,
+						identifier=lDigest(fGetHwid())
+					}),
+					Headers={
+						["Content-Type"]="application/json"
+					}
+				});
+				local message=""
+				if response.StatusCode==200 then
+					local decoded=lDecode(response.Body);
+					if decoded.success==true then
+						cachedLink=decoded.data.url;
+						cachedTime=fOsTime();
+						return true,cachedLink;
+					else
+						message=decoded.message;
+						MessageChanged(message);
+						return false,message;
+					end
+				elseif response.StatusCode==429 then
+					message="you are being rate limited, please wait 20 seconds and try again.";
+					MessageChanged(message);
+					return false,message;
+				end
+
+				message="Failed to cache link.";
+				MessageChanged(message);
+				return false,message;
+			else
+				return true,cachedLink;
+			end
+		end
+
+		local CopyLink=function()
+			local success,result=CacheLink();
+			if success then fSetClipboard(result); return true end
+			return success,result
+		end
+
+		-- Redeem player's key
+		local RedeemKey=function(key)
+			if UseStudio then
+				local isKey=key==Config.Secret
+				return isKey,not isKey and "Invalid key" or nil;
+			else
+				local textNonce=GenerateNonce();
+				local endpoint=host.."/public/redeem/".. fToString(ServiceId);
+
+				local body={
+					identifier=lDigest(fGetHwid()),
+					key=key
+				}
+
+				if UseNonce then
+					body.nonce=textNonce;
+				end
+
+				local response=SafeRequest({
+					Url=endpoint,
+					Method="POST",
+					Body=lEncode(body),
+					Headers={
+						["Content-Type"]="application/json"
+					}
+				});
+				local message="";
+
+				if response.StatusCode==200 then
+					local decoded=lDecode(response.Body);
+					if decoded.success==true then
+						if decoded.data.valid==true then
+							if UseNonce then
+								if decoded.data.hash==lDigest("true" .. "-" .. textNonce .. "-" .. PlatoSecret) then
+									return true;
+								else
+									message="failed to verify integrity.";
+									MessageChanged(message);
+									return false,message;
+								end    
+							else
+								return true;
+							end
+						else
+							message="key is invalid.";
+							MessageChanged(message);
+							return false,message;
+						end
+					else
+						if fStringSub(decoded.message,1,27)=="unique constraint violation" then
+							message="you already have an active key,please wait for it to expire before redeeming it.";
+							MessageChanged("message");
+							return false,message;
+						else
+							message=decoded.message;
+							MessageChanged(message);
+							return false,message;
+						end
+					end
+				elseif response.StatusCode==429 then
+					message="you are being rate limited, please wait 20 seconds and try again.";
+					MessageChanged(message);
+					return false,message;
+				else
+					message="server returned an invalid status code,please try again later.";
+					MessageChanged(message);
+					return false,message; 
+				end
+			end
+		end
+
+		-- Verify key on input
+		local VerifyKey=function(key)
+			if requestSending==true then return false end
+			requestSending=true
+
+			local textNonce=GenerateNonce();
+			local endpoint=host .. "/public/whitelist/" .. fToString(ServiceId) .. "?identifier=" .. lDigest(fGetHwid()) .. "&key=" .. key;
+
+			if UseNonce then
+				endpoint=endpoint .. "&nonce=" .. textNonce;
+			end
+
+			local response=SafeRequest({
+				Url=endpoint,
+				Method="GET",
+			});
+			local message=""
+			requestSending=false;
+
+			if response.StatusCode==200 then
+				local decoded=lDecode(response.Body);
+				if decoded.success==true then
+					if decoded.data.valid==true then
+						if UseNonce then
+							if decoded.data.hash==lDigest("true" .. "-" .. textNonce .. "-" .. PlatoSecret) then
+								return true;
+							else
+								message="failed to verify integrity.";
+								MessageChanged(message);
+								return false,message;
+							end
+						else
+							return true;
+						end
+					else
+						if fStringSub(key,1,4)=="KEY_" then
+							return RedeemKey(key);
+						else
+							message="key is invalid.";
+							MessageChanged(message);
+							return false,message;
+						end
+					end
+				else
+					message=decoded.message;
+					MessageChanged(message);
+					return false,message;
+				end
+			elseif response.StatusCode==429 then
+				message="you are being rate limited, please wait 20 seconds and try again.";
+				MessageChanged(message);
+				return false,message;
+			else
+				message="server returned an invalid status code, please try again later."
+				MessageChanged(message);
+				return false,message;
+			end
+		end
+
+		local GetFlag=function(name)
+			local textNonce=GenerateNonce();
+			local endpoint=host.."/public/flag/".. fToString(ServiceId) .."?name="..name;
+
+			if UseNonce then
+				endpoint=endpoint .. "&nonce=" .. textNonce;
+			end
+
+			local response=SafeRequest({
+				Url=endpoint,
+				Method="GET",
+			});
+			local message=""
+
+			if response.StatusCode==200 then
+				local decoded=lDecode(response.Body);
+				if decoded.success==true then
+					if UseNonce then
+						if decoded.data.hash==lDigest(fToString(decoded.data.value) .. "-" .. textNonce .. "-" .. PlatoSecret) then
+							return decoded.data.value;
+						else
+							message="failed to verify integrity.";
+							MessageChanged(message);
+							return nil,message;
+						end
+					else
+						return decoded.data.value;
+					end
+				else
+					message=decoded.message;
+					MessageChanged(message);
+					return nil,message;
+				end
+			else
+				message="server returned an invalid status code, please try again later.";
+				MessageChanged(message);
+				return nil,message;
+			end
+		end
+
+		-------------------------------------------------------------------------------
+		--! GUI & MAIN SCRIPT EXECUTION
+		-------------------------------------------------------------------------------
+
+		local function StartScriptURL()
+			-- Set secret global variable to bypass main script protection
+			_G[Config.Secret]=true 
+
+			-- Execute main script
+			loadstring(game:HttpGet(Config.ScriptURL))()
+		end
+
+		-- Initialize Key System GUI
+		local KeyTable=Module:CreateKeyCanvas(Config)
+		local KeyGui=KeyTable.Gui
+
+		KeyGui.Name=Config.GuiName
+		KeyGui.Enabled=true
+
+		if gethui then
+			KeyGui.Parent=gethui()
+		elseif syn and syn.protect_gui then 
+			syn.protect_gui(KeyGui)
+			KeyGui.Parent=CoreGui
+		elseif not UseStudio then
+			KeyGui.Parent=CoreGui:FindFirstChild("RobloxGui") or CoreGui
+		elseif UseStudio and script and script.Parent then
+			KeyGui.Parent=PlayerGui
+		end
+
+		if gethui then
+			for _,Interface in ipairs(gethui():GetChildren()) do
+				if Interface.Name==Config.GuiName and Interface~=KeyGui then
+					Interface.Enabled=false
+					Interface.Name=Config.OldGuiName
+				end
+			end
+		elseif not UseStudio then
+			for _, Interface in ipairs(CoreGui:GetChildren()) do
+				if Interface.Name==Config.GuiName and Interface~=KeyGui then
+					Interface.Enabled=false
+					Interface.Name=Config.OldGuiName
+				end
+			end
+		end
+
+		local CloseButton=KeyTable.CloseButton
+		local VerifyButton=KeyTable.VerifyButton
+		local GetKeyButton=KeyTable.GetKeyButton
+		local KeyInput=KeyTable.KeyInput
+		local Status=KeyTable.Status
+		local SaveStatus={TextColor3=Status.TextColor3,Text=Status.Text}
+
+		local newMetaTable={}
+
+		local funcs={}
+
+		funcs.WaitForKey=function(this)
+			repeat if this.Rejected==true then break end task.wait(1) until this.Pass==true
+		end
+
+		funcs.Destroy=function(this)
+			Config.Parent=nil
+			KeyGui:Destroy()
+			funcs={}
+			Config={}
+			CopyLink,RedeemKey,VerifyKey,GetFlag=nil,nil,nil,nil
+			setmetatable(this,nil)
+		end
+
+		-- Logic
+		CloseButton.MouseButton1Click:Connect(function() newMetaTable:Destroy() end)
+
+		VerifyButton.MouseButton1Click:Connect(function()
+			if Config.Rejected==true then return end
+			local key=KeyInput.Text
+			if key=="" then Status.Text="Enter a key!" return end
+			Status.Text="Verifying..."
+			local success,message=RedeemKey(key)
+			if success then
+				Status.Text="Success! Loading..."
+				Status.TextColor3=Color3.fromRGB(0,255,100)
+				task.wait(2)
+				Config.Pass=true
+				KeyGui.Enabled=false
+				if not Config.NoScriptURL then CallSafely(StartScriptURL) end
+			else
+				verifyAccept+=1
+				if verifyAccept>=maxVerifyAccept then 
+					Config.Rejected=true
+					return
+				end
+				Status.Text=message
+				Status.TextColor3=Color3.fromRGB(255,50,50)
+				task.wait(2)
+				Status.Text=SaveStatus.Text
+				Status.TextColor3=SaveStatus.TextColor3
+			end
+		end)
+
+		GetKeyButton.MouseButton1Click:Connect(function()
+			Status.Text = "Getting Link..."
+			local success,link=CopyLink()
+			if success then
+				fSetClipboard(link)
+				Status.Text="Link Copied!"
+				Status.TextColor3=Color3.fromRGB(0, 170, 255)
+			else
+				Status.Text="Error: ".. tostring(link)
+				Status.TextColor3=Color3.fromRGB(255,50,50)
+				task.wait(2)
+				Status.Text=SaveStatus.Text
+				Status.TextColor3=SaveStatus.TextColor3
+			end
+		end)
+
+		task.spawn(function()
+			-- Auto Check Saved Key
+			if isfile and CallSafely(isfile,fileName) then
+				local savedKey=CallSafely(readfile,fileName)
+				if savedKey~="" then
+					Status.Text="Found saved key, verifying..."
+					local success,message=RedeemKey(savedKey)
+					if success then
+						Status.Text="Auto-login success!"
+						Status.TextColor3=Color3.fromRGB(0,255,100)
+						task.wait(2)
+						Config.Pass=true
+						KeyGui.Enabled=false
+						if not Config.NoScriptURL then CallSafely(StartScriptURL) end
+					else
+						Status.Text = "Saved key expired or invalid."
+						Status.TextColor3 = Color3.fromRGB(255, 150, 0)
+					end
+				end
+			end
+		end)
+
+		local keyClass={Type=Config.Type}
+
+		newMetaTable=setmetatable(keyClass,{
+			__index=function(this,key)
+				local resolve=funcs[key]
+				if resolve then
+					return function(_,...)
+						return resolve(this,...)
+					end
+				end
+				local value=Config[key]
+				if value~=nil then return value end
+				return nil
+			end,
+
+			__newindex=function(this,key,value)
+			end,
+		})
+		return newMetaTable
+	end
+
+	function UILibrary:CreateWindow(WindowSettings)
+		WindowSettings=Missing("table",WindowSettings,{})
+
+		local KeySystemUI=UILibrary:CreateKeySystem(WindowSettings)
+
+		KeySystemUI:WaitForKey()
+
+		if KeySystemUI.Pass==false and KeySystemUI.Rejected==true then
+			UILibrary:Notify({Mode="warn",Description="The key has expired because you pressed too many times.",Duration=15})
+			KeySystemUI:Destroy()
+			return {}
+		end
+
+		local SelectedTheme=UILibrary.Theme.Default
 		local Contexts={}
 
 		local Window=Module:CreateCanvas(Gui)
+		Window.Frame.Visible=false
 		Window.Order=0
 		Window.Parent=true
-
-		if type(WindowSettings)=="table" then
-			Window.Title.Text=type(WindowSettings.Title)=="string" and WindowSettings.Title or Window.Title.Text
-		end
+		Window.Title.Text=type(WindowSettings.Title)=="string" and WindowSettings.Title or Window.Title.Text
 
 		function Window:SetTitle(Text)
 			self.Title.Text=Text
+		end
+
+		function Window:ModifyTheme(theme,data)
+			local success=pcall(function()
+				if type(theme)=="string" then
+					SelectedTheme=UILibrary.Theme[theme]
+				elseif type(theme)=="table" then
+					SelectedTheme=theme
+				else
+					return
+				end
+
+				local textList={Window.Title,Window.Open,Window.Toggle.TextLabel,Window.Toggle.TextButton,Window.Dropdown.TextLabel,	Window.Dropdown.Subtitle,Window.Template.TextLabel,Window.Template.TextButton,Window.Template.TextBox}
+
+				data=Missing("table",data,{})
+				local recursive=data.Recursive
+				Window.Frame.BackgroundColor3=SelectedTheme.Background
+				Window.Container.BackgroundColor3=SelectedTheme.Topbar
+
+				local runCallback=function(v)
+					if v:IsA("TextBox") or v:IsA("TextLabel") or v:IsA("TextButton") then
+						v.TextColor3=SelectedTheme.TextColor
+						if v:IsA("TextBox") then
+							v.BackgroundColor3=SelectedTheme.Input.Background
+							v.PlaceholderColor3=SelectedTheme.PlaceholderColor
+						end
+						if v:IsA("TextButton") then
+							v.BackgroundColor3=SelectedTheme.Button.Background
+						end
+					end
+				end
+
+				for i,v in ipairs(textList) do
+					runCallback(v)
+				end
+
+				if recursive then
+					for i,v in ipairs(Window.Container:GetDescendants()) do
+						runCallback(v)
+					end
+				end
+			end)
 		end
 
 		local Frm=Window.Frame
@@ -524,7 +1588,6 @@ do
 		end
 
 		local GrabUIClean=nil
-
 		LastFrame=Frm
 
 		-- Recalculate the window height
@@ -648,12 +1711,14 @@ do
 				if type(ContextSettings.Options)~="table" then
 					ContextSettings.Options={"Option 1","Option 2"}
 				end
-				ContextSettings.Index=type(ContextSettings.Index)=="number" and ContextSettings.Index or 0
-				ContextSettings.Value=type(ContextSettings.Value)=="string" and ContextSettings.Value or ContextSettings.Options[1]
-				
+				ContextSettings.Index=Missing("number",ContextSettings.Index,0)
+				ContextSettings.Value=Missing("string",ContextSettings.Value,ContextSettings.Options[1])
+
 				if ContextSettings.Mode==2 then
 					template:Destroy() template=nil
 					self.Order-=1
+
+					ContextSettings.Active=Missing("boolean",ContextSettings.Active,false)
 
 					local newSection,newDropdown
 
@@ -668,7 +1733,7 @@ do
 					newDropdown=Window:AddContext({
 						Type="Dropdown",
 						Name=tostring(ContextSettings.Value),
-						Active=false
+						Active=ContextSettings.Active
 					})
 
 					template=newDropdown.Template
@@ -683,12 +1748,12 @@ do
 							SafeCallback(value,index)
 						end
 					end
-					
+
 					if ContextSettings.ApplyOnInit then
 						textLabel.Text=tostring(ContextSettings.Value)
 						SafeCallback(ContextSettings.Value,ContextSettings.Index)
 					end
-					
+
 					for i,v in ipairs(ContextSettings.Options) do
 						local newButton=Window:AddContext({
 							Type="Button",
@@ -715,8 +1780,6 @@ do
 						if newDropdown then newDropdown:Destroy() end
 						if newSection then newSection:Destroy() end
 					end
-					
-
 				else
 					setCallback=function(value,index)
 						if ContextSettings.Value~=value then
@@ -727,17 +1790,17 @@ do
 						end
 					end
 					textLabel.Text=tostring(ContextSettings.Value)
-					
+
 					if ContextSettings.ApplyOnInit then
 						textLabel.Text=tostring(ContextSettings.Value)
 						SafeCallback(ContextSettings.Value,ContextSettings.Index)
 					end
-					
+
 					local selectorTweenInfo=TweenInfo.new(1,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out)
 					local selectorPropertys1,selectorPropertys2={["Size"]=UDim2.new(0.8,0,0.8,0)},{["Size"]=UDim2.new(1,0,1,0)}
 
 					local previousButton=template:FindFirstChild("Previous")
-					
+
 					local function PreviousFunc()
 						local index,optionList=ContextSettings.Index,ContextSettings.Options
 						if ContextSettings.NoCap then
@@ -750,7 +1813,7 @@ do
 						ContextSettings.Index=index
 						setCallback(tostring(optionList[index]),index)		
 					end
-					
+
 					cache.PreviousActivated=previousButton.Activated:Connect(PreviousFunc)
 
 					local previousLabel=previousButton:FindFirstChild("TextLabel")
@@ -764,7 +1827,7 @@ do
 					end)
 
 					local nextButton=template:FindFirstChild("Next")
-					
+
 					local function NextFunc()
 						local index,optionList=ContextSettings.Index,ContextSettings.Options
 						if index<=0 then index=1 end
@@ -776,7 +1839,7 @@ do
 						ContextSettings.Index=index
 						setCallback(tostring(optionList[index]),index)
 					end
-					
+
 					cache.NextActivated=nextButton.Activated:Connect(NextFunc)
 
 					local nextLabel=nextButton:FindFirstChild("TextLabel")
@@ -801,12 +1864,12 @@ do
 						SafeCallback(value)
 					end
 				end
-				
+
 				ContextSettings.Value=ContextSettings.Value or nil
 				ContextSettings.Active=type(ContextSettings.Active)=="boolean" and ContextSettings.Active or false
 
 				textButton.BackgroundColor3=TurnColors[not ContextSettings.Active]
-				
+
 				cache.ButtonActivated=textButton.Activated:Connect(function()
 					if cache.SelectMouseClick then cache.SelectMouseClick:Disconnect() cache.SelectMouseClick=nil end
 					ContextSettings.Active=not ContextSettings.Active
@@ -823,23 +1886,26 @@ do
 				end)
 			elseif typeName=="Dropdown" then
 				ContextSettings.Active=type(ContextSettings.Active)=="boolean" and ContextSettings.Active or false
-				subtitleLabel.Text=ContextSettings.Active and "v" or "–"
+				subtitleLabel.Text=ContextSettings.Value and "v" or "–"
 				contextClass.Children={}
-				setCallback=function(active)
-					if ContextSettings.Active~=active then
-						ContextSettings.Active=active
+
+				setCallback=function(value)
+					if ContextSettings.Active~=value then
+						ContextSettings.Active=value
 						for i,v in ipairs(contextClass.Children) do
 							if type(v)=="table" and v.Parent and v.Template then
-								v.Template.Visible=active
+								v.Template.Visible=value
 							end
 						end
 						Window:ApplyWindowHeight()
-						subtitleLabel.Text=active and "v" or "–"
+						subtitleLabel.Text=value and "v" or "–"
+						SafeCallback(value)
+
 					end
 				end
 				applyCallback=function()
-					local active=not ContextSettings.Active
-					setCallback(active)
+					local value=not ContextSettings.Active
+					setCallback(value)
 				end
 				cache.ButtonActivated=textButton.Activated:Connect(applyCallback)
 			else
@@ -853,12 +1919,14 @@ do
 
 			ContextSettings.Template=template
 			ContextSettings.Parent=true
-			
+
+
 			if template then
 				template.Parent=container
 				self.Order+=1
-				template.LayoutOrder=self.Order
-				uiListLayout:ApplyLayout()
+				local layoutOrder=self.Order
+				template.LayoutOrder=layoutOrder
+				ContextSettings.LayoutOrder=layoutOrder
 			end
 
 			local funcs={}
@@ -927,14 +1995,13 @@ do
 			funcs.Apply=function(this)
 				if applyCallback then applyCallback() end
 			end
-			
+
 			local instances={
 				["TextLabel"]=textLabel,["Toggle"]=textLabel,["TextBox"]=textBox,["TextButton"]=textButton,["Button"]=textButton,["Select"]=textButton
 			}
-			
+
 			local newMetaTable=setmetatable(contextClass,{
 				__index=function(this,key)
-					warn(`Window.{typeName}.{key}`)
 					local resolve=funcs[key]
 					if resolve then
 						return function(_,...)
@@ -950,7 +2017,7 @@ do
 						end
 						return false
 					end
-					
+
 					local success,result=pcall(function()
 						local instance=instances[typeName]
 						if instance then return instance[key] end
@@ -960,8 +2027,6 @@ do
 				end,
 
 				__newindex=function(this,key,value)
-					warn(`Window.{typeName}.{key}={value}`)
-					
 					if key=="Visible" then
 						local thisTemp=template
 						if thisTemp and thisTemp.Parent then
@@ -973,15 +2038,9 @@ do
 						if ContextSettings.Parent~=nil then
 							if type(value)=="table" then
 								if type(value.Children)=="table" and value.Parent then
+									this.Template.Visible=value.Active
 									ContextSettings.Parent=value
 									table.insert(value.Children,this)
-									if value.Type=="Dropdown" and value.CanVisibleWhenParent then
-										if value.Active then
-											value.Active=false
-										else
-											value.Active=true
-										end
-									end
 								end
 							else
 								local lastParent=ContextSettings.Parent
@@ -1029,37 +2088,60 @@ do
 			table.clear(self)
 		end
 
+		function Window:Notify(...)
+			local data=PackNotif(...)
+			if SelectedTheme~=nil then
+				data.BackgroundColor=SelectedTheme.Notification.Background or data.BackgroundColor
+				data.TitleColor=SelectedTheme.Notification.TitleColor or data.TitleColor
+				data.DescriptionColor=SelectedTheme.Notification.DescriptionColor or data.DescriptionColor
+			end
+			UILibrary:Notify(data)
+		end
+
 		local frame=Window.Frame
-		GrabUIClean=Module:GrabUI(Window.Frame)
+		GrabUIClean=Module:GrabUI(frame)
 		Window:Hide()
 		Window:ApplyWindowHeight()
 		Window.Open.Activated:Connect(function()
 			Window:SetVisible(not Window:IsVisible())
 		end)
 
-		return Window
+		Window:ModifyTheme(SelectedTheme)
+		frame.Visible=true
+
+		local windowClass={Type="Window"}
+		local newMetaTable=setmetatable(windowClass,{
+			__index=function(this,key)
+				local value=Window[key]
+				if value~=nil then return value end
+				if key=="SelectedTheme" then return SelectedTheme end
+				return nil
+			end,
+
+			__newindex=function(this,key,value)
+				if key=="SelectedTheme" and type(value)=="table" then 
+					SelectedTheme=value
+				elseif key=="Parent" then
+					Window.Parent=value
+				end
+			end,
+		})
+
+		return newMetaTable
 	end
 
-	function Library:Notify(...)
-		local title,description,duration,barColor,mode
-		local Data={}
-		local args={...}
-		if args[1] and type(args[1])=="table" then
-			title,description,duration,barColor,mode=Data.Title,Data.Description,Data.Duration,Data.BarColor,Data.Mode
-		else
-			title,description,duration,barColor,mode=unpack(args)
-		end
-		title=Missing("string",title,"Title")
-		description=Missing("string",description,"Description")
-		duration=Missing("number",duration,5)
-		mode=string.lower(Missing("string",mode,"None"))
-		barColor=barColor or Color3.fromRGB(0,170,255)
+	function UILibrary:Notify(...)
+		local data=PackNotif(...)
+		local title,description,duration,mode,backgroundColor,barColor,titleColor,descriptionColor=data.Title,data.Description,data.Duration,data.Mode,data.BackgroundColor,data.BarColor,data.TitleColor,data.DescriptionColor
 		if mode=="error" then
 			barColor=Color3.fromRGB(255,0,0)
+			title="Error"
 		elseif mode=="success" then
 			barColor=Color3.fromRGB(0,255,0)
+			title="Success"
 		elseif mode=="warn" then
 			barColor=Color3.fromRGB(255,170,0)
+			title="Warning"
 		end
 		local tc,dc,spacing,height,width=#title,#description,10,60,260;
 		local offsetY=20+(#Notifications*(height+spacing))
@@ -1067,8 +2149,8 @@ do
 		notification.Size=UDim2.new(0,width,0,height)
 		notification.Position=UDim2.new(1,width+20,1,-offsetY)
 		notification.AnchorPoint=Vector2.new(1,1) 
-		notification.BackgroundColor3=Color3.fromRGB(57,59,61)
 		notification.BackgroundTransparency=0
+		notification.BackgroundColor3=backgroundColor
 		notification.ClipsDescendants=true
 		notification.ZIndex=10
 		notification.Parent=Gui
@@ -1080,7 +2162,7 @@ do
 		tl.Position=UDim2.new(0,6,0,5)
 		tl.BackgroundTransparency=1
 		tl.Text=title
-		tl.TextColor3=Color3.new(1,1,1)
+		tl.TextColor3=titleColor
 		tl.Font=Enum.Font.GothamBold
 		tl.TextSize=14
 		tl.TextXAlignment=Enum.TextXAlignment.Left
@@ -1093,7 +2175,7 @@ do
 		dl.Position=UDim2.new(0,6,0,26)
 		dl.BackgroundTransparency=1
 		dl.Text=description
-		dl.TextColor3=Color3.fromRGB(200,200,200)
+		dl.TextColor3=descriptionColor
 		dl.Font=Enum.Font.FredokaOne
 		dl.TextXAlignment=Enum.TextXAlignment.Left
 		dl.ZIndex=11
@@ -1136,12 +2218,27 @@ do
 		end)
 	end
 
-	function Library:GrabUI(frame)
+	function UILibrary:GrabUI(frame)
 		return Module:GrabUI(frame)
+	end
+
+	function UILibrary:AddTheme(name,data)
+		if type(name)~="string" then return end
+		if type(data)~="table" then return end
+		if UILibrary.Theme[name] then return end
+		local config=UILibrary.Theme.Default
+		local newData=Module:DeepSet(config,data)
+		UILibrary.Theme[name]=newData
+		UILibrary:Notify({Title="Theme Added",Description=name,Duration=15})
+	end
+
+	function UILibrary:IsSecretKey(Key)
+		local secretKey=_G[Key]
+		return if secretKey~=nil and secretKey==true then true else false
 	end
 end
 
-Library.Loaded=true
-Library.Gui=Gui
+UILibrary.Loaded=true
+UILibrary.Gui=Gui
 
-return Library
+return UILibrary
