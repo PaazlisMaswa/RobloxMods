@@ -1,4 +1,4 @@
--- loadstring(game:HttpGet(''))()
+-- loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Mods/InstalPanel.luau'))()
 
 local RunService=game:GetService("RunService")
 local UILibrary=if RunService:IsStudio() then require(game.ReplicatedStorage.Packages.PaazlisUI) else loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/PaazlisUI/init.luau'))()
@@ -30,7 +30,7 @@ local KeySystemUI=UILibrary:CreateKeySystem({
 
 	-- [3] Scripts & Links
 	NoScriptURL    =false, -- If you don't want to use the script URL, you can set this to true to want to disable the script from running on the client.
-	ScriptURL      ="", -- The raw URL of your main script
+	ScriptURL      ="https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Mods/InstalPanel.luau", -- The raw URL of your main script
 
 	-- [4] Social Media Settings (Set to true to show,false to hide)
 	ShowDiscord    =false,
