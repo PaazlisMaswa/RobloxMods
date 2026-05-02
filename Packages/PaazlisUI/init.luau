@@ -37,6 +37,13 @@ local function CallSafely(func,...)
 	end
 end
 
+-- Ensures a folder exists by creating it if needed
+local function EnsureFolder(folderPath)
+	if isfolder and not CallSafely(isfolder, folderPath) then
+		CallSafely(makefolder, folderPath)
+	end
+end
+
 local Services={}
 
 for i,v in ipairs({'Players','UserInputService','TweenService','StarterGui','RunService'}) do 
@@ -889,7 +896,7 @@ function Module:CreateKeyCanvas(Settings)
 	}
 end
 
-local LastFrame=nil
+local LastFrame,UIFolder=nil,"Pazfield"
 
 local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
 local CoreGui=UseStudio and GetService("CoreGui") or nil
@@ -901,7 +908,6 @@ Gui.ResetOnSpawn=false
 Gui.AutoLocalize=false
 Gui.ZIndexBehavior=Enum.ZIndexBehavior.Global
 
-
 if gethui then
 	Gui.Parent=gethui()
 elseif syn and syn.protect_gui then 
@@ -912,6 +918,8 @@ elseif not UseStudio then
 elseif UseStudio and script and script.Parent then
 	Gui.Parent=PlayerGui
 end
+
+EnsureFolder(UIFolder)
 
 function Module:DeepSet(t1,t2)
 	local result={}
@@ -1021,8 +1029,10 @@ local function PackNotif(...)
 end
 
 do
+	
 	function UILibrary:CreateKeySystem(KeySettings)
 		KeySettings=Missing("table",KeySettings,{})
+		
 		--[[
 		    ================================================================
 		    [ SCRIPT INFORMATION ]
@@ -1054,7 +1064,7 @@ do
 
 			-- [3] Scripts & Links
 			NoScriptURL    =nil, -- If you don't want to use the script URL, you can set this to true to want to disable the script from running on the client.
-			ScriptURL      ="https://raw.githubusercontent.com/YourName/YourCode",-- The raw URL of your main script
+			ScriptURL      ="",-- The raw URL of your main script
 
 			-- [4] Social Media Settings (Set to true to show,false to hide)
 			ShowDiscord    =false,
@@ -1370,7 +1380,32 @@ do
 			-- Execute main script
 			loadstring(game:HttpGet(Config.ScriptURL))()
 		end
-
+		
+		EnsureFolder(UIFolder.."/Key System")
+		
+		-- Auto Check Saved Key
+		if isfile and CallSafely(isfile,UIFolder.."/Key System".."/"..fileName) then
+			local savedKey=CallSafely(readfile,UIFolder.."/Key System".."/"..fileName)
+			if savedKey and savedKey~="" then
+				Status.Text="Found saved key, verifying..."
+				local success,message=RedeemKey(savedKey)
+				if success then
+					if not Config.Pass then 
+						Config.Pass=true
+						Status.Text="Auto-login success!"
+						Status.TextColor3=Color3.fromRGB(0,255,100)
+						task.wait(2)
+						if not Config.NoScriptURL then CallSafely(StartScriptURL) end
+					end
+				else
+					Status.Text = "Saved key expired or invalid."
+					Status.TextColor3 = Color3.fromRGB(255, 150, 0)
+				end
+			end
+		end
+		
+		if Config.Pass==true then return {Pass=true,Rejected=false,WaitForKey=function() end,Destroy=function() end} end
+		
 		-- Initialize Key System GUI
 		local KeyTable=Module:CreateKeyCanvas(Config)
 		local KeyGui=KeyTable.Gui
@@ -1442,7 +1477,7 @@ do
 				if not Config.Pass then 
 					Config.Pass=true
 					if writefile then
-						CallSafely(writefile,fileName,key)
+						CallSafely(writefile,UIFolder.."/Key System".."/"..fileName,key)
 					end
 					Status.Text="Success! Loading..."
 					Status.TextColor3=Color3.fromRGB(0,255,100)
@@ -1482,27 +1517,6 @@ do
 		task.delay(1,function()
 			
 		end)
-		-- Auto Check Saved Key
-		if isfile and CallSafely(isfile,fileName) then
-			local savedKey=CallSafely(readfile,fileName)
-			if savedKey and savedKey~="" then
-				Status.Text="Found saved key, verifying..."
-				local success,message=RedeemKey(savedKey)
-				if success then
-					if not Config.Pass then 
-						Config.Pass=true
-						Status.Text="Auto-login success!"
-						Status.TextColor3=Color3.fromRGB(0,255,100)
-						task.wait(2)
-						KeyGui.Enabled=false
-						if not Config.NoScriptURL then CallSafely(StartScriptURL) end
-					end
-				else
-					Status.Text = "Saved key expired or invalid."
-					Status.TextColor3 = Color3.fromRGB(255, 150, 0)
-				end
-			end
-		end
 
 		local keyClass={Type=Config.Type}
 
