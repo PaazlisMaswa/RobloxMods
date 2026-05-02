@@ -1,4 +1,4 @@
--- loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Mods/InstalPanel.luau'))()
+-- loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Experiment/InstalKeySystem.luau'))()
 
 local RunService=game:GetService("RunService")
 local UILibrary=if RunService:IsStudio() then require(game.ReplicatedStorage.Packages.PaazlisUI) else loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/PaazlisUI/init.luau'))()
