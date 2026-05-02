@@ -1387,19 +1387,16 @@ do
 		if isfile and CallSafely(isfile,UIFolder.."/Key System".."/"..fileName) then
 			local savedKey=CallSafely(readfile,UIFolder.."/Key System".."/"..fileName)
 			if savedKey and savedKey~="" then
-				Status.Text="Found saved key, verifying..."
 				local success,message=RedeemKey(savedKey)
 				if success then
 					if not Config.Pass then 
 						Config.Pass=true
-						Status.Text="Auto-login success!"
-						Status.TextColor3=Color3.fromRGB(0,255,100)
+						UILibrary:Notify({Title=Config.Title,Description="Auto-login success!",Duration=5})
 						task.wait(2)
 						if not Config.NoScriptURL then CallSafely(StartScriptURL) end
 					end
 				else
-					Status.Text = "Saved key expired or invalid."
-					Status.TextColor3 = Color3.fromRGB(255, 150, 0)
+					UILibrary:Notify({Mode="warn",Description="Saved key expired or invalid.",Duration=5})
 				end
 			end
 		end
