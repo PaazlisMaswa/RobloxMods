@@ -3506,20 +3506,20 @@ function RayfieldLibrary:CreateWindow(Settings)
 							Start = Location
 						end
 						TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Current - Slider.Main.AbsolutePosition.X, 1, 0)}):Play()
-						local NewValue = SliderInfo.Range[1] + (Location - Slider.Main.AbsolutePosition.X) / Slider.Main.AbsoluteSize.X * (SliderSettings.Range[2] - SliderInfo.Range[1])
+						local NewValue = SliderInfo.Range[1] + (Location - Slider.Main.AbsolutePosition.X) / Slider.Main.AbsoluteSize.X * (SliderInfo.Range[2] - SliderInfo.Range[1])
 
-						NewValue = math.floor(NewValue / SliderSettings.Increment + 0.5) * (SliderSettings.Increment * 10000000) / 10000000
+						NewValue = math.floor(NewValue / SliderInfo.Increment + 0.5) * (SliderInfo.Increment * 10000000) / 10000000
 						NewValue = math.clamp(NewValue, SliderInfo.Range[1], SliderInfo.Range[2])
 
-						if not SliderSettings.Suffix then
+						if not SliderInfo.Suffix then
 							Slider.Main.Information.Text = tostring(NewValue)
 						else
-							Slider.Main.Information.Text = tostring(NewValue) .. " " .. SliderSettings.Suffix
+							Slider.Main.Information.Text = tostring(NewValue) .. " " .. SliderInfo.Suffix
 						end
 
-						if SliderSettings.CurrentValue ~= NewValue then
+						if SliderInfo.CurrentValue ~= NewValue then
 							local Success, Response = pcall(function()
-								SliderSettings.Callback(NewValue)
+								SliderInfo.Callback(NewValue)
 							end)
 							if not Success then
 								TweenService:Create(Slider, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundColor3 = Color3.fromRGB(85, 0, 0)}):Play()
@@ -3551,8 +3551,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 				TweenService:Create(Slider.Main.Progress, TweenInfo.new(0.45, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = UDim2.new(0, Slider.Main.AbsoluteSize.X * ((NewValue - SliderInfo.Range[1]) / (SliderInfo.Range[2] - SliderInfo.Range[1])) > 5 and Slider.Main.AbsoluteSize.X * ((NewValue - SliderInfo.Range[1]) / (SliderInfo.Range[2] - SliderInfo.Range[1])) or 5, 1, 0)}):Play()
 				Slider.Main.Information.Text = tostring(NewVal) .. " " .. (SliderInfo.Suffix or "")
 
-				local Success, Response = pcall(function()
-					SliderInfo.Callback(NewValue)
+				local Success, Response = pcall(SliderInfo.Callback
+					(NewValue)
 				end)
 
 				if not Success then
