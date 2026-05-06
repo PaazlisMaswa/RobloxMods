@@ -1,10 +1,8 @@
 -- Instancer by @Paazlis
 
-local RunService=game:GetService("RunService")
+local Players,RunService=game:GetService("Players"),game:GetService("RunService")
 
 local PartProperties={"Name","Anchored","Locked","CanCollide","Transparency","Color","Material","Reflectance","CFrame","BackSurface","BottomSurface","FrontSurface","LeftSurface","RightSurface","TopSurface","Size"}
-
-local MathFloor,StringFormat,StringFind,StringGmatch,StringSub,InstanceNew,TaskWait,TableInsert,TableRemove=math.floor,string.format,string.find,string.gmatch,string.sub,Instance.new,task.wait,table.insert,table.remove
 
 local function InvalidArgumentInstance(v,i,s)
 	assert(typeof(v)=="Instance",`Invalid argument #{i} (Instance expected, got {typeof(v)}) to Instancer.{s}`)
@@ -23,6 +21,56 @@ local function InvalidArgumentTable(v,i,s)
 end
 
 local Instancer={}
+
+function Instancer.IsAlive(instance)
+	if instance and instance.Parent then return true else return false end
+end
+
+function Instancer.IsCharacter(instance)
+	return Instancer.IsAlive(instance) and instance.ClassName=='Model' and instance:FindFirstChildOfClass('Humanoid')
+end
+
+function Instancer.IsDied(instance)
+	if Instancer.IsAlive(instance) then
+		local humanoid=instance:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health>0 and humanoid.MaxHealth>0 then
+			return false
+		end
+		return false
+	end
+	return true
+end
+
+function Instancer.IsNPC(instance)
+	return instance and instance:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(instance)
+end
+
+function Instancer.IsAs(instance,classNames)
+	for i,v in ipairs(classNames) do if Instancer.IsAlive(instance) and instance:IsA(v) then return true end end return false
+end
+
+function Instancer.AddInstance(className,data)
+	local instance=nil
+	local success,message=pcall(function() instance=Instance.new(className) end)
+	if not success then
+		warn(`[Instancer] Error while Instance.new, got {className} and`,message)
+	end
+	if instance~=nil then
+		local parent=nil
+		if type(data)=="table" then
+			for k,v in pairs(data) do 
+				if k=="Parent" then parent=v continue end
+				pcall(function() instance[k]=v end) 
+			end
+		elseif typeof(data)=="Instance" then
+			parent=data
+		end
+		if parent~=nil then
+			instance.Parent=parent
+		end
+	end
+	return instance
+end
 
 function Instancer.FindOrCreateChild(instance,name,className,data)
 	InvalidArgumentInstance(instance,1,"FindOrCreateChild")
@@ -108,16 +156,12 @@ function Instancer.ConvertMeshPartToSpecialMesh(instance)
 	end
 end
 
-function Instancer.IsAs(instance:Instance,classNames:{string})
-	for i,v in ipairs(classNames) do if instance and instance.Parent and instance:IsA(v) then return true end end return false
-end
-
 function Instancer.GetInstanceProperty(instance,properties,func)
 	InvalidArgumentInstance(instance,1,"GetInstanceProperty")
 	InvalidArgumentTable(properties,2,"GetInstanceProperty")
 	InvalidArgumentFunction(func,1,"GetInstanceProperty")
 	for i,v in ipairs(properties) do 
-		local success,err=pcall(function() return instance[v] end)
+		local success=pcall(function() return instance[v] end)
 		if success then
 			pcall(func,typeof(instance[v]),instance[v],v,i)
 		end 
@@ -179,7 +223,120 @@ end
 
 function Instancer.SetChildrenParent(instance,parent)
 	InvalidArgumentInstance(instance,1,"SetChildrenParent")
-    for i,v in ipairs(instance:GetChildren()) do v.Parent=parent  end
+	for i,v in ipairs(instance:GetChildren()) do v.Parent=parent  end
+end
+
+function Instancer.GetChildrenWhichIsA(instance,className)
+	InvalidArgumentInstance(instance,1,"GetChildrenWhichIsA")
+	InvalidArgumentString(className,2,"GetChildrenWhichIsA")
+	local list={}
+	for i,v in ipairs(instance:GetChildren()) do if v:IsA(className) then table.insert(list,v) end end
+	return list
+end
+
+function Instancer.GetDescendantsWhichIsA(instance,className)
+	InvalidArgumentInstance(instance,1,"GetDescendantsWhichIsA")
+	InvalidArgumentString(className,2,"GetDescendantsWhichIsA")
+	local list={}
+	for i,v in ipairs(instance:GetDescendants()) do if v:IsA(className) then table.insert(list,v) end end
+	return list
+end
+
+function Instancer.SetPartAnchoredChildren(v,anchored)
+	if Instancer.IsAlive(v) then for i,v in ipairs(v:GetChildren()) do if Instancer.IsAlive(v) and v.ClassName=="Part" or v.ClassName=="MeshPart" then v.Anchored=anchored end end end
+end
+
+function Instancer.GetCharacterInfo(instance,data)
+	local characterInfo={}
+
+	if Instancer.IsCharacter(instance) then 
+		local noParts,callback=data and data.NoParts,data and data.Callback
+
+		local headPart=instance:FindFirstChild("Head") 
+		if Instancer.IsAlive(headPart) and headPart:IsA("BasePart") then 
+			characterInfo.Head=headPart
+			if callback and type(callback)=="function" then pcall(callback,"Head",headPart) end
+		end 
+
+		local rootPart=instance:FindFirstChild("HumanoidRootPart") or instance:FindFirstChild("Torso") or instance:FindFirstChild("UpperTorso") or instance.PrimaryPart 
+		if Instancer.IsAlive(rootPart) then 
+			characterInfo.HumanoidRootPart=rootPart 
+			if callback and type(callback)=="function" then pcall(callback,"HumanoidRootPart",rootPart) end
+		end
+
+		local humanoid=instance:FindFirstChildOfClass("Humanoid") :: Humanoid
+		if Instancer.IsAlive(humanoid) then 
+			characterInfo.Humanoid=humanoid
+			characterInfo.RigType=humanoid.RigType
+			if callback and type(callback)=="function" then pcall(callback,"Humanoid",humanoid) end
+		end 
+
+		if not noParts then
+			characterInfo.Parts={}
+			for i,v in ipairs(instance:GetChildren()) do if v:IsA('BasePart') then table.insert(characterInfo.Parts,v) end end
+			if #characterInfo.Parts>=2 then
+				characterInfo.RandomPart=characterInfo.Parts[math.random(1,#characterInfo.Parts)]
+			else
+				characterInfo.RandomPart=characterInfo.HumanoidRootPart
+			end
+			if callback and type(callback)=="function" then pcall(callback,"RandomPart",characterInfo.RandomPart) end
+		end
+	end
+
+	return characterInfo
+end
+
+function Instancer.GetPlayer(object,callback)
+	if not object or type(object)=="nil" then return nil end
+	local result,objectType=nil,typeof(object)
+	if objectType=="Instance" then
+		if object and object.Parent then
+			if object.ClassName=="Model" then 
+				for i,v in ipairs(Players:GetPlayers()) do if v and v.Parent and (v.Character and v.Character.Parent) and v.Character==object then result=v break end end
+			elseif object.ClassName=="Player" then
+				result=object 
+			end
+		end
+	elseif objectType=="string" or objectType=="number" then
+		local inputNumber=tonumber(object)
+		if inputNumber then
+			for i,v in ipairs(Players:GetPlayers()) do if v and v.Parent and v.UserId==inputNumber then result=v break end end
+		else
+			local s=tostring(object) or ""
+			local ls=string.lower(s)
+			if ls=="!me" then
+				if RunService:IsClient() and Players.LocalPlayer and Players.LocalPlayer.Parent then result=Players.LocalPlayer end
+			elseif ls=="!random" then
+				local matches={}
+				if RunService:IsClient() then
+					for i,v in ipairs(Players:GetPlayers()) do 
+						if v.Parent and Players.LocalPlayer and Players.LocalPlayer.Parent and v.UserId~=Players.LocalPlayer.UserId then 
+							table.insert(matches,v) 
+						end 
+					end
+				else
+					for i,v in ipairs(Players:GetPlayers()) do 
+						if v.Parent then 
+							table.insert(matches,v) 
+						end 
+					end
+				end
+				if #matches>=2 then result=matches[math.random(1,#matches)] end
+			else
+				for i=1,4 do
+					for j,v in ipairs(Players:GetPlayers()) do
+						if v and v.Parent then
+							local name=if i==1 then v.Name elseif i==2 then v.DisplayName elseif i==3 then string.lower(v.Name) else string.lower(v.DisplayName)
+							if string.find(name,s) then result=v break end
+						end
+					end
+					if typeof(result)=="Instance" then break end
+				end
+			end
+		end
+	end
+	if callback and type(callback)=="function" and typeof(result)=="Instance" then pcall(callback,result) end
+	return result
 end
 
 return Instancer
