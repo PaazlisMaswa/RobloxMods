@@ -1,5 +1,3 @@
-local MathHuge,MathFloor,StringGsub,StringFormat,StringFind,StringLen,StringMatch=math.huge,math.floor,string.gsub,string.format,string.find,string.len,string.match
-
 local Strs={}
 
 local function InvalidArgumentNumber(v,i,s)
@@ -14,12 +12,30 @@ local function InvalidArgumentTable(v,i,s)
 	assert(type(v)=="table",`Invalid argument #{i} (table expected, got {typeof(v)}) to Strs.{s}`)
 end
 
-function Strs.GetLines(s:string):()->(string)
+function Strs.TryNumber(s,defautValue,originalValue)
+	if type(s)=="string" or type(s)=="number" then
+		if tonumber(s) then return tonumber(s) end
+		local ls=string.lower(s)
+		if ls=="reset" or ls=="default" or ls=="original" or ls=="origin" then return tonumber(originalValue) or tonumber(defautValue) end
+		if ls=="inf" or ls=="huge" or "infinite" then return math.huge end
+		if ls=="-inf" or ls=="-huge" or "-infinite" then return -math.huge end
+		return tonumber(defautValue)
+	end
+	return nil
+end
+
+function Strs.IsOriginal(s)
+	s=string.lower(tostring(s)) 
+	for i,v in ipairs({"reset","default","original","origin"}) do if string.find(s,v) then return true end end
+	return false
+end
+
+function Strs.GetLines(s):()
 	InvalidArgumentString(s,1,"GetLines")
 	local lastBreak=0
 	local function NextLine()
 		if lastBreak==#s then return nil end
-		local line,nextBreak=nil,StringFind(s,"\n",lastBreak+1)		
+		local line,nextBreak=nil,string.find(s,"\n",lastBreak+1)		
 		if nextBreak then
 			line=s:sub(lastBreak+1,nextBreak-1)
 			lastBreak=nextBreak
@@ -32,39 +48,39 @@ function Strs.GetLines(s:string):()->(string)
 	return NextLine
 end
 
-function Strs.IsEmpty(s:any):boolean
+function Strs.IsEmpty(s)
 	if type(s)=="string" then
-		if StringLen(s)==0 then return true end
-		local v=StringMatch(s,"^%s*$")
+		if string.len(s)==0 then return true end
+		local v=string.match(s,"^%s*$")
 		if v==nil then return false end
 		return true
 	end
 	return true
 end
 
-function Strs.IsStrings(s1:string,s2:{string}):boolean
+function Strs.IsStrings(s1,s2)
 	InvalidArgumentString(s1,1,"IsStrings")
 	InvalidArgumentTable(s2,2,"IsStrings")
 	for i,v in ipairs(s2) do if s1==v then return true end end return false
 end
 
-function Strs.ToNumberString(v:any,maxFloat:number?):string
+function Strs.ToNumberString(v,maxFloat)
 	local x=type(v)=="string" and tonumber(v) or v
 	InvalidArgumentNumber(x,1,"ToNumberString")
 	maxFloat=if type(maxFloat)=="number" and maxFloat>0 then maxFloat else 3
-	if x==MathFloor(x) then return tostring(MathFloor(x)) end
-	local s=StringFormat(`%.{maxFloat}f`,x)
-	s=StringGsub(s,"%.?0+$","")
+	if x==math.floor(x) then return tostring(math.floor(x)) end
+	local s=string.format(`%.{maxFloat}f`,x)
+	s=string.gsub(s,"%.?0+$","")
 	return s
 end
 
-function Strs.ToPersentase(x:number,max:number?,maxFloat:number?,reverse:boolean?):string
+function Strs.ToPersentase(x,max,maxFloat,reverse)
 	if type(x)~="number" or x==0 then return "0%" end
-	if (x>=MathHuge or x<=-MathHuge) then return "∞%" end
+	if (x>=math.huge or x<=-math.huge) then return "∞%" end
 	maxFloat=if type(maxFloat)=="number" and maxFloat>0 then maxFloat else 2
-	local percentage=MathFloor(x)*100
+	local percentage=math.floor(x)*100
 	if not reverse then
-		if max then percentage=MathFloor(x/max)*100 end
+		if max then percentage=math.floor(x/max)*100 end
 	else
 		if max then
 			percentage=(1/max)*x
@@ -75,10 +91,19 @@ function Strs.ToPersentase(x:number,max:number?,maxFloat:number?,reverse:boolean
 			end
 		end
 	end
-	local s=StringFormat(`%.{maxFloat}f`,percentage)
+	local s=string.format(`%.{maxFloat}f`,percentage)
 	s=s.."%"
 	if max and x>=max then s="100%" end
 	return s
+end
+
+function Strs.RandomString()
+	local length=math.random(10,20)
+	local array={}
+	for i=1,length do
+		array[i]=string.char(math.random(32,126))
+	end
+	return table.concat(array)
 end
 
 return Strs
