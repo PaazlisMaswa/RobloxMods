@@ -1,4 +1,4 @@
-l--[[
+--[[
 
 	Rayfield Interface Suite
 	by Sirius
@@ -717,12 +717,8 @@ local RayfieldLibrary={
 	}
 }
 
-
-
-
 -- Interface Management
-
-local RayfieldAssetId=customAssetId or 10804731440
+local RayfieldAssetId=customAssetId or 134923138597588 --10804731440
 local Rayfield=useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
 local buildAttempts=0
 local correctBuild=false
@@ -753,6 +749,8 @@ until buildAttempts >= 2
 
 Rayfield.Enabled=false
 
+local baseSize=Vector2.new(1024,768)
+
 if gethui then
 	Rayfield.Parent=gethui()
 elseif syn and syn.protect_gui then 
@@ -781,6 +779,37 @@ elseif not useStudio then
 		end
 	end
 end
+
+local Module={}
+
+function Module:ResizeUIScale(ui,screenSize)
+	local scaleX=screenSize.X / baseSize.X
+	local scaleY=screenSize.Y / baseSize.Y
+	local scale=math.min(scaleX, scaleY)
+
+	local minAxis=math.min(screenSize.X, screenSize.Y)
+	local isSmallScreen=minAxis <= 500
+
+	local uiScale:UIScale=ui:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+	uiScale.Parent=ui
+
+	local result=1
+
+	if scale < 1 then
+		result=scale*1.5
+	elseif scale > 1 then
+		result=scale*1
+	else
+		result=1
+	end
+
+	uiScale.Scale=result
+end
+
+Module:ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
+workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+	Module:ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
+end)
 
 if secureMode and not customAssetId then
 	secureNotify("default_asset","Secure Mode","You are using the default Rayfield asset ID. Set RAYFIELD_ASSET_ID to a custom upload to avoid detection.")
@@ -892,10 +921,10 @@ do
 
 end -- custom asset block
 
-local minSize=Vector2.new(1024,768)
+
 local useMobileSizing
 
-if Rayfield.AbsoluteSize.X < minSize.X and Rayfield.AbsoluteSize.Y < minSize.Y then
+if Rayfield.AbsoluteSize.X<baseSize.X and Rayfield.AbsoluteSize.Y<baseSize.Y then
 	useMobileSizing=true
 end
 
@@ -904,9 +933,7 @@ if UserInputService.TouchEnabled then
 	useMobilePrompt=true
 end
 
-
 -- Object Variables
-
 local Main=Rayfield.Main
 local MPrompt=Rayfield:FindFirstChild('Prompt')
 local Topbar=Main.Topbar
@@ -1053,9 +1080,7 @@ local function resolveIcon(icon)
 end
 
 local function makeDraggable(object,dragObject,enableTaptic,tapticOffset)
-	local dragging=false
-	local relative=nil
-
+	local dragging,relative,inputConnection=false,nil,nil
 	local offset=Vector2.zero
 	local screenGui=object:FindFirstAncestorWhichIsA("ScreenGui")
 	if screenGui and screenGui.IgnoreGuiInset then
@@ -1082,11 +1107,20 @@ local function makeDraggable(object,dragObject,enableTaptic,tapticOffset)
 
 	dragObject.InputBegan:Connect(function(input,processed)
 		if processed then return end
-
 		local inputType=input.UserInputType.Name
 		if inputType=="MouseButton1" or inputType=="Touch" then
 			dragging=true
-
+			if inputConnection then inputConnection:Disconnect() inputConnection=nil end
+			inputConnection=input.Changed:Connect(function() 
+				local newInputState=input.UserInputState.Name
+				if newInputState=="End" then 
+					dragging=false
+					if inputConnection then inputConnection:Disconnect() inputConnection=nil end
+					if enableTaptic and not Hidden then
+						TweenService:Create(dragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,100,0,4),BackgroundTransparency=0.7}):Play()
+					end
+				end 
+			end)
 			relative=object.AbsolutePosition + object.AbsoluteSize * object.AnchorPoint - UserInputService:GetMouseLocation()
 			if enableTaptic and not Hidden then
 				TweenService:Create(dragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,110,0,4),BackgroundTransparency=0}):Play()
@@ -1096,11 +1130,10 @@ local function makeDraggable(object,dragObject,enableTaptic,tapticOffset)
 
 	local inputEnded=UserInputService.InputEnded:Connect(function(input)
 		if not dragging then return end
-
 		local inputType=input.UserInputType.Name
 		if inputType=="MouseButton1" or inputType=="Touch" then
 			dragging=false
-
+			if inputConnection then inputConnection:Disconnect() inputConnection=nil end
 			if enableTaptic and not Hidden then
 				TweenService:Create(dragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,100,0,4),BackgroundTransparency=0.7}):Play()
 			end
@@ -1123,6 +1156,7 @@ local function makeDraggable(object,dragObject,enableTaptic,tapticOffset)
 	end)
 
 	object.Destroying:Connect(function()
+		if inputConnection then inputConnection:Disconnect() inputConnection=nil end
 		if inputEnded then inputEnded:Disconnect() end
 		if renderStepped then renderStepped:Disconnect() end
 	end)
@@ -1153,7 +1187,7 @@ local function LoadConfiguration(Configuration)
 					changed=true
 					Flag:Set(UnpackColor(FlagValue))
 				else
-					if (Flag.CurrentValue or Flag.CurrentKeybind or Flag.CurrentOption or Flag.Color)~=FlagValue then 
+					if (Flag.CurrentValue or Flag.CurrentKeybind or Flag.CurrentOption or Flag.Color or Flag.Value)~=FlagValue then 
 						changed=true
 						Flag:Set(FlagValue) 	
 					end
@@ -1185,10 +1219,10 @@ local function SaveConfiguration()
 				if v.CurrentValue==false then
 					Data[i]=false
 				else
-					Data[i]=v.CurrentValue or v.CurrentKeybind or v.CurrentOption or v.Color
+					Data[i]=v.CurrentValue or v.CurrentKeybind or v.CurrentOption or v.Color or v.Value
 				end
 			else
-				Data[i]=v.CurrentValue or v.CurrentKeybind or v.CurrentOption or v.Color
+				Data[i]=v.CurrentValue or v.CurrentKeybind or v.CurrentOption or v.Color or v.Value
 			end
 		end
 	end
@@ -2127,7 +2161,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TabButton.Title.TextColor3=SelectedTheme.TabTextColor
 		end
 
-
 		-- Animate
 		task.wait(0.1)
 		if FirstTab or Ext then
@@ -2250,7 +2283,175 @@ function RayfieldLibrary:CreateWindow(Settings)
 			
 			return ButtonInfo
 		end
+		
+		-- Selector
+		function Tab:CreateSelector(SelectorInfo)
+			SelectorInfo=type(SelectorInfo)=="table" and SelectorInfo or {}
 
+			local DefaultInfo={Type="Selector",Name="Selector Here",Value="Option 1",Options={"Option 1","Option 2","Option 3","Option 4"},NoCap=true,Callback=function() end}
+			for key,value in pairs(DefaultInfo) do if SelectorInfo[key]==nil then SelectorInfo[key]=value end end
+			
+			local Selector=Elements.Template.Selector:Clone()
+			SelectorInfo.Template=Selector
+			TabPrivate.Order+=1
+			Selector.LayoutOrder=TabPrivate.Order
+			Selector.Name=SelectorInfo.Name
+			Selector.Title.Text=SelectorInfo.Name
+			Selector.Visible=true
+			Selector.Parent=TabPage
+
+			Selector.BackgroundTransparency=1
+			Selector.UIStroke.Transparency=1
+			Selector.Title.TextTransparency=1
+
+			TweenService:Create(Selector,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0}):Play()
+			TweenService:Create(Selector.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0}):Play()
+			TweenService:Create(Selector.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0}):Play()	
+			
+			local PreviousButton=Selector:FindFirstChild("Previous")
+			local NextButton=Selector:FindFirstChild("Next")
+			local Information=Selector:FindFirstChild("Information")
+			
+			local Index=1
+			 
+			if type(SelectorInfo.Options)~="table" then
+				SelectorInfo.Options={"Option 1","Option 2"}
+			end
+			SelectorInfo.Index=type(SelectorInfo.Index)=="number" and SelectorInfo.Index or 0
+			Information.Text=tostring(SelectorInfo.Value or SelectorInfo.Options[1])
+			
+			function SelectorInfo:Set(value,index)
+				SelectorInfo.Value=value
+				Information.Text=tostring(value)
+				if index then SelectorInfo.Index=index end
+				local Success,Response=pcall(function()
+					if SelectorInfo.Callback then SelectorInfo.Callback(value,index) end
+				end)
+				if not Success then
+					TweenService:Create(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)}):Play()
+					TweenService:Create(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1}):Play()
+					SelectorInfo.Title.Text="Callback Error"
+					print("Rayfield | "..SelectorInfo.Name.." Callback Error " ..tostring(Response))
+					warn('Check docs.sirius.menu for help with Rayfield specific development.')
+					task.wait(0.5)
+					SelectorInfo.Title.Text=SelectorInfo.Name
+					TweenService:Create(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
+					TweenService:Create(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0}):Play()
+				end
+			end
+
+			function SelectorInfo:Add(value)
+				if not table.find(SelectorInfo.Options,value) then
+					table.insert(SelectorInfo.Options,value)
+					if SelectorInfo.Added then callSafely(SelectorInfo.Added,value) end
+				end
+			end
+
+			function SelectorInfo:Remove(value)
+				local pos=table.find(SelectorInfo.Options,value)
+				if pos~=nil then
+					table.remove(SelectorInfo.Options,pos)
+					if SelectorInfo.Removing then callSafely(SelectorInfo.Removing,value) end
+				end
+			end
+			
+			local function ConnectHover(btn)
+				local SelectorTweenInfo=TweenInfo.new(0.2,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out)
+				local SelectorPropertys1,SelectorPropertys2={["MaxTextSize"]=25},{["MaxTextSize"]=40}
+				local ViewsTitle=btn:FindFirstChild("Title")
+				if ViewsTitle then
+					local ViewAutoTextSize=ViewsTitle:FindFirstChild("UITextSizeConstraint")
+					if ViewAutoTextSize then
+						btn.MouseEnter:Connect(function()
+							TweenService:Create(ViewAutoTextSize,SelectorTweenInfo,SelectorPropertys1):Play()
+						end)
+						btn.MouseLeave:Connect(function()
+							TweenService:Create(ViewAutoTextSize,SelectorTweenInfo,SelectorPropertys2):Play()
+						end)
+					end
+				end
+			end
+			
+			ConnectHover(NextButton); ConnectHover(PreviousButton);
+			
+			PreviousButton.Activated:Connect(function()
+				local index,optionList=SelectorInfo.Index,SelectorInfo.Options
+				if SelectorInfo.NoCap then
+					if index<=0 then index=1 end
+					index=index<=1 and #optionList or index-1
+				else
+					index=index<=0 and 1 or index-1
+					if index<=0 then index=1 end
+				end
+				SelectorInfo.Index=index
+				SelectorInfo:Set(tostring(optionList[index]),index)
+			end)
+
+			NextButton.Activated:Connect(function()
+				local index,optionList=SelectorInfo.Index,SelectorInfo.Options
+				if index<=0 then index=1 end
+				if index>=#optionList then
+					index=index and 1 or #optionList
+				else
+					index+=1
+				end
+				SelectorInfo.Index=index
+				SelectorInfo:Set(tostring(optionList[index]),index)
+			end)
+
+			if Settings.ConfigurationSaving then
+				if Settings.ConfigurationSaving.Enabled and SelectorInfo.Flag then
+					RayfieldLibrary.Flags[SelectorInfo.Flag]=SelectorInfo
+				end
+			end
+			
+			--Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
+			--	Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor
+			--	TweenService:Create(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
+			--end)
+			
+			return SelectorInfo
+		end
+		
+		-- Expand
+		function Tab:CreateExpand(ExpandInfo)
+			ExpandInfo=type(ExpandInfo)=="table" and ExpandInfo or {}
+
+			local DefaultInfo={Type="Expand",Name="Events",Active=false,List={},Callback=function() end}
+			for key,value in pairs(DefaultInfo) do if ExpandInfo[key]==nil then ExpandInfo[key]=value end end
+			ExpandInfo.List={}
+			local Expand=Elements.Template.Expand:Clone() :: TextButton
+			ExpandInfo.Template=Expand
+			TabPrivate.Order+=1
+			Expand.LayoutOrder=TabPrivate.Order
+			Expand.Name=ExpandInfo.Name
+			Expand.Title.Text=ExpandInfo.Name
+			Expand.Visible=true
+			Expand.Parent=TabPage
+			
+			local Debounce=false
+			Expand.Interact.MouseButton1Click:Connect(function()
+				if Debounce then return end
+				Debounce=true
+				local active=not ExpandInfo.Active
+				ExpandInfo.Active=active
+				for i,v in ipairs(ExpandInfo.List) do if v and v.Template and v.Template.Parent then v.Template.Visible=active RunService.RenderStepped:Wait() end end
+				callSafely(ExpandInfo.Callback,active)
+				Debounce=false
+			end)
+			
+			function ExpandInfo:Add(Context)
+				if type(Context)=="table" and Context.Type and Context.Template and Context.Template.Parent and not table.find(ExpandInfo.List,Context) then
+					Context.Template.Visible=ExpandInfo.Active
+					table.insert(ExpandInfo.List,Context)
+					if ExpandInfo.Added then callSafely(ExpandInfo.Added,Context) end
+				end
+				
+			end
+			
+			return ExpandInfo
+		end
+		
 		-- ColorPicker
 		function Tab:CreateColorPicker(ColorPickerInfo) -- by Throit
 			ColorPickerInfo=type(ColorPickerInfo)=="table" and ColorPickerInfo or {}
@@ -3523,8 +3724,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 			for key,value in pairs(DefaultInfo) do if SliderInfo[key]==nil then SliderInfo[key]=value end end
 			TabPrivate.Order+=1
-			if SliderInfo.Version==2 and Elements.Template:FindFirstChild("RobloxSlider")~=nil then
-				Slider=Elements.Template.RobloxSlider:Clone()
+			if SliderInfo.Version==2 and Elements.Template:FindFirstChild("SliderPro")~=nil then
+				Slider=Elements.Template.SliderPro:Clone()
 				SliderInfo.Template=Slider
 				Slider.LayoutOrder=TabPrivate.Order
 				Slider.Name=SliderInfo.Name
@@ -3920,391 +4121,396 @@ function RayfieldLibrary:CreateWindow(Settings)
 			if TabPrivate.FirstPlayerPicker then warn("Rayfield | You can only have one PlayerPicker in a single tab") return nil end
 			TabPrivate.FirstPlayerPicker=true
 			
-			if not Elements.Template:FindFirstChild("PlayerPicker") then warn("Rayfield | No Template PlayerPicker element found!") return nil end
+			if not Elements.Template:FindFirstChild("PlayerPicker") then warn("Rayfield | Template not found for PlayerPicker!") return nil end
 			
-			PlayerPickerInfo=type(PlayerPickerInfo)=="table" and PlayerPickerInfo or {}
-			PlayerPickerInfo.Type="PlayerPicker"
-			if type(PlayerPickerInfo.Observe)~="function" then PlayerPickerInfo.Observe=function() return function() end end end
-			
-			if not UserService then UserService=callSafely(getService,"UserService") end
+			local Success,message=pcall(function()
+				PlayerPickerInfo=type(PlayerPickerInfo)=="table" and PlayerPickerInfo or {}
+				PlayerPickerInfo.Type="PlayerPicker"
+				if type(PlayerPickerInfo.Observe)~="function" then PlayerPickerInfo.Observe=function() return function() end end end
 
-			local PlayerModule,PlayerCache={},{}
-			local PlayerPicker=Elements.Template.PlayerPicker:Clone()
-			PlayerPickerInfo.Template=PlayerPicker
-			TabPrivate.Order+=1
-			PlayerPicker.LayoutOrder=TabPrivate.Order
-			local PlayerInfo=PlayerPicker.Info
-			local PlayerLabel=PlayerInfo.List.Label
-			local PlayerTemplate=PlayerPicker.List.Template
-			PlayerLabel.Visible=false
-			PlayerTemplate.Visible=false
-			local PlayerTitles={}
-			local ThisPlayer=Players.LocalPlayer
-			local PlayerInstance=nil
-			local SelectPlayerIndex,SelectPlayerInfo,SelectedPlayerTemplate,ViewEnabled,ViewInstance,ViewCharAddedConnection=1,nil,nil,false,nil,nil
-			
-			for i,v in pairs({{"Name","@Roblox","NameLabel"},{"Display","Roblox","DisplayLabel"},{"ID","1","IdLabel"},{"Age","Inf","AgeLabel"},{"In Game","No","InGameLabel"}}) do
-				local newLabel:TextLabel=PlayerLabel:Clone()
-				newLabel.Name=v[3]
-				newLabel.LayoutOrder=i
-				newLabel.Visible=true
-				newLabel.Text=v[1]..": "..v[2]
-				table.insert(PlayerTitles,newLabel)
-				newLabel.Parent=PlayerInfo.List
-			end
-			
-			function PlayerModule:GetPlayer(object,func)
-				if type(object)=="nil" then return nil end
-				local result,objectType=nil,typeof(object)
-				if objectType=="Instance" then
-					if object and object.Parent then
-						if object.ClassName=="Model" then 
-							for i,v in ipairs(Players:GetPlayers()) do if v and v.Parent and (v.Character and v.Character.Parent) and v.Character==object then result=v break end end
-						elseif object.ClassName=="Player" then
-							result=object 
-						end
-					end
-				elseif objectType=="string" or objectType=="number" then
-					local inputNumber=tonumber(object)
-					if inputNumber then
-						for i,v in ipairs(Players:GetPlayers()) do if v and v.Parent and v.UserId==inputNumber then result=v break end end
-					else
-						local s=tostring(object) or ""
-						local ls=string.lower(s)
-						if ls=="!me" then
-							if ThisPlayer and ThisPlayer.Parent then result=ThisPlayer end
-						elseif ls=="!random" then
-							local matches={}
-							for i,v in ipairs(Players:GetPlayers()) do if v.Parent and ThisPlayer.Parent and v.UserId~=ThisPlayer.UserId then table.insert(matches,v) end end
-							if #matches>=2 then result=matches[math.random(1,#matches)] end
-						else
-							for i=1,4 do
-								for j,v in ipairs(Players:GetPlayers()) do
-									if v and v.Parent then
-										local name=if i==1 then v.Name elseif i==2 then v.DisplayName elseif i==3 then string.lower(v.Name) else string.lower(v.DisplayName)
-										if string.find(name,s) then result=v break end
-									end
-								end
-								if typeof(result)=="Instance" then break end
-							end
-						end
-					end
-				end
-				if type(func)=="function" and typeof(result)=="Instance" then func(result) end
-				return result
-			end
-			
-			function PlayerModule:View(player)
-				ViewInstance=player
-				workspace.CurrentCamera.CameraSubject=player.Character
-				if ViewCharAddedConnection then ViewCharAddedConnection:Disconnect() end
-				ViewCharAddedConnection=player.CharacterAdded:Connect(function(newChar) workspace.CurrentCamera.CameraSubject=newChar end)
-			end
+				if not UserService then UserService=callSafely(getService,"UserService") end
 
-			function PlayerModule:Unview()
-				ViewInstance=nil
-				if ViewCharAddedConnection then ViewCharAddedConnection:Disconnect() ViewCharAddedConnection=nil end
-				pcall(function()
-					ContextActionService:UnbindAction('FreecamKeyboard')
-					ContextActionService:UnbindAction('FreecamMousePan')
-					RunService:UnbindFromRenderStep('Freecam')
-				end)
-				workspace.CurrentCamera.CameraSubject=ThisPlayer.Character or ThisPlayer.CharacterAdded:Wait()
-			end
-			
-			function PlayerModule:GetUserInfo(userId)
-				local results={}
-				results.UserId=userId
-				local player=Players:GetPlayerByUserId(userId)
-				results.Value=player
-				results.InServer=player and true or false
-				results.Icon=`rbxthumb://type=AvatarHeadShot&id={userId}&w=420&h=420`
-				if player then
-					results.Name=player.Name
-					results.DisplayName=player.DisplayName
-					results.Age=player.AccountAge
-				else
-					local success,userInfo=pcall(function()
-						return UserService and UserService:GetUserInfosByUserIdsAsync({userId})[1]
-					end)
-					if success and userInfo then
-						results.Name=userInfo.Username or 'nil'
-						results.DisplayName=userInfo.DisplayName or 'nil'
-						results.Age=0
-					end
-				end
-				return results
-			end
-			
-			function PlayerModule:SetPlayerFrameColor(template)
-				if SelectedPlayerTemplate and SelectedPlayerTemplate.Parent then
-					SelectedPlayerTemplate.BackgroundColor3=Color3.fromRGB(163,162,165)
-					SelectedPlayerTemplate.BackgroundTransparency=1
-					SelectedPlayerTemplate=nil
-				end
-				if template and template.Parent then
-					SelectedPlayerTemplate=template
-					template.BackgroundColor3=SelectedTheme.PlayerPickerSelected
-					template.BackgroundTransparency=0
-				end
-			end
-			
-			function PlayerModule:ApplyPlayerFrame()
-				if not next(SelectPlayerInfo) then return end
-				local player,userId,template=SelectPlayerInfo.Value,SelectPlayerInfo.UserId,SelectPlayerInfo.Template
-				PlayerInstance=player
-				if ViewEnabled then PlayerModule:View(player) end
-				if template then PlayerModule:SetPlayerFrameColor(template) end
-				PlayerModule:SetPlayerFrame(userId)
-			end
-			
-			function PlayerModule:SetPlayerFrame(userIdOrName)
-				local userIdOrNameType=type(userIdOrName)
-				if not (userIdOrNameType=='number' or userIdOrNameType=='string') then return end
-				local success,userId=false,1
-				if not tonumber(userIdOrName) then
-					success,userId=pcall(function() return Players:GetUserIdFromNameAsync(userIdOrName) end)
-					if not (success and tonumber(userId)) then return end
-					userId=tonumber(userId)
-				else
-					userId=tonumber(userIdOrName)
-				end
-				local userInfo=PlayerModule:GetUserInfo(userId)
-				local newContext={
-					Name=userInfo.Name or 'Roblox',
-					DisplayName=userInfo.DisplayName or 'Roblox',
-					UserId=userId,
-					Icon=userInfo.Icon,
-					Age=userInfo.Age or 0,
-					InServer=userInfo.InServer
-				}
-				if userInfo.Value~=nil and PlayerInstance~=userInfo.Value  then 
-					PlayerInstance=userInfo.Value 
-					PlayerPickerInfo.Value=PlayerInstance 
-					newContext.IsViewing=ViewInstance~=nil and ViewInstance==PlayerInstance
-					callSafely(PlayerPickerInfo.Callback,PlayerInstance,newContext)
-				end
-				pcall(function()
-					local playerInfoFrame=PlayerInfo.List
-					playerInfoFrame.Visible=false
-					playerInfoFrame.NameLabel.Text='Name: @'..newContext.Name
-					playerInfoFrame.DisplayLabel.Text='Display: '..newContext.DisplayName
-					playerInfoFrame.IdLabel.Text='ID: '..tostring(userId)
-					playerInfoFrame.AgeLabel.Text='Age: '..tostring(newContext.Age)
-					playerInfoFrame.InGameLabel.Text='In Game: '..(userInfo.InServer and 'Yes' or 'No')
-					PlayerInfo.Icon.Image=newContext.Icon
-					PlayerPickerInfo.Context=newContext
-					playerInfoFrame.Visible=true
-				end)
-			end
-			
-			function PlayerModule:ObservePlayer(callback)
-				local playerAddedConnection
-				local playerRemovedConnection
-				local playerCache={}
+				local PlayerModule,PlayerCache={},{}
+				local PlayerPicker=Elements.Template.PlayerPicker:Clone()
+				PlayerPickerInfo.Template=PlayerPicker
+				TabPrivate.Order+=1
+				PlayerPicker.LayoutOrder=TabPrivate.Order
+				local PlayerInfo=PlayerPicker.Info
+				local PlayerLabel=PlayerInfo.List.Label
+				local PlayerTemplate=PlayerPicker.List.Template
+				PlayerLabel.Visible=false
+				PlayerTemplate.Visible=false
+				local PlayerTitles={}
+				local ThisPlayer=Players.LocalPlayer
+				local PlayerInstance=nil
+				local SelectPlayerIndex,SelectPlayerInfo,SelectedPlayerTemplate,ViewEnabled,ViewInstance,ViewCharAddedConnection=1,nil,nil,false,nil,nil
 
-				local function OnPlayerAdded(player)
-					task.defer(function()
-						if playerAddedConnection.Connected and player and player.Parent then
-							local cleanup=callback(player)
-							if type(cleanup)~="function" then return end
-							if playerAddedConnection.Connected and player and player.Parent then
-								playerCache[player]=cleanup
-							else
-								task.spawn(cleanup)
-							end
-						end
-					end)
+				for i,v in pairs({{"Name","@Roblox","NameLabel"},{"Display","Roblox","DisplayLabel"},{"ID","1","IdLabel"},{"Age","Inf","AgeLabel"},{"In Game","No","InGameLabel"}}) do
+					local newLabel:TextLabel=PlayerLabel:Clone()
+					newLabel.Name=v[3]
+					newLabel.LayoutOrder=i
+					newLabel.Visible=true
+					newLabel.Text=v[1]..": "..v[2]
+					table.insert(PlayerTitles,newLabel)
+					newLabel.Parent=PlayerInfo.List
 				end
-
-				local function OnPlayerRemoving(player)
-					local cleanup=playerCache[player]
-					playerCache[player]=nil
-					if type(cleanup)~="function" then return end
-					task.spawn(cleanup)
-				end
-
-				-- Listen for changes:
-				playerAddedConnection=Players.PlayerAdded:Connect(OnPlayerAdded)
-				playerRemovedConnection=Players.PlayerRemoving:Connect(OnPlayerRemoving)
-
-				-- Initial:
-				task.defer(function()
-					if not playerAddedConnection.Connected then return end
-					local plrs=Players:GetPlayers()
-					for i,player in ipairs(plrs) do
-						OnPlayerAdded(player)
-					end
-				end)
-
-				-- Cleanup:
-				return function()
-					playerAddedConnection:Disconnect()
-					playerRemovedConnection:Disconnect()
-					local player=next(playerCache)
-					while player do
-						OnPlayerRemoving(player::Player)
-						player=next(playerCache)
-					end
-				end
-			end
-			
-			function PlayerModule:AddPlayerFrame(player,index)
-				local userId,userName=player.UserId,player.Name
-				local data=PlayerCache[index]
-				local template=PlayerTemplate:Clone()
-				template.Name=player.Name..'_Button'
-				template.Title.Text=player.DisplayName
-				template.Icon.Image=`rbxthumb://type=AvatarHeadShot&id={userId}&w=420&h=420`
-				template.MouseButton1Click:Connect(function()
-					SelectPlayerIndex,SelectPlayerInfo=index,{['Value']=player,['Name']=userName,['UserId']=userId,['Template']=template}
-					PlayerModule:ApplyPlayerFrame()
-				end)
-				template.Visible=true
-				template.Parent=PlayerPicker.List
-				data.Template=template
-				PlayerCache[index]=data
-				if userId==ThisPlayer.UserId then
-					SelectPlayerIndex,SelectPlayerInfo=index,{['Value']=player,['Name']=userName,['UserId']=userId,['Template']=template}
-					PlayerModule:ApplyPlayerFrame()
-				end
-				task.spawn(function()
-					table.sort(data,function(a,b) return a.Age < b.Age end)
-					for i,v in ipairs(data) do if v.Template then data.Template.LayoutOrder=i end end
-				end)
-				return function()
-					template:Destroy()
-					PlayerCache[index]=nil
-				end
-			end
-
-			local function NextValue(t,i)
-				if i>=#t then i=1 else i=i+1 end if not t[i] then i=i+1 end if not t[i] then i=1 end return i,t[i]
-			end
-
-			local function PreviousValue(t,i)
-				if i==0 or i==1 then i=#t else i=i-1 end if not t[i] then i=i-1 end if not t[i] then i=#t end return i,t[i]
-			end
-			
-			function PlayerModule:NextSelectPlayer()
-				SelectPlayerIndex,SelectPlayerInfo=NextValue(PlayerCache,SelectPlayerIndex)
-				PlayerModule:ApplyPlayerFrame()
-			end
-
-			function PlayerModule:PreviousSelectPlayer()
-				SelectPlayerIndex,SelectPlayerInfo=PreviousValue(PlayerCache,SelectPlayerIndex)
-				PlayerModule:ApplyPlayerFrame()
-			end
-
-			function PlayerPickerInfo:Set(NewPlayer)
-				PlayerModule:SetPlayerFrame(NewPlayer.UserId)
-			end
-			
-			PlayerPicker.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
-				local inputText=string.lower(PlayerPicker.TextBox.Text)
-				local inputNumber=tonumber(inputText)
-				for k,v in pairs(PlayerCache) do 
-					local template=v.Template
-					if template and template.Parent then 
-						local visible=inputText==""
-						if inputNumber then
-							visible=string.find(tostring(v.UserId),inputText,1,true) and true or false 
-						else
-							for j,text in ipairs({v.Name,string.lower(v.Name),v.DisplayName,string.lower(v.DisplayName)}) do
-								visible=string.find(text,inputText,1,true) and true or false 
-								if visible then break end
-							end
-						end
-						if template and template.Parent then
-							v.Template.Visible=visible 
-						end
-					end
-				end
-			end)
-
-			PlayerPicker.TextBox.FocusLost:Connect(function(enterPress)
-				if not enterPress then return end
-				local inputText=PlayerPicker.TextBox.Text
-				PlayerModule:SetPlayerFrame(inputText)
-				local player=PlayerModule:GetPlayer(inputText)
-				if not (player and player.Parent) then return end
-				local userId,userName,template=player.UserId,player.Name,nil
-				for i,v in ipairs(PlayerCache) do if v.Template and v.Template.Parent and v.UserId and v.UserId==userId then template=v.Template SelectPlayerIndex=i break end end
-				SelectPlayerInfo={["Value"]=player,["Name"]=userName,["UserId"]=userId,["Template"]=template}
-				PlayerModule:ApplyPlayerFrame()
-			end)
-			
-			local PlayerViews:Frame=PlayerPicker.Views
-			PlayerViews.Button.MouseButton1Click:Connect(function()
-				if not ViewEnabled then
-					ViewEnabled=true
-					PlayerViews.Button.Text="Unview"
-					PlayerModule:View(PlayerInstance)
-				else
-					ViewEnabled=false
-					PlayerViews.Button.Text="View"
-					PlayerModule:Unview()
-				end
-			end)
-			PlayerViews.Next.MouseButton1Click:Connect(function()
-				PlayerModule:NextSelectPlayer()
-			end)
-			PlayerViews.Previous.MouseButton1Click:Connect(function()
-				PlayerModule:PreviousSelectPlayer()
-			end)
-			
-			PlayerModule:SetPlayerFrame(ThisPlayer.UserId)
-			
-			function PlayerModule:ApplyTheme()
-				local AllBackground=SelectedTheme.InputBackground
-				if SelectedPlayerTemplate and SelectedPlayerTemplate.Parent then
-					SelectedPlayerTemplate.BackgroundColor3=SelectedTheme.PlayerPickerSelected
-				end
-				PlayerViews.BackgroundColor3=AllBackground
-				PlayerInfo.BackgroundColor3=AllBackground
-				PlayerPicker.List.BackgroundColor3=AllBackground
-				PlayerPicker.TextBox.BackgroundColor3=AllBackground
-				PlayerPicker.TextBox.PlaceholderColor3=SelectedTheme.PlaceholderColor
-				for i,v in ipairs(PlayerViews:GetChildren()) do
-					if v:IsA("TextButton") then
-						v.TextColor3=SelectedTheme.TextColor
-					end
-				end
-				for i,v in ipairs(PlayerTitles) do
-					if v and v.Parent then v.TextColor3=SelectedTheme.TextColor end
-				end
-			end
-
-			PlayerModule:ApplyTheme()
-			PlayerPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
-				PlayerModule:ApplyTheme()
-			end)
-			
-			local cleanPlayer=PlayerModule:ObservePlayer(function(player)
-				task.wait(1)
 				
-				if player:IsDescendantOf(Players) then
-					local index=#PlayerCache+1
-					PlayerCache[index]={['Index']=index,['Value']=player,['UserId']=player.UserId,['Name']=player.Name,['DisplayName']=player.DisplayName,['Age']=player.AccountAge}
-					local cleanAddPlayer=PlayerModule:AddPlayerFrame(player,index)
-					
-					local onPlayerRemoving=callSafely(PlayerPickerInfo.Observe,player)
-					
-					return function()
-						cleanAddPlayer()
-						callSafely(onPlayerRemoving,player)
+				PlayerPicker.Parent=TabPage
+				
+				function PlayerModule:GetPlayer(object,func)
+					if type(object)=="nil" then return nil end
+					local result,objectType=nil,typeof(object)
+					if objectType=="Instance" then
+						if object and object.Parent then
+							if object.ClassName=="Model" then 
+								for i,v in ipairs(Players:GetPlayers()) do if v and v.Parent and (v.Character and v.Character.Parent) and v.Character==object then result=v break end end
+							elseif object.ClassName=="Player" then
+								result=object 
+							end
+						end
+					elseif objectType=="string" or objectType=="number" then
+						local inputNumber=tonumber(object)
+						if inputNumber then
+							for i,v in ipairs(Players:GetPlayers()) do if v and v.Parent and v.UserId==inputNumber then result=v break end end
+						else
+							local s=tostring(object) or ""
+							local ls=string.lower(s)
+							if ls=="!me" then
+								if ThisPlayer and ThisPlayer.Parent then result=ThisPlayer end
+							elseif ls=="!random" then
+								local matches={}
+								for i,v in ipairs(Players:GetPlayers()) do if v.Parent and ThisPlayer.Parent and v.UserId~=ThisPlayer.UserId then table.insert(matches,v) end end
+								if #matches>=2 then result=matches[math.random(1,#matches)] end
+							else
+								for i=1,4 do
+									for j,v in ipairs(Players:GetPlayers()) do
+										if v and v.Parent then
+											local name=if i==1 then v.Name elseif i==2 then v.DisplayName elseif i==3 then string.lower(v.Name) else string.lower(v.DisplayName)
+											if string.find(name,s) then result=v break end
+										end
+									end
+									if typeof(result)=="Instance" then break end
+								end
+							end
+						end
+					end
+					if type(func)=="function" and typeof(result)=="Instance" then func(result) end
+					return result
+				end
+
+				function PlayerModule:View(player)
+					ViewInstance=player
+					workspace.CurrentCamera.CameraSubject=player.Character
+					if ViewCharAddedConnection then ViewCharAddedConnection:Disconnect() end
+					ViewCharAddedConnection=player.CharacterAdded:Connect(function(newChar) workspace.CurrentCamera.CameraSubject=newChar end)
+				end
+
+				function PlayerModule:Unview()
+					ViewInstance=nil
+					if ViewCharAddedConnection then ViewCharAddedConnection:Disconnect() ViewCharAddedConnection=nil end
+					pcall(function()
+						ContextActionService:UnbindAction('FreecamKeyboard')
+						ContextActionService:UnbindAction('FreecamMousePan')
+						RunService:UnbindFromRenderStep('Freecam')
+					end)
+					workspace.CurrentCamera.CameraSubject=ThisPlayer.Character or ThisPlayer.CharacterAdded:Wait()
+				end
+
+				function PlayerModule:GetUserInfo(userId)
+					local results={}
+					results.UserId=userId
+					local player=Players:GetPlayerByUserId(userId)
+					results.Value=player
+					results.InServer=player and true or false
+					results.Icon=`rbxthumb://type=AvatarHeadShot&id={userId}&w=420&h=420`
+					if player then
+						results.Name=player.Name
+						results.DisplayName=player.DisplayName
+						results.Age=player.AccountAge
+					else
+						local success,userInfo=pcall(function()
+							return UserService and UserService:GetUserInfosByUserIdsAsync({userId})[1]
+						end)
+						if success and userInfo then
+							results.Name=userInfo.Username or 'nil'
+							results.DisplayName=userInfo.DisplayName or 'nil'
+							results.Age=0
+						end
+					end
+					return results
+				end
+
+				function PlayerModule:SetPlayerFrameColor(template)
+					if SelectedPlayerTemplate and SelectedPlayerTemplate.Parent then
+						SelectedPlayerTemplate.BackgroundColor3=Color3.fromRGB(163,162,165)
+						SelectedPlayerTemplate.BackgroundTransparency=1
+						SelectedPlayerTemplate=nil
+					end
+					if template and template.Parent then
+						SelectedPlayerTemplate=template
+						template.BackgroundColor3=SelectedTheme.PlayerPickerSelected
+						template.BackgroundTransparency=0
 					end
 				end
-			end)
 
-			PlayerPicker.Destroying:Connect(function()
-				cleanPlayer()
-				table.clear(PlayerModule)
-				table.clear(PlayerCache)
-				table.clear(PlayerTitles)
+				function PlayerModule:ApplyPlayerFrame()
+					if not next(SelectPlayerInfo) then return end
+					local player,userId,template=SelectPlayerInfo.Value,SelectPlayerInfo.UserId,SelectPlayerInfo.Template
+					PlayerInstance=player
+					if ViewEnabled then PlayerModule:View(player) end
+					if template then PlayerModule:SetPlayerFrameColor(template) end
+					PlayerModule:SetPlayerFrame(userId)
+				end
+
+				function PlayerModule:SetPlayerFrame(userIdOrName)
+					local userIdOrNameType=type(userIdOrName)
+					if not (userIdOrNameType=='number' or userIdOrNameType=='string') then return end
+					local success,userId=false,1
+					if not tonumber(userIdOrName) then
+						success,userId=pcall(function() return Players:GetUserIdFromNameAsync(userIdOrName) end)
+						if not (success and tonumber(userId)) then return end
+						userId=tonumber(userId)
+					else
+						userId=tonumber(userIdOrName)
+					end
+					local userInfo=PlayerModule:GetUserInfo(userId)
+					local newContext={
+						Name=userInfo.Name or 'Roblox',
+						DisplayName=userInfo.DisplayName or 'Roblox',
+						UserId=userId,
+						Icon=userInfo.Icon,
+						Age=userInfo.Age or 0,
+						InServer=userInfo.InServer
+					}
+					if userInfo.Value~=nil and PlayerInstance~=userInfo.Value  then 
+						PlayerInstance=userInfo.Value 
+						PlayerPickerInfo.Value=PlayerInstance 
+						newContext.IsViewing=ViewInstance~=nil and ViewInstance==PlayerInstance
+						callSafely(PlayerPickerInfo.Callback,PlayerInstance,newContext)
+					end
+					pcall(function()
+						local playerInfoFrame=PlayerInfo.List
+						playerInfoFrame.Visible=false
+						playerInfoFrame.NameLabel.Text='Name: @'..newContext.Name
+						playerInfoFrame.DisplayLabel.Text='Display: '..newContext.DisplayName
+						playerInfoFrame.IdLabel.Text='ID: '..tostring(userId)
+						playerInfoFrame.AgeLabel.Text='Age: '..tostring(newContext.Age)
+						playerInfoFrame.InGameLabel.Text='In Game: '..(userInfo.InServer and 'Yes' or 'No')
+						PlayerInfo.Icon.Image=newContext.Icon
+						PlayerPickerInfo.Context=newContext
+						playerInfoFrame.Visible=true
+					end)
+				end
+
+				function PlayerModule:ObservePlayer(callback)
+					local playerAddedConnection
+					local playerRemovedConnection
+					local playerCache={}
+
+					local function OnPlayerAdded(player)
+						task.defer(function()
+							if playerAddedConnection.Connected and player and player.Parent then
+								local cleanup=callback(player)
+								if type(cleanup)~="function" then return end
+								if playerAddedConnection.Connected and player and player.Parent then
+									playerCache[player]=cleanup
+								else
+									task.spawn(cleanup)
+								end
+							end
+						end)
+					end
+
+					local function OnPlayerRemoving(player)
+						local cleanup=playerCache[player]
+						playerCache[player]=nil
+						if type(cleanup)~="function" then return end
+						task.spawn(cleanup)
+					end
+
+					-- Listen for changes:
+					playerAddedConnection=Players.PlayerAdded:Connect(OnPlayerAdded)
+					playerRemovedConnection=Players.PlayerRemoving:Connect(OnPlayerRemoving)
+
+					-- Initial:
+					task.defer(function()
+						if not playerAddedConnection.Connected then return end
+						local plrs=Players:GetPlayers()
+						for i,player in ipairs(plrs) do
+							OnPlayerAdded(player)
+						end
+					end)
+
+					-- Cleanup:
+					return function()
+						playerAddedConnection:Disconnect()
+						playerRemovedConnection:Disconnect()
+						local player=next(playerCache)
+						while player do
+							OnPlayerRemoving(player::Player)
+							player=next(playerCache)
+						end
+					end
+				end
+
+				function PlayerModule:AddPlayerFrame(player,index)
+					local userId,userName=player.UserId,player.Name
+					local data=PlayerCache[index]
+					local template=PlayerTemplate:Clone()
+					template.Name=player.Name..'_Button'
+					template.Title.Text=player.DisplayName
+					template.Icon.Image=`rbxthumb://type=AvatarHeadShot&id={userId}&w=420&h=420`
+					template.MouseButton1Click:Connect(function()
+						SelectPlayerIndex,SelectPlayerInfo=index,{['Value']=player,['Name']=userName,['UserId']=userId,['Template']=template}
+						PlayerModule:ApplyPlayerFrame()
+					end)
+					template.Visible=true
+					template.Parent=PlayerPicker.List
+					data.Template=template
+					PlayerCache[index]=data
+					if userId==ThisPlayer.UserId then
+						SelectPlayerIndex,SelectPlayerInfo=index,{['Value']=player,['Name']=userName,['UserId']=userId,['Template']=template}
+						PlayerModule:ApplyPlayerFrame()
+					end
+					task.spawn(function()
+						table.sort(data,function(a,b) return a.Age < b.Age end)
+						for i,v in ipairs(data) do if v.Template then data.Template.LayoutOrder=i end end
+					end)
+					return function()
+						template:Destroy()
+						PlayerCache[index]=nil
+					end
+				end
+
+				local function NextValue(t,i)
+					if i>=#t then i=1 else i=i+1 end if not t[i] then i=i+1 end if not t[i] then i=1 end return i,t[i]
+				end
+
+				local function PreviousValue(t,i)
+					if i==0 or i==1 then i=#t else i=i-1 end if not t[i] then i=i-1 end if not t[i] then i=#t end return i,t[i]
+				end
+
+				function PlayerModule:NextSelectPlayer()
+					SelectPlayerIndex,SelectPlayerInfo=NextValue(PlayerCache,SelectPlayerIndex)
+					PlayerModule:ApplyPlayerFrame()
+				end
+
+				function PlayerModule:PreviousSelectPlayer()
+					SelectPlayerIndex,SelectPlayerInfo=PreviousValue(PlayerCache,SelectPlayerIndex)
+					PlayerModule:ApplyPlayerFrame()
+				end
+
+				function PlayerPickerInfo:Set(NewPlayer)
+					PlayerModule:SetPlayerFrame(NewPlayer.UserId)
+				end
+
+				PlayerPicker.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+					local inputText=string.lower(PlayerPicker.TextBox.Text)
+					local inputNumber=tonumber(inputText)
+					for k,v in pairs(PlayerCache) do 
+						local template=v.Template
+						if template and template.Parent then 
+							local visible=inputText==""
+							if inputNumber then
+								visible=string.find(tostring(v.UserId),inputText,1,true) and true or false 
+							else
+								for j,text in ipairs({v.Name,string.lower(v.Name),v.DisplayName,string.lower(v.DisplayName)}) do
+									visible=string.find(text,inputText,1,true) and true or false 
+									if visible then break end
+								end
+							end
+							if template and template.Parent then
+								v.Template.Visible=visible 
+							end
+						end
+					end
+				end)
+
+				PlayerPicker.TextBox.FocusLost:Connect(function(enterPress)
+					if not enterPress then return end
+					local inputText=PlayerPicker.TextBox.Text
+					PlayerModule:SetPlayerFrame(inputText)
+					local player=PlayerModule:GetPlayer(inputText)
+					if not (player and player.Parent) then return end
+					local userId,userName,template=player.UserId,player.Name,nil
+					for i,v in ipairs(PlayerCache) do if v.Template and v.Template.Parent and v.UserId and v.UserId==userId then template=v.Template SelectPlayerIndex=i break end end
+					SelectPlayerInfo={["Value"]=player,["Name"]=userName,["UserId"]=userId,["Template"]=template}
+					PlayerModule:ApplyPlayerFrame()
+				end)
+
+				local PlayerViews=PlayerPicker.Views
+				PlayerViews.Button.MouseButton1Click:Connect(function()
+					if not ViewEnabled then
+						ViewEnabled=true
+						PlayerViews.Button.Text="Unview"
+						PlayerModule:View(PlayerInstance)
+					else
+						ViewEnabled=false
+						PlayerViews.Button.Text="View"
+						PlayerModule:Unview()
+					end
+				end)
+				PlayerViews.Next.MouseButton1Click:Connect(function()
+					PlayerModule:NextSelectPlayer()
+				end)
+				PlayerViews.Previous.MouseButton1Click:Connect(function()
+					PlayerModule:PreviousSelectPlayer()
+				end)
+
+				PlayerModule:SetPlayerFrame(ThisPlayer.UserId)
+
+				function PlayerModule:ApplyTheme()
+					local AllBackground=SelectedTheme.InputBackground
+					if SelectedPlayerTemplate and SelectedPlayerTemplate.Parent then
+						SelectedPlayerTemplate.BackgroundColor3=SelectedTheme.PlayerPickerSelected
+					end
+					PlayerViews.BackgroundColor3=AllBackground
+					PlayerInfo.BackgroundColor3=AllBackground
+					PlayerPicker.List.BackgroundColor3=AllBackground
+					PlayerPicker.TextBox.BackgroundColor3=AllBackground
+					PlayerPicker.TextBox.PlaceholderColor3=SelectedTheme.PlaceholderColor
+					for i,v in ipairs(PlayerViews:GetChildren()) do
+						if v:IsA("TextButton") then
+							v.TextColor3=SelectedTheme.TextColor
+						end
+					end
+					for i,v in ipairs(PlayerTitles) do
+						if v and v.Parent then v.TextColor3=SelectedTheme.TextColor end
+					end
+				end
+
+				PlayerModule:ApplyTheme()
+				PlayerPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+					PlayerModule:ApplyTheme()
+				end)
+
+				local cleanPlayer=PlayerModule:ObservePlayer(function(player)
+					task.wait(1)
+
+					if player:IsDescendantOf(Players) then
+						local index=#PlayerCache+1
+						PlayerCache[index]={['Index']=index,['Value']=player,['UserId']=player.UserId,['Name']=player.Name,['DisplayName']=player.DisplayName,['Age']=player.AccountAge}
+						local cleanAddPlayer=PlayerModule:AddPlayerFrame(player,index)
+
+						local onPlayerRemoving=callSafely(PlayerPickerInfo.Observe,player)
+
+						return function()
+							cleanAddPlayer()
+							callSafely(onPlayerRemoving,player)
+						end
+					end
+				end)
+
+				PlayerPicker.Destroying:Connect(function()
+					cleanPlayer()
+					table.clear(PlayerModule)
+					table.clear(PlayerCache)
+					table.clear(PlayerTitles)
+				end)
 			end)
 			
-			PlayerPicker.Parent=TabPage
+			if not Success then warn("Rayfield | Fatal Error for PlayerPicker,",message) end)
+			
 			return PlayerPickerInfo
 		end
 		-- ThemeButton
@@ -4343,6 +4549,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 			["Select"]=Tab.CreateSelect,
 			["PlayerPicker"]=Tab.CreatePlayerPicker,
 			["ThemeButton"]=Tab.CreateThemeButton,
+			["Expand"]=Tab.CreateExpand,
+			["Selector"]=Tab.CreateSelector
 		}
 		
 		function Tab:AddContext(ContextInfo)
@@ -4724,12 +4932,9 @@ function RayfieldLibrary:LoadConfiguration()
 	globalLoaded=true
 end
 
-
-
 if useStudio then
 	-- run w/ studio
 	-- Feel free to place your own script here to see how it'd work in Roblox Studio before running it on your execution software.
-
 
 	--local Window=RayfieldLibrary:CreateWindow({
 	--	Name="Rayfield Example Window",
@@ -4942,7 +5147,6 @@ if CEnabled and Main:FindFirstChild('Notice') then
 	Main.Notice.Size=UDim2.new(0,0,0,0)
 	Main.Notice.Position=UDim2.new(0.5,0,0,-100)
 	Main.Notice.Visible=true
-
 
 	TweenService:Create(Main.Notice,TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,280,0,35),Position=UDim2.new(0.5,0,0,-50),BackgroundTransparency=0.5}):Play()
 	TweenService:Create(Main.Notice.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0.1}):Play()
