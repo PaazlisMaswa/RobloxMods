@@ -8,7 +8,6 @@ local Missing=function(t,v,f)
 end
 
 cloneref,setclipboard=Missing("function",cloneref,function(v) return v end),Missing("function",setclipboard,function(x) warn(x) return x end)
-local fColorRGB=Color3.fromRGB
 
 local GetService=function(name)
 	local service=game:GetService(name)
@@ -82,8 +81,8 @@ local GlobalData={
 			[false]="□"
 		},
 		{
-			[true]=fColorRGB(0,200,97),
-			[false]=fColorRGB(255,89,89)
+			[true]=Color3.fromRGB(0,200,97),
+			[false]=Color3.fromRGB(255,89,89)
 		}
 	}
 }
@@ -96,283 +95,283 @@ local UILibrary={
 		"Default","Dark","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity",
 
 		Default={
-			TextColor=fColorRGB(255,255,255),
-			Background=fColorRGB(25,26,31),
-			Topbar=fColorRGB(57,59,61),
+			TextColor=Color3.fromRGB(255,255,255),
+			Background=Color3.fromRGB(25,26,31),
+			Topbar=Color3.fromRGB(57,59,61),
 
 			Notification={
-				Background=fColorRGB(57,59,61),
-				ActionsBackground=fColorRGB(230,230,230),
-				TitleColor=fColorRGB(255,255,255),
-				DescriptionColor=fColorRGB(200,200,200)
+				Background=Color3.fromRGB(57,59,61),
+				ActionsBackground=Color3.fromRGB(230,230,230),
+				TitleColor=Color3.fromRGB(255,255,255),
+				DescriptionColor=Color3.fromRGB(200,200,200)
 			},
 
 			Button={
-				Background=fColorRGB(25,25,25)
+				Background=Color3.fromRGB(25,25,25)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				Background=fColorRGB(30,30,30),
-				Stroke=fColorRGB(65,65,65)
+				Background=Color3.fromRGB(30,30,30),
+				Stroke=Color3.fromRGB(65,65,65)
 			},
-			PlaceholderColor=fColorRGB(178,178,178)
+			PlaceholderColor=Color3.fromRGB(178,178,178)
 		},
 
 		Dark={
-			TextColor=fColorRGB(240,240,240),
-			Background=fColorRGB(25,25,25),
-			Topbar=fColorRGB(34,34,34),
+			TextColor=Color3.fromRGB(240,240,240),
+			Background=Color3.fromRGB(25,25,25),
+			Topbar=Color3.fromRGB(34,34,34),
 
 			Notification={
-				Background=fColorRGB(20,20,20),
-				ActionsBackground=fColorRGB(230,230,230),
-				TitleColor=fColorRGB(240,240,240),
-				DescriptionColor=fColorRGB(200,200,200)
+				Background=Color3.fromRGB(20,20,20),
+				ActionsBackground=Color3.fromRGB(230,230,230),
+				TitleColor=Color3.fromRGB(240,240,240),
+				DescriptionColor=Color3.fromRGB(200,200,200)
 			},
 
 			Button={
-				Background=fColorRGB(25,25,25)
+				Background=Color3.fromRGB(25,25,25)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				Background=fColorRGB(30,30,30),
-				Stroke=fColorRGB(65,65,65)
+				Background=Color3.fromRGB(30,30,30),
+				Stroke=Color3.fromRGB(65,65,65)
 			},
-			PlaceholderColor=fColorRGB(178,178,178)
+			PlaceholderColor=Color3.fromRGB(178,178,178)
 		},
 
 		Ocean={
-			TextColor=fColorRGB(230,240,240),
-			Background=fColorRGB(20,30,30),
-			Topbar=fColorRGB(25,40,40),
+			TextColor=Color3.fromRGB(230,240,240),
+			Background=Color3.fromRGB(20,30,30),
+			Topbar=Color3.fromRGB(25,40,40),
 
 			Notification={
-				Background=fColorRGB(25,35,35),
-				ActionsBackground=fColorRGB(230,240,240),
-				TitleColor=fColorRGB(230,240,240),
-				DescriptionColor=fColorRGB(200,200,200)
+				Background=Color3.fromRGB(25,35,35),
+				ActionsBackground=Color3.fromRGB(230,240,240),
+				TitleColor=Color3.fromRGB(230,240,240),
+				DescriptionColor=Color3.fromRGB(200,200,200)
 			},
 
 			Button={
-				Background=fColorRGB(20,30,30)
+				Background=Color3.fromRGB(20,30,30)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				Background=fColorRGB(30,50,50),
-				Stroke=fColorRGB(50,70,70)
+				Background=Color3.fromRGB(30,50,50),
+				Stroke=Color3.fromRGB(50,70,70)
 			},
-			PlaceholderColor=fColorRGB(140,160,160)
+			PlaceholderColor=Color3.fromRGB(140,160,160)
 		},
 
 		AmberGlow={
-			TextColor=fColorRGB(255,245,230),
-			Background=fColorRGB(45,30,20),
-			Topbar=fColorRGB(55,40,25),
+			TextColor=Color3.fromRGB(255,245,230),
+			Background=Color3.fromRGB(45,30,20),
+			Topbar=Color3.fromRGB(55,40,25),
 
 			Notification={
-				Background=fColorRGB(50,35,25),
-				ActionsBackground=fColorRGB(245,230,215),
-				TitleColor=fColorRGB(255,245,230),
-				DescriptionColor=fColorRGB(200,200,200)
+				Background=Color3.fromRGB(50,35,25),
+				ActionsBackground=Color3.fromRGB(245,230,215),
+				TitleColor=Color3.fromRGB(255,245,230),
+				DescriptionColor=Color3.fromRGB(200,200,200)
 			},
 
 			Button={
-				Background=fColorRGB(45,30,20)
+				Background=Color3.fromRGB(45,30,20)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				Background=fColorRGB(60,45,35),
-				Stroke=fColorRGB(90,65,50)
+				Background=Color3.fromRGB(60,45,35),
+				Stroke=Color3.fromRGB(90,65,50)
 			},
-			PlaceholderColor=fColorRGB(190,150,130)
+			PlaceholderColor=Color3.fromRGB(190,150,130)
 		},
 
 		Light={
-			TextColor=fColorRGB(40,40,40),
-			Background=fColorRGB(245,245,245),
-			Topbar=fColorRGB(230,230,230),
+			TextColor=Color3.fromRGB(40,40,40),
+			Background=Color3.fromRGB(245,245,245),
+			Topbar=Color3.fromRGB(230,230,230),
 
 			Notification={
-				Background=fColorRGB(250,250,250),
-				ActionsBackground=fColorRGB(240,240,240),
-				TitleColor=fColorRGB(40,40,40),
-				DescriptionColor=fColorRGB(200,200,200)
+				Background=Color3.fromRGB(250,250,250),
+				ActionsBackground=Color3.fromRGB(240,240,240),
+				TitleColor=Color3.fromRGB(40,40,40),
+				DescriptionColor=Color3.fromRGB(200,200,200)
 			},
 
 			Button={
-				Background=fColorRGB(245,245,245)
+				Background=Color3.fromRGB(245,245,245)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				Background=fColorRGB(240,240,240),
-				Stroke=fColorRGB(180,180,180)
+				Background=Color3.fromRGB(240,240,240),
+				Stroke=Color3.fromRGB(180,180,180)
 			},
-			PlaceholderColor=fColorRGB(140,140,140)
+			PlaceholderColor=Color3.fromRGB(140,140,140)
 		},
 
 		Amethyst={
-			TextColor=fColorRGB(240,240,240),
-			Background=fColorRGB(30,20,40),
-			Topbar=fColorRGB(40,25,50),
+			TextColor=Color3.fromRGB(240,240,240),
+			Background=Color3.fromRGB(30,20,40),
+			Topbar=Color3.fromRGB(40,25,50),
 
 			Notification={
-				Background=fColorRGB(35,20,40),
-				ActionsBackground=fColorRGB(240,240,250),
-				TitleColor=fColorRGB(240,240,240),
-				DescriptionColor=fColorRGB(200,200,200)
+				Background=Color3.fromRGB(35,20,40),
+				ActionsBackground=Color3.fromRGB(240,240,250),
+				TitleColor=Color3.fromRGB(240,240,240),
+				DescriptionColor=Color3.fromRGB(200,200,200)
 			},
 
 			Button={
-				Background=fColorRGB(30,20,40)
+				Background=Color3.fromRGB(30,20,40)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				Background=fColorRGB(45,30,60),
-				Stroke=fColorRGB(80,50,110)
+				Background=Color3.fromRGB(45,30,60),
+				Stroke=Color3.fromRGB(80,50,110)
 			},
-			PlaceholderColor=fColorRGB(178,150,200)
+			PlaceholderColor=Color3.fromRGB(178,150,200)
 		},
 
 		Green={
-			TextColor=fColorRGB(30,60,30),
-			Background=fColorRGB(235,245,235),
-			Topbar=fColorRGB(210,230,210),
+			TextColor=Color3.fromRGB(30,60,30),
+			Background=Color3.fromRGB(235,245,235),
+			Topbar=Color3.fromRGB(210,230,210),
 
 			Notification={
-				Background=fColorRGB(240,250,240),
-				ActionsBackground=fColorRGB(220,235,220),
-				TitleColor=fColorRGB(30,60,30),
-				DescriptionColor=fColorRGB(200,200,200)
+				Background=Color3.fromRGB(240,250,240),
+				ActionsBackground=Color3.fromRGB(220,235,220),
+				TitleColor=Color3.fromRGB(30,60,30),
+				DescriptionColor=Color3.fromRGB(200,200,200)
 			},
 
 			Button={
-				Background=fColorRGB(235,245,235)
+				Background=Color3.fromRGB(235,245,235)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				Background=fColorRGB(235,245,235),
-				Stroke=fColorRGB(180,200,180)
+				Background=Color3.fromRGB(235,245,235),
+				Stroke=Color3.fromRGB(180,200,180)
 			},
-			PlaceholderColor=fColorRGB(120,140,120)
+			PlaceholderColor=Color3.fromRGB(120,140,120)
 		},
 
 		Bloom={
-			TextColor=fColorRGB(60,40,50),
-			Background=fColorRGB(255,240,245),
-			Topbar=fColorRGB(250,220,225),
+			TextColor=Color3.fromRGB(60,40,50),
+			Background=Color3.fromRGB(255,240,245),
+			Topbar=Color3.fromRGB(250,220,225),
 
 			Notification={
-				Background=fColorRGB(255,235,240),
-				ActionsBackground=fColorRGB(245,215,225),
-				TitleColor=fColorRGB(60,40,50),
-				DescriptionColor=fColorRGB(200,200,200)
+				Background=Color3.fromRGB(255,235,240),
+				ActionsBackground=Color3.fromRGB(245,215,225),
+				TitleColor=Color3.fromRGB(60,40,50),
+				DescriptionColor=Color3.fromRGB(200,200,200)
 			},
 
 			Button={
-				Background=fColorRGB(255,240,245)
+				Background=Color3.fromRGB(255,240,245)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				Background=fColorRGB(255,235,240),
-				Stroke=fColorRGB(220,190,200)
+				Background=Color3.fromRGB(255,235,240),
+				Stroke=Color3.fromRGB(220,190,200)
 			},
-			PlaceholderColor=fColorRGB(170,130,140)
+			PlaceholderColor=Color3.fromRGB(170,130,140)
 		},
 
 		DarkBlue={
-			TextColor=fColorRGB(230,230,230),
-			Background=fColorRGB(20,25,30),
-			Topbar=fColorRGB(30,35,40),
+			TextColor=Color3.fromRGB(230,230,230),
+			Background=Color3.fromRGB(20,25,30),
+			Topbar=Color3.fromRGB(30,35,40),
 
 			Notification={
-				Background=fColorRGB(25,30,35),
-				ActionsBackground=fColorRGB(45,50,55),
-				TitleColor=fColorRGB(230,230,230),
-				DescriptionColor=fColorRGB(200,200,200)
+				Background=Color3.fromRGB(25,30,35),
+				ActionsBackground=Color3.fromRGB(45,50,55),
+				TitleColor=Color3.fromRGB(230,230,230),
+				DescriptionColor=Color3.fromRGB(200,200,200)
 			},
 
 			Button={
-				Background=fColorRGB(20,25,30)
+				Background=Color3.fromRGB(20,25,30)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				InputBackground=fColorRGB(25,30,35),
-				InputStroke=fColorRGB(45,50,60)
+				InputBackground=Color3.fromRGB(25,30,35),
+				InputStroke=Color3.fromRGB(45,50,60)
 			},
-			PlaceholderColor=fColorRGB(150,150,160)
+			PlaceholderColor=Color3.fromRGB(150,150,160)
 		},
 
 		Serenity={
-			TextColor=fColorRGB(50,55,60),
-			Background=fColorRGB(240,245,250),
-			Topbar=fColorRGB(215,225,235),
+			TextColor=Color3.fromRGB(50,55,60),
+			Background=Color3.fromRGB(240,245,250),
+			Topbar=Color3.fromRGB(215,225,235),
 
 			Notification={
-				Background=fColorRGB(210,220,230),
-				ActionsBackground=fColorRGB(225,230,240),
-				TitleColor=fColorRGB(50,55,60),
-				DescriptionColor=fColorRGB(150,150,150)
+				Background=Color3.fromRGB(210,220,230),
+				ActionsBackground=Color3.fromRGB(225,230,240),
+				TitleColor=Color3.fromRGB(50,55,60),
+				DescriptionColor=Color3.fromRGB(150,150,150)
 			},
 
 			Button={
-				Background=fColorRGB(240,245,250)
+				Background=Color3.fromRGB(240,245,250)
 			},
 
 			Select={
-				EnableColor=fColorRGB(0,200,97),
-				DisableColor=fColorRGB(255,89,89)
+				EnableColor=Color3.fromRGB(0,200,97),
+				DisableColor=Color3.fromRGB(255,89,89)
 			},
 
 			Input={
-				Background=fColorRGB(220,230,240),
-				Stroke=fColorRGB(180,190,200)
+				Background=Color3.fromRGB(220,230,240),
+				Stroke=Color3.fromRGB(180,190,200)
 			},
-			PlaceholderColor=fColorRGB(150,150,150)
+			PlaceholderColor=Color3.fromRGB(150,150,150)
 		}
 	}
 }
@@ -392,7 +391,7 @@ local UseStudio=RunService:IsStudio()
 function Module:CreateCanvas(Gui)
 	local Frame=Instance.new("Frame")
 	Frame.Name="Frame"
-	Frame.BackgroundColor3=fColorRGB(57,59,61)
+	Frame.BackgroundColor3=Color3.fromRGB(57,59,61)
 	Frame.BackgroundTransparency=0
 	Frame.BorderSizePixel=0
 	Frame.Position=UDim2.new(0.1,0,0.38,0)
@@ -407,7 +406,7 @@ function Module:CreateCanvas(Gui)
 	Title.Size=UDim2.new(1,0,1,0)
 	Title.TextSize=18
 	Title.Font=Enum.Font.SourceSansBold
-	Title.TextColor3=fColorRGB(248,248,248)
+	Title.TextColor3=Color3.fromRGB(248,248,248)
 	Title.Text="Title Here"
 	Title.Parent=Frame
 
@@ -419,13 +418,13 @@ function Module:CreateCanvas(Gui)
 	Open.Size=UDim2.new(0.15,0,0.8,0)
 	Open.TextSize=18
 	Open.Font=Enum.Font.SourceSansBold
-	Open.TextColor3=fColorRGB(248,248,248)
+	Open.TextColor3=Color3.fromRGB(248,248,248)
 	Open.Text="v"
 	Open.Parent=Frame
 
 	local Container=Instance.new("ScrollingFrame")
 	Container.Name="Container"
-	Container.BackgroundColor3=fColorRGB(57,59,61)
+	Container.BackgroundColor3=Color3.fromRGB(57,59,61)
 	Container.BackgroundTransparency=0
 	Container.BorderSizePixel=0
 	Container.Position=UDim2.new(0,0,1,0)
@@ -460,7 +459,7 @@ function Module:CreateCanvas(Gui)
 
 	local TextButton=Instance.new("TextButton")
 	TextButton.Name="TextButton"
-	TextButton.BackgroundColor3=fColorRGB(163,162,165)
+	TextButton.BackgroundColor3=Color3.fromRGB(163,162,165)
 	TextButton.BackgroundTransparency=0
 	TextButton.BorderSizePixel=0
 	TextButton.Position=UDim2.new(0.049,0,0.123,0)
@@ -469,13 +468,13 @@ function Module:CreateCanvas(Gui)
 	TextButton.Font=Enum.Font.SourceSansBold
 	TextButton.TextStrokeTransparency=1
 	TextButton.TextTransparency=0
-	TextButton.TextColor3=fColorRGB(248,248,248)
+	TextButton.TextColor3=Color3.fromRGB(248,248,248)
 	TextButton.TextSize=18
 	TextButton.Parent=Template
 
 	local TextBox=Instance.new("TextBox")
 	TextBox.Name="TextBox"
-	TextBox.BackgroundColor3=fColorRGB(163,162,165)
+	TextBox.BackgroundColor3=Color3.fromRGB(163,162,165)
 	TextBox.BackgroundTransparency=0
 	TextBox.BorderSizePixel=0
 	TextBox.Position=UDim2.new(0.049,0,0.123,0)
@@ -484,8 +483,8 @@ function Module:CreateCanvas(Gui)
 	TextBox.Font=Enum.Font.SourceSansBold
 	TextBox.TextStrokeTransparency=1
 	TextBox.TextTransparency=0
-	TextBox.PlaceholderColor3=fColorRGB(248,248,248)
-	TextBox.TextColor3=fColorRGB(248,248,248)
+	TextBox.PlaceholderColor3=Color3.fromRGB(248,248,248)
+	TextBox.TextColor3=Color3.fromRGB(248,248,248)
 	TextBox.TextSize=18
 	TextBox.Parent=Template
 
@@ -499,7 +498,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel.Font=Enum.Font.SourceSansBold
 	TextLabel.TextStrokeTransparency=1
 	TextLabel.TextTransparency=0
-	TextLabel.TextColor3=fColorRGB(248,248,248)
+	TextLabel.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel.TextSize=18
 	TextLabel.Parent=Template
 
@@ -524,7 +523,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel2.Font=Enum.Font.SourceSansBold
 	TextLabel2.TextStrokeTransparency=1
 	TextLabel2.TextTransparency=0
-	TextLabel2.TextColor3=fColorRGB(248,248,248)
+	TextLabel2.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel2.TextScaled=true
 	TextLabel2.Parent=Toggle
 
@@ -539,7 +538,7 @@ function Module:CreateCanvas(Gui)
 	TextButton2.Font=Enum.Font.SourceSansBold
 	TextButton2.TextStrokeTransparency=1
 	TextButton2.TextTransparency=0
-	TextButton2.TextColor3=fColorRGB(248,248,248)
+	TextButton2.TextColor3=Color3.fromRGB(248,248,248)
 	TextButton2.TextScaled=true
 	TextButton2.Parent=Toggle
 
@@ -564,7 +563,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel3.Font=Enum.Font.SourceSansBold
 	TextLabel3.TextStrokeTransparency=1
 	TextLabel3.TextTransparency=0
-	TextLabel3.TextColor3=fColorRGB(248,248,248)
+	TextLabel3.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel3.TextSize=18
 	TextLabel3.Parent=Selector
 
@@ -576,7 +575,7 @@ function Module:CreateCanvas(Gui)
 	Next.Position=UDim2.new(0.806,0,0,0)
 	Next.Size=UDim2.new(0.194,0,1,0)
 	Next.Font=Enum.Font.SourceSansBold
-	Next.TextColor3=fColorRGB(248,248,248)
+	Next.TextColor3=Color3.fromRGB(248,248,248)
 	Next.TextTransparency=1
 	Next.Text=""
 	Next.Parent=Selector
@@ -592,7 +591,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel4.Font=Enum.Font.SourceSansBold
 	TextLabel4.TextStrokeTransparency=1
 	TextLabel4.TextTransparency=0
-	TextLabel4.TextColor3=fColorRGB(248,248,248)
+	TextLabel4.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel4.TextScaled=true
 	TextLabel4.Parent=Next
 
@@ -605,7 +604,7 @@ function Module:CreateCanvas(Gui)
 	Previous.Size=UDim2.new(0.194,0,1,0)
 	Previous.TextScaled=true
 	Previous.Font=Enum.Font.SourceSansBold
-	Previous.TextColor3=fColorRGB(248,248,248)
+	Previous.TextColor3=Color3.fromRGB(248,248,248)
 	Previous.TextTransparency=1
 	Previous.Text=""
 	Previous.Parent=Selector
@@ -613,7 +612,7 @@ function Module:CreateCanvas(Gui)
 	local TextLabel5=Instance.new("TextLabel")
 	TextLabel5.Name="TextLabel"
 	TextLabel5.AnchorPoint=Vector2.new(0.5,0.5)
-	TextLabel5.BackgroundColor3=fColorRGB(163,162,165)
+	TextLabel5.BackgroundColor3=Color3.fromRGB(163,162,165)
 	TextLabel5.BackgroundTransparency=1
 	TextLabel5.BorderSizePixel=0
 	TextLabel5.Position=UDim2.new(0.5,0,0.5,0)
@@ -622,7 +621,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel5.Font=Enum.Font.SourceSansBold
 	TextLabel5.TextStrokeTransparency=1
 	TextLabel5.TextTransparency=0
-	TextLabel5.TextColor3=fColorRGB(248,248,248)
+	TextLabel5.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel5.TextScaled=true
 	TextLabel5.Parent=Previous
 
@@ -640,7 +639,7 @@ function Module:CreateCanvas(Gui)
 
 	local Frame2=Instance.new("Frame")
 	Frame2.Name="Frame"
-	Frame2.BackgroundColor3=fColorRGB(200,200,200)
+	Frame2.BackgroundColor3=Color3.fromRGB(200,200,200)
 	Frame2.BackgroundTransparency=0
 	Frame2.BorderSizePixel=0
 	Frame2.Position=UDim2.new(0.41,0,0.123,0)
@@ -649,14 +648,14 @@ function Module:CreateCanvas(Gui)
 
 	local TextButton3=Instance.new("TextButton")
 	TextButton3.Name="TextButton"
-	TextButton3.BackgroundColor3=fColorRGB(0,200,97)
+	TextButton3.BackgroundColor3=Color3.fromRGB(0,200,97)
 	TextButton3.BackgroundTransparency=0
 	TextButton3.BorderSizePixel=0
 	TextButton3.Position=UDim2.new(0.049,0,0.123,0)
 	TextButton3.Size=UDim2.new(0.299,0,0.753,0)
 	TextButton3.Font=Enum.Font.SourceSansBold
 	TextButton3.TextScaled=true
-	TextButton3.TextColor3=fColorRGB(248,248,248)
+	TextButton3.TextColor3=Color3.fromRGB(248,248,248)
 	TextButton3.Text="Select"
 	TextButton3.Parent=Select
 	
@@ -687,7 +686,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel6.Font=Enum.Font.SourceSansBold
 	TextLabel6.TextStrokeTransparency=1
 	TextLabel6.TextTransparency=0
-	TextLabel6.TextColor3=fColorRGB(248,248,248)
+	TextLabel6.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel6.TextSize=18
 	TextLabel6.Parent=Dropdown
 
@@ -701,7 +700,7 @@ function Module:CreateCanvas(Gui)
 	TextLabel7.Font=Enum.Font.SourceSansBold
 	TextLabel7.TextStrokeTransparency=1
 	TextLabel7.TextTransparency=0
-	TextLabel7.TextColor3=fColorRGB(248,248,248)
+	TextLabel7.TextColor3=Color3.fromRGB(248,248,248)
 	TextLabel7.TextSize=18
 	TextLabel7.Parent=Dropdown
 
@@ -713,7 +712,7 @@ function Module:CreateCanvas(Gui)
 	TextButton4.Position=UDim2.new(0,0,0,0)
 	TextButton4.Size=UDim2.new(1,0,1,0)
 	TextButton4.Font=Enum.Font.SourceSansBold
-	TextButton4.TextColor3=fColorRGB(248,248,248)
+	TextButton4.TextColor3=Color3.fromRGB(248,248,248)
 	TextButton4.TextTransparency=1
 	TextButton4.Parent=Dropdown
 
@@ -741,14 +740,14 @@ function Module:CreateKeyCanvas(Settings)
 	local MainFrame=Instance.new("Frame",ScreenGui)
 	MainFrame.Size=UDim2.new(0,340,0,420)
 	MainFrame.Position=UDim2.new(0.5,-170,0.5,-210)
-	MainFrame.BackgroundColor3=fColorRGB(25,26,31)
+	MainFrame.BackgroundColor3=Color3.fromRGB(25,26,31)
 	MainFrame.Active=true;
 	MainFrame.Draggable=true
 	Instance.new("UICorner",MainFrame).CornerRadius=UDim.new(0,15)
 
 	local mainStroke=Instance.new("UIStroke",MainFrame)
 	mainStroke.Thickness=2;
-	mainStroke.Color=fColorRGB(40,40,40)
+	mainStroke.Color=Color3.fromRGB(40,40,40)
 
 	-- Close Button
 	local CloseBtn=Instance.new("TextButton",MainFrame)
@@ -756,7 +755,7 @@ function Module:CreateKeyCanvas(Settings)
 	CloseBtn.Position=UDim2.new(1,-35,0,10)
 	CloseBtn.BackgroundTransparency=1
 	CloseBtn.Text="X"
-	CloseBtn.TextColor3=fColorRGB(255,50,50)
+	CloseBtn.TextColor3=Color3.fromRGB(255,50,50)
 	CloseBtn.Font=Enum.Font.GothamBold
 	CloseBtn.TextSize=18
 	CloseBtn.ZIndex=10
@@ -764,9 +763,9 @@ function Module:CreateKeyCanvas(Settings)
 	local Title=Instance.new("TextLabel",MainFrame)
 	Title.Size=UDim2.new(1,0,0,50)
 	Title.BackgroundTransparency=1
-	Title.BackgroundColor3=fColorRGB(255,255,255)
+	Title.BackgroundColor3=Color3.fromRGB(255,255,255)
 	Title.Text=Settings.Title or "Title"
-	Title.TextColor3=fColorRGB(0,170,255)
+	Title.TextColor3=Color3.fromRGB(0,170,255)
 	Title.Font=Enum.Font.GothamBold;
 	Title.TextSize=16
 	Instance.new("UICorner",Title).CornerRadius=UDim.new(0,15)
@@ -776,7 +775,7 @@ function Module:CreateKeyCanvas(Settings)
 	PromoText.Position=UDim2.new(0.05,0,0,50)
 	PromoText.BackgroundTransparency=1
 	PromoText.Text=Settings.Description or "Description"
-	PromoText.TextColor3=fColorRGB(0,170,255)
+	PromoText.TextColor3=Color3.fromRGB(0,170,255)
 	PromoText.Font=Enum.Font.GothamBold;
 	PromoText.TextSize=14
 	PromoText.TextWrapped=true
@@ -805,7 +804,7 @@ function Module:CreateKeyCanvas(Settings)
 		DiscordBtn.Text="      JOIN DISCORD"
 		DiscordBtn.Font="GothamBold";
 		DiscordBtn.TextSize=14
-		DiscordBtn.BackgroundColor3=fColorRGB(88,101,242)
+		DiscordBtn.BackgroundColor3=Color3.fromRGB(88,101,242)
 		DiscordBtn.TextColor3=Color3.new(1,1,1)
 		Instance.new("UICorner",DiscordBtn)
 		AddRainbowStroke(DiscordBtn)
@@ -821,7 +820,7 @@ function Module:CreateKeyCanvas(Settings)
 			local Status=MainFrame:FindFirstChild("StatusLabel")
 			if Status then 
 				Status.Text="Discord Link Copied!"
-				Status.TextColor3=fColorRGB(88,101,242)
+				Status.TextColor3=Color3.fromRGB(88,101,242)
 			end
 			-- Auto-extract invite code from config URL
 			local inviteCode=string.match(Settings.DiscordURL,"discord%.gg/([%w-]+)" :: string)
@@ -839,7 +838,7 @@ function Module:CreateKeyCanvas(Settings)
 		InstaBtn.Text="      FOLLOW INSTAGRAM"
 		InstaBtn.Font="GothamBold";
 		InstaBtn.TextSize=14
-		InstaBtn.BackgroundColor3=fColorRGB(225,48,108)
+		InstaBtn.BackgroundColor3=Color3.fromRGB(225,48,108)
 		InstaBtn.TextColor3=Color3.new(1,1,1)
 		Instance.new("UICorner",InstaBtn)
 		AddRainbowStroke(InstaBtn)
@@ -855,7 +854,7 @@ function Module:CreateKeyCanvas(Settings)
 			local Status=MainFrame:FindFirstChild("StatusLabel")
 			if Status then 
 				Status.Text="Instagram Link Copied!"
-				Status.TextColor3=fColorRGB(225,48,108)
+				Status.TextColor3=Color3.fromRGB(225,48,108)
 			end
 		end)
 
@@ -870,7 +869,7 @@ function Module:CreateKeyCanvas(Settings)
 		YTBtn.Text="      SUBSCRIBE YOUTUBE"
 		YTBtn.Font="GothamBold";
 		YTBtn.TextSize=14
-		YTBtn.BackgroundColor3=fColorRGB(255,0,0)
+		YTBtn.BackgroundColor3=Color3.fromRGB(255,0,0)
 		YTBtn.TextColor3=Color3.new(1,1,1)
 		Instance.new("UICorner",YTBtn)
 		AddRainbowStroke(YTBtn)
@@ -886,7 +885,7 @@ function Module:CreateKeyCanvas(Settings)
 			local Status=MainFrame:FindFirstChild("StatusLabel")
 			if Status then
 				Status.Text="YouTube Link Copied!"
-				Status.TextColor3=fColorRGB(255,0,0)
+				Status.TextColor3=Color3.fromRGB(255,0,0)
 			end
 		end)
 
@@ -901,7 +900,7 @@ function Module:CreateKeyCanvas(Settings)
 	KeyInput.Text=""
 	KeyInput.Font=Enum.Font.SourceSansBold
 	KeyInput.TextSize=14
-	KeyInput.BackgroundColor3=fColorRGB(25,25,25)
+	KeyInput.BackgroundColor3=Color3.fromRGB(25,25,25)
 	KeyInput.TextColor3=Color3.new(1,1,1)
 	Instance.new("UICorner",KeyInput)
 
@@ -911,7 +910,7 @@ function Module:CreateKeyCanvas(Settings)
 	VerifyBtn.Text="VERIFY"
 	VerifyBtn.Font="GothamBold"
 	VerifyBtn.TextSize=14
-	VerifyBtn.BackgroundColor3=fColorRGB(0,120,255)
+	VerifyBtn.BackgroundColor3=Color3.fromRGB(0,120,255)
 	VerifyBtn.TextColor3=Color3.new(1,1,1)
 	Instance.new("UICorner",VerifyBtn)
 
@@ -921,7 +920,7 @@ function Module:CreateKeyCanvas(Settings)
 	GetKeyBtn.Text="GET KEY"
 	GetKeyBtn.Font="GothamBold"
 	GetKeyBtn.TextSize=14
-	GetKeyBtn.BackgroundColor3=fColorRGB(35,35,35);
+	GetKeyBtn.BackgroundColor3=Color3.fromRGB(35,35,35);
 	GetKeyBtn.TextColor3=Color3.new(1,1,1)
 	Instance.new("UICorner",GetKeyBtn)
 
@@ -931,7 +930,7 @@ function Module:CreateKeyCanvas(Settings)
 	Status.Position=UDim2.new(0,0,0,currentYOffset + 115)
 	Status.BackgroundTransparency=1
 	Status.Text="Waiting for input..."
-	Status.TextColor3=fColorRGB(150,150,150)
+	Status.TextColor3=Color3.fromRGB(150,150,150)
 	Status.Font=Enum.Font.Gotham
 	Status.TextSize=12
 
@@ -960,7 +959,7 @@ Gui.ResetOnSpawn=false
 Gui.AutoLocalize=false
 Gui.ZIndexBehavior=Enum.ZIndexBehavior.Global
 
-function Module:ProtectUI(v)
+function Module:SetProtectUI(v)
 	if gethui then
 		v.Parent=gethui()
 	elseif syn and syn.protect_gui then 
@@ -991,7 +990,7 @@ function Module:EnableProtectUI(vName,v,oldVName,enabled)
 	end
 end
 
-Module:ProtectUI(Gui)
+Module:SetProtectUI(Gui)
 
 EnsureFolder(UIFolder)
 
@@ -1031,7 +1030,7 @@ function Module:DeepCopy(t)
 	return copyTable
 end
 
-function Module:GrabUI(frame)
+function Module:GrabUI(frame:Instance)
 	local dragging,dragInput,dragStart,startPos
 	local inputBeganConnection,inputChangedConnection1,inputChangedConnection2
 	inputBeganConnection=frame.InputBegan:Connect(function(input)
@@ -1049,34 +1048,34 @@ function Module:GrabUI(frame)
 			frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
 		end
 	end)
+	local destroyingConnection=frame.Destroying:Connect(function()
+		inputChangedConnection2:Disconnect()
+	end)
 	return function()
+		destroyingConnection:Disconnect()
 		inputBeganConnection:Disconnect()
 		inputChangedConnection1:Disconnect()
 		inputChangedConnection2:Disconnect()
 	end
 end
 
-function Module:ResizeUIScale(ui,screenSize)
-	local scaleX=screenSize.X / baseX
-	local scaleY=screenSize.Y / baseY
-	local scale=math.min(scaleX, scaleY)
+function Module:ResizeUIScale(ui,screenSize,x,y,callback)
+	local scaleX=screenSize.X/x
+	local scaleY=screenSize.Y/y
+	local scale=math.min(scaleX,scaleY)
 
-	local minAxis=math.min(screenSize.X, screenSize.Y)
-	local isSmallScreen=minAxis <= 500
+	local minAxis=math.min(screenSize.X,screenSize.Y)
+	local isSmallScreen=minAxis<=500
 
 	local uiScale=ui:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
 	uiScale.Parent=ui
 
-	local result=1
-
-	if scale < 1 then
-		result=scale*1.5
-	elseif scale > 1 then
-		result=scale*1
-	else
-		result=1
+	local result,done=1,false
+	if callback then
+		local value=CallSafely(callback,scale,minAxis,isSmallScreen)
+		if value and type(value)=="number" then done=true if value>1 then result=value else done=false end end
 	end
-
+	if not done then if scale<1 then result=scale*1.5 elseif scale>1 then result=scale*1 else result=1 end end
 	uiScale.Scale=result
 end
 
@@ -1084,10 +1083,17 @@ function Module:UpdateTextSize(label)
 	local c=#label.Text label.TextSize=if c>=90 and c<101 then 0 elseif c>=60 and c<70 then 7 elseif c>=50 and c<60 then 8 elseif c>=10 and c<20 then 10 else 14; label.TextScaled=label.TextSize<=0
 end
 
-Module:ResizeUIScale(Gui,workspace.CurrentCamera.ViewportSize)
-workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-	Module:ResizeUIScale(Gui,workspace.CurrentCamera.ViewportSize)
-end)
+function UILibrary:SetAutoResizeUI(ui:Instance,data)
+	data=type(data)=="table" and data or {}
+	Module:ResizeUIScale(ui,workspace.CurrentCamera.ViewportSize,data.BaseX and data.BaseX or baseX,data.BaseY and data.BaseY or baseY,data.Callback)
+	local connection=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+		Module:ResizeUIScale(ui,workspace.CurrentCamera.ViewportSize,data.BaseX or baseX,data.BaseY or baseY,data.Callback)
+	end)
+	ui.Destroying:Connect(function() connection:Disconnect() end)
+	return function() connection:Disconnect() end
+end
+
+UILibrary:SetAutoResizeUI(Gui,{BaseX=baseX,BaseY=baseY})
 
 local function PackNotif(...)
 	local title,description,duration,backgroundColor,barColor,titleColor,descriptionColor,mode
@@ -1104,16 +1110,16 @@ local function PackNotif(...)
 		Description=Missing("string",description,"Description"),
 		Duration=Missing("number",duration,5),
 		Mode=string.lower(Missing("string",mode,"None")),
-		BackgroundColor=Missing("Color3",backgroundColor,fColorRGB(57,59,61)),
-		BarColor=Missing("Color3",barColor,fColorRGB(0,170,255)),
-		TitleColor=Missing("Color3",titleColor,fColorRGB(255,255,255)),
-		DescriptionColor=Missing("Color3",descriptionColor,fColorRGB(200,200,200))
+		BackgroundColor=Missing("Color3",backgroundColor,Color3.fromRGB(57,59,61)),
+		BarColor=Missing("Color3",barColor,Color3.fromRGB(0,170,255)),
+		TitleColor=Missing("Color3",titleColor,Color3.fromRGB(255,255,255)),
+		DescriptionColor=Missing("Color3",descriptionColor,Color3.fromRGB(200,200,200))
 	}
 	return result
 end
 
-function UILibrary:ProtectUI(ui)
-	return Module:ProtectUI(ui)
+function UILibrary:SetProtectUI(ui)
+	return Module:SetProtectUI(ui)
 end
 
 function UILibrary:EnableProtectUI(vName,v,oldVName,enabled)
@@ -1509,18 +1515,14 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	KeyGui.Name=GuiName
 	KeyGui.Enabled=true
 
-	Module:ProtectUI(KeyGui)
-	Module:EnableProtectUI(GuiName,KeyGui,OldGuiName,false)
-	
-	Module:ResizeUIScale(KeyGui,workspace.CurrentCamera.ViewportSize)
-	local KeyViewportSizeChanged=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-		Module:ResizeUIScale(KeyGui,workspace.CurrentCamera.ViewportSize)
-	end)
-	
+	UILibrary:SetProtectUI(KeyGui)
+	UILibrary:EnableProtectUI(GuiName,KeyGui,OldGuiName,false)
+	local cleanResizeUI=UILibrary:SetAutoResizeUI(Gui,{BaseX=baseX,BaseY=baseY})
+
 	local CloseButton=KeyTable.CloseButton
 	local VerifyButton=KeyTable.VerifyButton
 	local GetKeyButton=KeyTable.GetKeyButton
-	local KeyInput=KeyTable.KeyInput
+	local KeyInput=KeyTable.KeyInput :: TextBox
 	local Status=KeyTable.Status
 	local SaveStatus={TextColor3=Status.TextColor3,Text=Status.Text}
 
@@ -1534,21 +1536,19 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	end
 
 	funcs.Destroy=function(this)
-		if KeyViewportSizeChanged then KeyViewportSizeChanged:Disconnect() KeyViewportSizeChanged=n() end 
 		Config.Parent=nil
+		cleanResizeUI()
 		KeyGui:Destroy()
 		funcs={}
 		Config={}
 		CopyLink,RedeemKey,VerifyKey,GetFlag=nil,nil,nil,nil
 		setmetatable(this,nil)
 	end
-
-	-- Logic
-	CloseButton.MouseButton1Click:Connect(function() newMetaTable:Destroy() Config.Closed=true end)
-
-	VerifyButton.MouseButton1Click:Connect(function()
-		if Config.Rejected==true and Config.Pass==true then return end
-		local key=KeyInput.Text
+	
+	local ApplyKey=function(key)
+		if Config.Pass==true then return end
+		if Config.Rejected==true then return end
+		if Config.Closed==true then return end
 		if key=="" then Status.Text="Enter a key!" return end
 		Status.Text="Verifying..."
 		local success,message=RedeemKey(key)
@@ -1559,7 +1559,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 					CallSafely(writefile,FolderName.."/Key System".."/"..FileName,key)
 				end
 				Status.Text="Success! Loading..."
-				Status.TextColor3=fColorRGB(0,255,100)
+				Status.TextColor3=Color3.fromRGB(0,255,100)
 				task.wait(2)
 				funcs.Destroy(newMetaTable)
 				if not Config.NoScriptURL then CallSafely(StartScriptURL) end
@@ -1571,22 +1571,31 @@ function UILibrary:CreateKeySystem(KeyInfo)
 				return
 			end
 			Status.Text=message
-			Status.TextColor3=fColorRGB(255,50,50)
+			Status.TextColor3=Color3.fromRGB(255,50,50)
 			task.wait(2)
 			Status.Text=SaveStatus.Text
 			Status.TextColor3=SaveStatus.TextColor3
 		end
+	end
+	
+	-- Logic
+	CloseButton.MouseButton1Click:Connect(function() newMetaTable:Destroy() Config.Closed=true end)
+	KeyInput.FocusLost:Connect(function(enter)
+		if not enter then return end
+		ApplyKey(KeyInput.Text)
 	end)
-
+	VerifyButton.MouseButton1Click:Connect(function()
+		ApplyKey(KeyInput.Text)
+	end)
 	GetKeyButton.MouseButton1Click:Connect(function()
 		Status.Text = "Getting Link..."
 		local success,link=CopyLink()
 		if success then
 			Status.Text="Link Copied!"
-			Status.TextColor3=fColorRGB(0, 170, 255)
+			Status.TextColor3=Color3.fromRGB(0, 170, 255)
 		else
 			Status.Text="Error: ".. tostring(link)
-			Status.TextColor3=fColorRGB(255,50,50)
+			Status.TextColor3=Color3.fromRGB(255,50,50)
 			task.wait(2)
 			Status.Text=SaveStatus.Text
 			Status.TextColor3=SaveStatus.TextColor3
@@ -2024,7 +2033,7 @@ function UILibrary:CreateWindow(WindowInfo)
 			function ContextInfo:Set(value)
 				ContextInfo.Value=value
 				if type(value)=="table" then
-					emptyFrame.BackgroundColor3=value.Color or fColorRGB(200,200,200)
+					emptyFrame.BackgroundColor3=value.Color or Color3.fromRGB(200,200,200)
 				elseif typeof(value)=="Instance" and value:IsA("BasePart") then
 					emptyFrame.BackgroundColor3=value.Color
 				end
@@ -2056,7 +2065,7 @@ function UILibrary:CreateWindow(WindowInfo)
 				textButton.BackgroundColor3=ContextInfo.Active and SelectedTheme.Select.EnableColor or SelectedTheme.Select.DisableColor
 			end)
 			cache.ButtonTextColor3Changed=textButton:GetPropertyChangedSignal("TextColor3"):Connect(function()
-				textButton.TextColor3=fColorRGB(255,255,255)
+				textButton.TextColor3=Color3.fromRGB(255,255,255)
 			end)
 		elseif typeName=="Dropdown" then
 			textLabel.Text=ContextInfo.Name or ContextInfo.Text or "Dropdown Here"
@@ -2349,13 +2358,13 @@ function UILibrary:Notify(...)
 	local data=PackNotif(...)
 	local title,description,duration,mode,backgroundColor,barColor,titleColor,descriptionColor=data.Title,data.Description,data.Duration,data.Mode,data.BackgroundColor,data.BarColor,data.TitleColor,data.DescriptionColor
 	if mode=="error" then
-		barColor=fColorRGB(255,0,0)
+		barColor=Color3.fromRGB(255,0,0)
 		if title==nil then title="Error" end
 	elseif mode=="success" then
-		barColor=fColorRGB(0,255,0)
+		barColor=Color3.fromRGB(0,255,0)
 		if title==nil then title="Success" end
 	elseif mode=="warn" then
-		barColor=fColorRGB(255,170,0)
+		barColor=Color3.fromRGB(255,170,0)
 		if title==nil then title="Warning" end
 	end
 	local tc,dc,spacing,height,width=#title,#description,10,60,260;
