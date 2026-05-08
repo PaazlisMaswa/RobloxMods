@@ -139,7 +139,7 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(30,30,30),
 			InputStroke=Color3.fromRGB(65,65,65),
 			PlaceholderColor=Color3.fromRGB(178,178,178),
-			
+
 			PlayerPickerInStroke=Color3.fromRGB(65,65,65),
 			PlayerPickerSelected=Color3.fromRGB(50,138,220)
 		},
@@ -184,7 +184,7 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(30,50,50),
 			InputStroke=Color3.fromRGB(50,70,70),
 			PlaceholderColor=Color3.fromRGB(140,160,160),
-			
+
 			PlayerPickerInStroke=Color3.fromRGB(50,70,70),
 			PlayerPickerSelected=Color3.fromRGB(0,140,140)
 		},
@@ -229,7 +229,7 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(60,45,35),
 			InputStroke=Color3.fromRGB(90,65,50),
 			PlaceholderColor=Color3.fromRGB(190,150,130),
-			
+
 			PlayerPickerInStroke=Color3.fromRGB(90,65,50),
 			PlayerPickerSelected=Color3.fromRGB(250,150,75)
 		},
@@ -274,7 +274,7 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(240,240,240),
 			InputStroke=Color3.fromRGB(180,180,180),
 			PlaceholderColor=Color3.fromRGB(140,140,140),
-			
+
 			PlayerPickerInStroke=Color3.fromRGB(180,180,180),
 			PlayerPickerSelected=Color3.fromRGB(100,150,200)
 		},
@@ -319,7 +319,7 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(45,30,60),
 			InputStroke=Color3.fromRGB(80,50,110),
 			PlaceholderColor=Color3.fromRGB(178,150,200),
-			
+
 			PlayerPickerInStroke=Color3.fromRGB(80,50,110),
 			PlayerPickerSelected=Color3.fromRGB(130,80,180)
 		},
@@ -364,7 +364,7 @@ local RayfieldLibrary={
 			InputBackground=Color3.fromRGB(235,245,235),
 			InputStroke=Color3.fromRGB(180,200,180),
 			PlaceholderColor=Color3.fromRGB(120,140,120),
-			
+
 			PlayerPickerInStroke=Color3.fromRGB(80,50,110),
 			PlayerPickerSelected=Color3.fromRGB(70,130,70)
 		},
@@ -2049,7 +2049,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		TabButton.Parent=TabList
 		TabButton.Title.TextWrapped=false
 		TabButton.Size=UDim2.new(0,TabButton.Title.TextBounds.X + 30,0,30)
-		
+
 		if Image and Image~=0 then
 			local img,rectOffset,rectSize=resolveIcon(Image)
 			TabButton.Image.Image=img
@@ -2150,11 +2150,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end)
 
 		local Tab={}
-		
+
 		-- Button
 		function Tab:CreateButton(ButtonInfo)
 			ButtonInfo=type(ButtonInfo)=="table" and ButtonInfo or {}
-			
+
 			local DefaultInfo={Type="Button",Name="Button Here",Callback=function() end}
 			for key,value in pairs(DefaultInfo) do if ButtonInfo[key]==nil then ButtonInfo[key]=value end end
 
@@ -2221,10 +2221,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 				Button.Title.Text=NewButton
 				Button.Name=NewButton
 			end
-			
+
 			return ButtonInfo
 		end
-		
+
 		-- Selector
 		function Tab:CreateSelector(SelectorInfo)
 			SelectorInfo=type(SelectorInfo)=="table" and SelectorInfo or {}
@@ -2333,7 +2333,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 			return SelectorInfo
 		end
-		
+
 		-- Expand
 		function Tab:CreateExpand(ExpandInfo)
 			ExpandInfo=type(ExpandInfo)=="table" and ExpandInfo or {}
@@ -2388,11 +2388,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 			return ExpandInfo
 		end
-		
+
 		-- ColorPicker
 		function Tab:CreateColorPicker(ColorPickerInfo) -- by Throit
 			ColorPickerInfo=type(ColorPickerInfo)=="table" and ColorPickerInfo or {}
-			
+
 			local DefaultInfo={Type="ColorPicker",Name="Color Picker Here",Color=Color3.fromRGB(163,162,165),Ext=false,Callback=function(Color) end}
 			for key,value in pairs(DefaultInfo) do if ColorPickerInfo[key]==nil then ColorPickerInfo[key]=value end end
 
@@ -2663,11 +2663,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Section
 		function Tab:CreateSection(SectionName)
 			local SectionInfo={Name=SectionName}
-			
+
 			local DefaultInfo={Type="Section",Name="Section Here"}
 			for key,value in pairs(DefaultInfo) do if SectionInfo[key]==nil then SectionInfo[key]=value end end
 			SectionInfo.Value=SectionInfo.Name
-			
+
 			if SDone then
 				local SectionSpace=Elements.Template.SectionSpacing:Clone()
 				TabPrivate.Order+=1
@@ -2675,9 +2675,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 				SectionSpace.Visible=true
 				SectionSpace.Parent=TabPage
 			end
-			
+
 			SDone=true
-			
+
 			local Section=Elements.Template.SectionTitle:Clone()
 			SectionInfo.Template=Section
 			TabPrivate.Order+=1
@@ -2700,7 +2700,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Divider
 		function Tab:CreateDivider()
 			local DividerInfo={Type="Divider",Value=true}
-			
+
 			local Divider=Elements.Template.Divider:Clone()
 			DividerInfo.Template=Divider
 			TabPrivate.Order+=1
@@ -2722,7 +2722,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Label
 		function Tab:CreateLabel(Text,Icon,Color,IgnoreTheme)
 			local LabelInfo={Text=Text,Icon=Icon,Color=Color,IgnoreTheme=IgnoreTheme}
-			
+
 			local DefaultInfo= {Type="Label",Text="Label Here",Icon=false,Color=false,IgnoreTheme=false}
 			for key,value in pairs(DefaultInfo) do if LabelInfo[key]==nil then LabelInfo[key]=value end end
 
@@ -2769,16 +2769,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Label.Title.Text=labelText
 					LabelInfo.Text=labelText
 				end
-				
+
 				local labelColor=Color or SelectedTheme.SecondaryElementBackground
 				Label.BackgroundColor3=labelColor
 				Label.UIStroke.Color=labelColor
 				LabelInfo.COlor=labelColor
-				
+
 				local labelIcon=Icon or LabelInfo.Icon
 				if labelIcon and Label:FindFirstChild('Icon') then
 					LabelInfo.Icon=labelIcon
-					
+
 					Label.Title.Position=UDim2.new(0,45,0.5,0)
 					Label.Title.Size=UDim2.new(1,-100,0,14)
 
@@ -2802,7 +2802,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Paragraph
 		function Tab:CreateParagraph(ParagraphInfo)
 			ParagraphInfo=type(ParagraphInfo)=="table" and ParagraphInfo or {}
-			
+
 			local DefaultInfo={Type="Paragraph",Title="Paragraph Here",["Content"]="Long Text Here",Ext=false}
 			for key,value in pairs(DefaultInfo) do if ParagraphInfo[key]==nil then ParagraphInfo[key]=value end end
 
@@ -2844,11 +2844,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Input
 		function Tab:CreateInput(InputInfo)
 			InputInfo=type(InputInfo)=="table" and InputInfo or {}
-			
+
 			local DefaultInfo={Type="Input",Name="Input Here",PlaceholderText="Type here",CurrentValue='',Ext=false,Callback=function(InputText) end}
 			for key,value in pairs(DefaultInfo) do if InputInfo[key]==nil then InputInfo[key]=value end end
 			InputInfo.Value=DefaultInfo.CurrentValue
-			
+
 			local Input=Elements.Template.Input:Clone()
 			InputInfo.Template=Input
 			TabPrivate.Order+=1
@@ -2918,9 +2918,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 				Input.InputFrame.InputBox.Text=text
 				InputInfo.CurrentValue=text
 				InputInfo.Value=text
-				
+
 				callSafely(InputInfo.Callback,text)
-	
+
 				if not InputInfo.Ext then
 					SaveConfiguration()
 				end
@@ -2939,7 +2939,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			return InputInfo
 		end
-		
+
 		-- Dropdown
 		function Tab:CreateDropdown(DropdownInfo)
 			DropdownInfo=type(DropdownInfo)=="table" and DropdownInfo or {}
@@ -3350,11 +3350,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Toggle
 		function Tab:CreateToggle(ToggleInfo)
 			ToggleInfo=type(ToggleInfo)=="table" and ToggleInfo or {}
-			
+
 			local DefaultInfo={Type="Toggle",Name="Toggle Here",CurrentValue=false,Ext=false}
 			for key,value in pairs(DefaultInfo) do if ToggleInfo[key]==nil then ToggleInfo[key]=value end end
 			ToggleInfo.Value=ToggleInfo.CurrentValue
-			
+
 			local Toggle=Elements.Template.Toggle:Clone()
 			ToggleInfo.Template=Toggle
 			TabPrivate.Order+=1
@@ -3399,7 +3399,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			Toggle.Interact.MouseButton1Click:Connect(function()
 				ToggleInfo.Value=not ToggleInfo.CurrentValue
-				
+
 				if ToggleInfo.CurrentValue==true then
 					ToggleInfo.CurrentValue=false
 					TweenService:Create(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover}):Play()
@@ -3421,7 +3421,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
 					TweenService:Create(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0}):Play()		
 				end
-				
+
 				local Success,Response=pcall(function()
 					if debugX then warn('Running toggle \''..ToggleInfo.Name..'\' (Interact)') end
 					if ToggleInfo.Callback then ToggleInfo.Callback(ToggleInfo.CurrentValue) end
@@ -3443,13 +3443,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 					SaveConfiguration()
 				end
 			end)
-			
+
 			-- No Callback
 			function ToggleInfo:Replace(NewToggleValue)
 				if NewToggleValue==true then NewToggleValue=true else NewToggleValue=false end
 				if ToggleInfo.CurrentValue~=NewToggleValue then
 					ToggleInfo.CurrentValue=NewToggleValue
-					
+
 					ToggleInfo.Value=NewToggleValue
 					if NewToggleValue==true then
 						TweenService:Create(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover}):Play()
@@ -3476,13 +3476,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 						TweenService:Create(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
 						TweenService:Create(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0}):Play()	
 					end
-					
+
 					if not ToggleInfo.Ext then
 						SaveConfiguration()
 					end
 				end
 			end
-			
+
 			-- With Callback
 			function ToggleInfo:Set(NewToggleValue)
 				if NewToggleValue==true then
@@ -3512,8 +3512,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 					TweenService:Create(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground}):Play()
 					TweenService:Create(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0}):Play()	
 				end
-				
-				
+
+
 				local Success,Response=pcall(function()
 					if debugX then warn('Running toggle \''..ToggleInfo.Name..'\' (:Set)') end
 					ToggleInfo.Callback(ToggleInfo.CurrentValue)
@@ -3596,9 +3596,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 				local SliderPlus,SliderMinus,SliderIndicator,SliderTextBox=Slider:FindFirstChild("Plus"),Slider:FindFirstChild("Minus"),Slider:FindFirstChild("Indicator"),Slider:FindFirstChild("TextBox")
 				local Buttons,Index,Min,Max,Value,List={},0,SliderInfo.Range[1],SliderInfo.Range[2],SliderInfo.CurrentValue,{}
-				
+
 				SliderTextBox.Text=""
-				
+
 				local function UpdateMinusOrPlus()
 					SliderPlus.Visible=Index<Total and true or false
 					SliderMinus.Visible=Index>1
@@ -3606,7 +3606,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						v.BackgroundColor3=i<=Index and Color3.fromRGB(255,255,255) or Color3.fromRGB(128,128,128)
 					end
 				end
-				
+
 				SliderIndicator.Bar.Visible=false
 
 				for i=1,Total do
@@ -3627,7 +3627,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					table.insert(List,NewValue)
 					table.insert(Buttons,temp)
 				end
-				
+
 				UpdateMinusOrPlus()
 
 				local function IsOriginalString(s)
@@ -3639,13 +3639,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 				local function ToFloatString(x)
 					return x%1==0 and `{x}` or `{string.format("%.2f",x)}`
 				end
-				
+
 				local function GetListIndex(x)
 					local newIndex=Index
 					for nextIndex,nextValue in ipairs(List) do if nextValue<=x then  newIndex=nextIndex end end
 					return newIndex
 				end
-				
+
 				function SliderInfo:Set(NewSliderInfo)
 					if Index~=NewSliderInfo.Index then
 						Index=NewSliderInfo.Index
@@ -3662,23 +3662,23 @@ function RayfieldLibrary:CreateWindow(Settings)
 						callSafely(SliderInfo.Callback,Value)
 					end
 				end
-				
+
 				function SliderInfo:Refresh()
-					
+
 				end
-				
+
 				local NewIndex=GetListIndex(SliderInfo.CurrentValue)
 				if NewIndex==Index then NewIndex=1 end
 				SliderInfo:Set({Index=NewIndex})
 				SliderInfo.Value=Value
-				
+
 				local connection=UserInputService.InputEnded:Connect(function(input)
 					if input.UserInputType==Enum.UserInputType.MouseButton1 and SLDragging==true then
 						SLDragging=false
 					end
 				end)
 				table.insert(keybindConnections,connection)
-				
+
 				for i,v in ipairs(Buttons) do
 					v.MouseButton1Down:Connect(function(input)
 						SLDragging=true
@@ -3693,16 +3693,16 @@ function RayfieldLibrary:CreateWindow(Settings)
 						end
 					end)
 				end
-				
+
 				SliderPlus.MouseButton1Click:Connect(function()
 					if Index==Total then Index=Total return end
 					SliderInfo:Set({Index=Index+1})
 				end)
-				
+
 				SliderMinus.Activated:Connect(function()
 					if Index>1 then SliderInfo:Set({Index=Index-1}) end
 				end)
-				
+
 				SliderTextBox.FocusLost:Connect(function(enterPress)
 					if not enterPress then return end
 					local inputText=SliderTextBox.Text
@@ -3881,7 +3881,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						SaveConfiguration()
 					end
 				end
-				
+
 				function SliderInfo:Refresh()
 					if debugX then warn(`"Rayfield | {SliderInfo.Name} Slider Refresh`) end
 					if SliderInfo.Percent then
@@ -3899,7 +3899,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						Slider.Main.Information.Text=tostring(SliderInfo.CurrentValue) .. " " .. SliderInfo.Suffix
 					end
 				end
-				
+
 				if Settings.ConfigurationSaving then
 					if Settings.ConfigurationSaving.Enabled and SliderInfo.Flag then
 						RayfieldLibrary.Flags[SliderInfo.Flag]=SliderInfo
@@ -3919,7 +3919,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 			return SliderInfo
 		end
-		
+
 		-- Select
 		function Tab:CreateSelect(SelectInfo)
 			SelectInfo=type(SelectInfo)=="table" and SelectInfo or {}
@@ -3971,7 +3971,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end)
 			return SelectInfo
 		end
-		
+
 		-- PlayerPicker
 		function Tab:CreatePlayerPicker(PlayerPickerInfo) -- by HowToRoblox
 			PlayerPickerInfo=type(PlayerPickerInfo)=="table" and PlayerPickerInfo or {}
@@ -4327,14 +4327,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 				end)
 				local cleanPlayer=PlayerModule:ObservePlayer(function(player)
 					task.wait(1)
-
 					if player:IsDescendantOf(Players) then
 						local index=#PlayerCache+1
 						PlayerCache[index]={['Index']=index,['Value']=player,['UserId']=player.UserId,['Name']=player.Name,['DisplayName']=player.DisplayName,['Age']=player.AccountAge}
 						local cleanAddPlayer=PlayerModule:AddPlayerFrame(player,index)
-
+						table.sort(PlayerCache,function(a,b) if next(a) and next(b) then return a.Age<b.Age end return false end)
+						for i,v in ipairs(PlayerCache) do if v and v.Template and v.Template.Parent then v.Template.LayoutOrder=i end end
 						local onPlayerRemoving=callSafely(PlayerPickerInfo.Observe,player)
-
 						return function()
 							cleanAddPlayer()
 							callSafely(onPlayerRemoving,player)
@@ -4352,7 +4351,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			if not success then warn("Rayfield | Fatal Error for PlayerPicker,",message) end
 			return PlayerPickerInfo
 		end
-		
+
 		-- ThemeButton
 		function Tab:CreateThemeButton() 
 			if TabPrivate.FirstThemeButton then warn("Rayfield | You can only have one ThemeButton in a single tab") return end
@@ -4373,7 +4372,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			})
 			return ThemeButton
 		end
-		
+
 		local ListOfTab={
 			["Button"]=Tab.CreateButton,
 			["ColorPicker"]=Tab.CreateColorPicker,
@@ -4392,7 +4391,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			["Expand"]=Tab.CreateExpand,
 			["Selector"]=Tab.CreateSelector
 		}
-		
+
 		function Tab:AddContext(ContextInfo)
 			ContextInfo=type(ContextInfo)=="table" and ContextInfo or {}
 			local TypeName=ContextInfo.Type
@@ -4447,7 +4446,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 			return MainInfo
 		end
-		
+
 		Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 			TabButton.UIStroke.Color=SelectedTheme.TabStroke
 
@@ -4464,7 +4463,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		return Tab
 	end
-	
+
 	Elements.Visible=true
 
 	task.wait(1.1)
