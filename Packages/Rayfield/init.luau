@@ -651,7 +651,7 @@ local correctBuild=false
 local warned
 local globalLoaded
 local rayfieldDestroyed=false -- True when RayfieldLibrary:Destroy() is called
-
+Rayfield.Main.Visible=false
 repeat
 	if Rayfield:FindFirstChild('Build') and Rayfield.Build.Value==InterfaceBuild then
 		correctBuild=true
