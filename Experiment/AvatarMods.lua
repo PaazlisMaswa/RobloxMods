@@ -62,3 +62,117 @@ local PantsInput=Tab:CreateInput({
 		end
 	end
 })
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Accessory Executor | Fix Position",
+   LoadingTitle = "Memuat Script...",
+   LoadingSubtitle = "by Gemini",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "AccExecConfig",
+      FileName = "MainConfig"
+   },
+   KeySystem = false -- Set ke true jika ingin pakai key
+})
+
+local MainTab = Window:CreateTab("Main Executor", 4483362458)
+
+-- Variabel penyimpan ID, default diisi dengan ID yang kamu minta
+local AccessoryID = "97694229491058"
+
+-- Input Field
+local Input = MainTab:CreateInput({
+   Name = "Asset ID Aksesori",
+   CurrentValue = AccessoryID, -- ID Default yang kamu minta
+   PlaceholderText = "Masukkan ID di sini...",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      AccessoryID = Text
+   end,
+})
+
+-- Tombol Eksekusi
+MainTab:CreateButton({
+   Name = "Pasang Aksesori ke Karakter",
+   Callback = function()
+      local player = game.Players.LocalPlayer
+      local char = player.Character
+      
+      if not char or not char:FindFirstChild("Humanoid") then
+         Rayfield:Notify({
+            Title = "Error",
+            Content = "Karakter tidak ditemukan!",
+            Duration = 5,
+            Image = 4483362458,
+         })
+         return
+      end
+
+      if AccessoryID == "" or not tonumber(AccessoryID) then
+         Rayfield:Notify({
+            Title = "ID Salah",
+            Content = "Silahkan masukkan ID angka yang valid.",
+            Duration = 5,
+            Image = 4483362458,
+         })
+         return
+      end
+
+      -- Proses pengambilan dan pemasangan objek
+      local success, err = pcall(function()
+         local objects = game:GetObjects("rbxassetid://" .. AccessoryID)
+         local item = objects[1]
+
+         if item and item:IsA("Accessory") then
+            -- Gunakan AddAccessory agar otomatis menempel ke Attachment karakter (Fix 0,0,0)
+            char.Humanoid:AddAccessory(item)
+            
+            Rayfield:Notify({
+               Title = "Berhasil!",
+               Content = "Aksesori ID " .. AccessoryID .. " terpasang.",
+               Duration = 3,
+               Image = 4483362458,
+            })
+         else
+            Rayfield:Notify({
+               Title = "Gagal",
+               Content = "ID ini bukan aksesori atau tidak dapat di-load.",
+               Duration = 5,
+               Image = 4483362458,
+            })
+            if item then item:Destroy() end
+         end
+      end)
+
+      if not success then
+         warn("Terjadi kesalahan: " .. err)
+         Rayfield:Notify({
+            Title = "Cek Console (F9)",
+            Content = "Terjadi error saat mengambil object.",
+            Duration = 5,
+         })
+      end
+   end,
+})
+
+-- Tombol Tambahan: Hapus Aksesori
+MainTab:CreateButton({
+   Name = "Hapus Semua Aksesori",
+   Callback = function()
+      local char = game.Players.LocalPlayer.Character
+      if char then
+         for _, v in pairs(char:GetChildren()) do
+            if v:IsA("Accessory") then
+               v:Destroy()
+            end
+         end
+         Rayfield:Notify({
+            Title = "Cleaned",
+            Content = "Semua aksesori telah dihapus.",
+            Duration = 3,
+         })
+      end
+   end,
+})
