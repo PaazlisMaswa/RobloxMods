@@ -1758,6 +1758,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 		end
 	end
+	
 	if (Settings.KeySystem) then
 		if not Settings.KeySettings then
 			Passthrough=true
@@ -1926,6 +1927,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Passthrough=true
 		end
 	end
+	
 	if Settings.KeySystem then
 		repeat task.wait() until Passthrough
 		if rayfieldDestroyed then return end
@@ -2272,6 +2274,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		function Tab:CreateExpand(ExpandInfo)
 			ExpandInfo=PackTab(ExpandInfo,DefaultData.Expand)
 			if Elements.Template:FindFirstChild("Expand") then 
+				local List={}
 				local Expand=Elements.Template.Expand:Clone()
 				ExpandInfo.Template=Expand
 				TabPrivate.Order+=1
@@ -2282,36 +2285,35 @@ function RayfieldLibrary:CreateWindow(Settings)
 				Expand.Parent=TabPage
 				function ExpandInfo:Remove(Context)
 					if Context["_expandAncestryChanged"] then Context._expandAncestryChanged:Disconnect() Context._expandAncestryChanged=nil end
-					local pos=table.find(ExpandInfo.List,Context) if pos then table.remove(ExpandInfo.List,Context) end
+					local pos=table.find(List,Context) if pos then table.remove(List,Context) end
 					if ExpandInfo.Removing then callSafely(ExpandInfo.Removing,Context) end
 				end
 				function ExpandInfo:Add(Context)
-					if type(Context)=="table" and Context.Type and Context.Template and Context.Template.Parent and not table.find(ExpandInfo.List,Context) then
-						local OtherTemplate=Context.Template :: Instance
+					if type(Context)=="table" and Context.Type and Context.Template and Context.Template.Parent and not table.find(List,Context) then
+						local OtherTemplate=Context.Template
 						OtherTemplate.Visible=ExpandInfo.Active
-						table.insert(ExpandInfo.List,Context)
+						table.insert(List,Context)
 						local ancestryChanged;
 						ancestryChanged=OtherTemplate.AncestryChanged:Connect(function(_,Parent)
 							if not Parent then
 								ancestryChanged:Disconnect()
 								Context._expandAncestryChanged=nil
-								local pos=table.find(ExpandInfo.List,Context)
-								if pos then table.remove(ExpandInfo.List,Context) end
+								local pos=table.find(List,Context)
+								if pos then table.remove(List,pos) end
 							end
 						end)
 						Context._expandAncestryChanged=ancestryChanged
 						if ExpandInfo.Added then callSafely(ExpandInfo.Added,Context) end
 					end
 				end
-				local Debounce=false
 				Expand.Interact.MouseButton1Click:Connect(function()
-					if Debounce then return end
-					Debounce=true
+					if ExpandInfo.Debounce then return end
+					ExpandInfo.Debounce=true
 					local active=not ExpandInfo.Active
 					ExpandInfo.Active=active
-					for i,v in ipairs(ExpandInfo.List) do if v and v.Template and v.Template.Parent then v.Template.Visible=active RunService.RenderStepped:Wait() end end
+					for i,v in ipairs(List) do if v and v.Template and v.Template.Parent then v.Template.Visible=active RunService.RenderStepped:Wait() end end
 					callSafely(ExpandInfo.Callback,active)
-					Debounce=false
+					ExpandInfo.Debounce=nil
 				end)
 			else
 				warn("Rayfield | Expand not found, replace with section.") 
@@ -4087,7 +4089,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 			local MainInfo={}
 			if TabFunc~=nil then
 				if TypeName=="Label" then
-					warn("Yes",ContextInfo.Name or ContextInfo.Text)
 					MainInfo=TabFunc(Tab,ContextInfo.Name or ContextInfo.Text,ContextInfo.Icon,ContextInfo.Color,ContextInfo.IgnoreTheme)
 				else
 					MainInfo=TabFunc(Tab,ContextInfo)
