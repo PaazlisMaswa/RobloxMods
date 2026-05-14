@@ -1180,14 +1180,9 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		GuiName        ="KeyUI", -- Name of the main script's GUI to check if it's already executing
 	}
 
-	local SaveConfig={
-		OldGuiName=DefaultInfo.OldGuiName,
-		GuiName=DefaultInfo.GuiName
-	}
-
 	for k,v in pairs(DefaultInfo) do if KeyInfo[k]==nil then KeyInfo[k]=v end end
 
-	if KeyInfo.GuiName~=SaveConfig.GuiName and KeyInfo.OldGuiName==SaveConfig.OldGuiName then
+	if KeyInfo.GuiName~=DefaultInfo.GuiName and KeyInfo.OldGuiName==DefaultInfo.OldGuiName then
 		KeyInfo.OldGuiName=KeyInfo.GuiName.."-Old"
 	end
 
