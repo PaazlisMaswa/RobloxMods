@@ -1181,8 +1181,8 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	}
 
 	local SaveConfig={
-		OldGuiName=Config.OldGuiName,
-		GuiName=Config.GuiName
+		OldGuiName=DefaultInfo.OldGuiName,
+		GuiName=DefaultInfo.GuiName
 	}
 
 	for k,v in pairs(DefaultInfo) do if KeyInfo[k]==nil then KeyInfo[k]=v end end
@@ -1246,7 +1246,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 			local textNonce=GenerateNonce();
 			task.wait(0.2)
 			if GenerateNonce()==textNonce then
-				MessageChanged("platoboost nonce error.");
+				MessageChanged("platoboost nonce error.")
 				return
 			end
 		end
