@@ -1147,7 +1147,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	    Copyright (c) 2026 OYB. All rights reserved.
 	    ================================================================
 	]]
-	local Config={
+	local DefaultInfo={
 		Title          ="Panel",-- The main title shown at the top of the GUI
 		Description    ="Key System",-- The text shown below the title
 		UseNonce       =true,-- To prevent replay attacks and request tampering.
@@ -1185,19 +1185,17 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		GuiName=Config.GuiName
 	}
 
-	for k,v in pairs(KeyInfo) do Config[k]=v end
+	for k,v in pairs(DefaultInfo) do if KeyInfo[k]==nil then KeyInfo[k]=v end end
 
-	Config.NoScriptURL=KeyInfo.NoScriptURL
-
-	if Config.GuiName~=SaveConfig.GuiName and Config.OldGuiName==SaveConfig.OldGuiName then
-		Config.OldGuiName=Config.GuiName.."-Old"
+	if KeyInfo.GuiName~=SaveConfig.GuiName and KeyInfo.OldGuiName==SaveConfig.OldGuiName then
+		KeyInfo.OldGuiName=KeyInfo.GuiName.."-Old"
 	end
 
-	Config.Type="KeySystem"
-	Config.Pass=false
-	Config.Rejected=false
-	Config.Closed=false
-	Config.Parent=false
+	KeyInfo.Type="KeySystem"
+	KeyInfo.Pass=false
+	KeyInfo.Rejected=false
+	KeyInfo.Closed=false
+	KeyInfo.Parent=true
 
 	-------------------------------------------------------------------------------
 	--! Library Json and Cryptography
@@ -1212,22 +1210,22 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	-------------------------------------------------------------------------------
 	
 	--! configuration
-	local FileName=Config.FileName
-	local FolderName=Config.FolderName
-	
-	local ServiceId=Config.ServiceId -- your service id, this is used to identify your service.
-	local PlatoSecret=Config.PlatoSecret -- make sure to obfuscate this if you want to ensure security.
-	local UseNonce=Config.UseNonce -- Hidden from Config to avoid user confusion, but active for security and use a nonce to prevent replay attacks and request tampering.
-	local MessageChanged=Config.MessageChanged or function() end
+	local FileName=KeyInfo.FileName
+	local FolderName=KeyInfo.FolderName
+	local ServiceId=KeyInfo.ServiceId -- your service id, this is used to identify your service.
+	local PlatoSecret=KeyInfo.PlatoSecret -- make sure to obfuscate this if you want to ensure security.
+	local UseNonce=KeyInfo.UseNonce -- Hidden from Config to avoid user confusion, but active for security and use a nonce to prevent replay attacks and request tampering.
+	local SecretKey=KeyInfo.Secret
 
 	--! functions
 	local fSetClipboard,fStringChar,fToString,fStringSub,fOsTime,fMathRandom,fMathFloor,fGetHwid=setclipboard or toclipboard,string.char,tostring,string.sub,os.time,math.random,math.floor,gethwid or function() return LocalPlayer.UserId end
 	local requestSending,cachedLink,cachedTime=false,"",0;
 	local host="https://api.platoboost.com";
 	local verifyAccept,maxVerifyAccept=0,30
-	-- Check server connectivity
+	
+    -- Check server connectivity
 	local function CheckConnectivity()
-		local response=SafeRequest({Url=host .. "/public/connectivity",Method="GET"})
+		local response=RequestSafely({Url=host .. "/public/connectivity",Method="GET"})
 		if not response or (response.StatusCode ~= 200 and response.StatusCode ~= 429) then
 			host="https://api.platoboost.net"
 		end
@@ -1257,7 +1255,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	-- Get player's key link
 	local function CacheLink()
 		if cachedTime+(10*60)<fOsTime() then
-			local response=SafeRequest({
+			local response=RequestSafely({
 				Url=host.."/public/start",
 				Method="POST",
 				Body=lEncode({
@@ -1270,40 +1268,35 @@ function UILibrary:CreateKeySystem(KeyInfo)
 			});
 			local message=""
 			if response.StatusCode==200 then
-				local decoded=lDecode(response.Body);
+				local decoded=lDecode(response.Body)
 				if decoded.success==true then
-					cachedLink=decoded.data.url;
-					cachedTime=fOsTime();
-					return true,cachedLink;
+					cachedLink=decoded.data.url
+					cachedTime=fOsTime()
+					return true,cachedLink
 				else
-					message=decoded.message;
-					MessageChanged(message);
-					return false,message;
+					message=decoded.message
+					return false,message
 				end
 			elseif response.StatusCode==429 then
-				message="you are being rate limited, please wait 20 seconds and try again.";
-				MessageChanged(message);
-				return false,message;
+				return false,"you are being rate limited, please wait 20 seconds and try again."
 			end
-			message="Failed to cache link.";
-			MessageChanged(message);
-			return false,message;
+			return false,"Failed to cache link."
 		else
-			return true,cachedLink;
+			return true,cachedLink
 		end
 	end
 
 	local CopyLink=function()
-		local success,result=CacheLink();
-		if success then fSetClipboard(result); return true end
+		local success,result=CacheLink()
+		if success then fSetClipboard(result) return true end
 		return success,result
 	end
 
 	-- Redeem player's key
 	local RedeemKey=function(key)
 		if UseStudio then
-			local isKey=key==Config.Secret
-			return isKey,not isKey and "Invalid key" or nil;
+			local isKey=key==SecretKey
+			return isKey,not isKey and "key is invalid." or nil;
 		else
 			local textNonce=GenerateNonce();
 			local endpoint=host.."/public/redeem/".. fToString(ServiceId);
@@ -1317,55 +1310,44 @@ function UILibrary:CreateKeySystem(KeyInfo)
 				body.nonce=textNonce;
 			end
 
-			local response=SafeRequest({
+			local response=RequestSafely({
 				Url=endpoint,
 				Method="POST",
 				Body=lEncode(body),
 				Headers={
 					["Content-Type"]="application/json"
 				}
-			});
-			local message="";
+			})
+
+			local message=""
 
 			if response.StatusCode==200 then
-				local decoded=lDecode(response.Body);
+				local decoded=lDecode(response.Body)
 				if decoded.success==true then
 					if decoded.data.valid==true then
 						if UseNonce then
 							if decoded.data.hash==lDigest("true" .. "-" .. textNonce .. "-" .. PlatoSecret) then
-								return true;
+								return true
 							else
-								message="failed to verify integrity.";
-								MessageChanged(message);
-								return false,message;
+								return false,"failed to verify integrity."
 							end    
 						else
-							return true;
+							return true
 						end
 					else
-						message="key is invalid.";
-						MessageChanged(message);
-						return false,message;
+						return false,"key is invalid."
 					end
 				else
 					if fStringSub(decoded.message,1,27)=="unique constraint violation" then
-						message="you already have an active key,please wait for it to expire before redeeming it.";
-						MessageChanged("message");
-						return false,message;
+						return false,"you already have an active key,please wait for it to expire before redeeming it."
 					else
-						message=decoded.message;
-						MessageChanged(message);
-						return false,message;
+						return false,decoded.message
 					end
 				end
 			elseif response.StatusCode==429 then
-				message="you are being rate limited, please wait 20 seconds and try again.";
-				MessageChanged(message);
-				return false,message;
+				return false,"you are being rate limited, please wait 20 seconds and try again."
 			else
-				message="server returned an invalid status code,please try again later.";
-				MessageChanged(message);
-				return false,message; 
+				return false,"server returned an invalid status code,please try again later."
 			end
 		end
 	end
@@ -1382,65 +1364,57 @@ function UILibrary:CreateKeySystem(KeyInfo)
 			endpoint=endpoint .. "&nonce=" .. textNonce;
 		end
 
-		local response=SafeRequest({
+		local response=RequestSafely({
 			Url=endpoint,
-			Method="GET",
-		});
+			Method="GET"
+		})
+
 		local message=""
-		requestSending=false;
+		requestSending=false
 
 		if response.StatusCode==200 then
-			local decoded=lDecode(response.Body);
+			local decoded=lDecode(response.Body)
 			if decoded.success==true then
 				if decoded.data.valid==true then
 					if UseNonce then
 						if decoded.data.hash==lDigest("true" .. "-" .. textNonce .. "-" .. PlatoSecret) then
-							return true;
+							return true
 						else
-							message="failed to verify integrity.";
-							MessageChanged(message);
-							return false,message;
+							return false,"failed to verify integrity."
 						end
 					else
 						return true;
 					end
 				else
 					if fStringSub(key,1,4)=="KEY_" then
-						return RedeemKey(key);
+						return RedeemKey(key)
 					else
-						message="key is invalid.";
-						MessageChanged(message);
-						return false,message;
+						return false,"key is invalid."
 					end
 				end
 			else
-				message=decoded.message;
-				MessageChanged(message);
-				return false,message;
+				return false,decoded.message
 			end
 		elseif response.StatusCode==429 then
-			message="you are being rate limited, please wait 20 seconds and try again.";
-			MessageChanged(message);
-			return false,message;
+			return false,"you are being rate limited, please wait 20 seconds and try again."
 		else
-			message="server returned an invalid status code, please try again later."
-			MessageChanged(message);
-			return false,message;
+			return false,"server returned an invalid status code, please try again later."
 		end
 	end
 
 	local GetFlag=function(name)
-		local textNonce=GenerateNonce();
-		local endpoint=host.."/public/flag/".. fToString(ServiceId) .."?name="..name;
+		local textNonce=GenerateNonce()
+		local endpoint=host.."/public/flag/".. fToString(ServiceId) .."?name="..name
 
 		if UseNonce then
 			endpoint=endpoint .. "&nonce=" .. textNonce;
 		end
 
-		local response=SafeRequest({
+		local response=RequestSafely({
 			Url=endpoint,
-			Method="GET",
-		});
+			Method="GET"
+		})
+
 		local message=""
 
 		if response.StatusCode==200 then
@@ -1450,22 +1424,16 @@ function UILibrary:CreateKeySystem(KeyInfo)
 					if decoded.data.hash==lDigest(fToString(decoded.data.value) .. "-" .. textNonce .. "-" .. PlatoSecret) then
 						return decoded.data.value;
 					else
-						message="failed to verify integrity.";
-						MessageChanged(message);
-						return nil,message;
+						return nil,"failed to verify integrity."
 					end
 				else
-					return decoded.data.value;
+					return decoded.data.value
 				end
 			else
-				message=decoded.message;
-				MessageChanged(message);
-				return nil,message;
+				return nil,decoded.message
 			end
 		else
-			message="server returned an invalid status code, please try again later.";
-			MessageChanged(message);
-			return nil,message;
+			return nil,"server returned an invalid status code, please try again later."
 		end
 	end
 
@@ -1477,9 +1445,9 @@ function UILibrary:CreateKeySystem(KeyInfo)
 
 	local function StartScriptURL()
 		-- Set secret global variable to bypass main script protection
-		pcall(function() _G[Config.Secret]=true end)
+		pcall(function() _G[SecretKey]=true end)
 		-- Execute main script
-		if not Config.NoScriptURL then pcall(function() loadstring(game:HttpGet(Config.ScriptURL))() end) end
+		if not KeyInfo.NoScriptURL then pcall(function() loadstring(game:HttpGet(KeyInfo.ScriptURL))() end) end
 	end
 
 	EnsureFolder(FolderName.."/Key System")
@@ -1495,8 +1463,8 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		if saveKey~=nil and saveKey~="" then
 			local success,message=RedeemKey(savedKey)
 			if success then
-				if not Config.Pass then 
-					Config.Pass=true
+				if not KeyInfo.Pass then 
+					KeyInfo.Pass=true
 					UILibrary:Notify({Title=Config.Title,Description="Auto-login success!",Duration=5})
 					task.wait(2)
 					StartScriptURL()
@@ -1509,6 +1477,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	end
 	
 	-- Initialize Key System GUI
+    local Cache={}
 	local KeyTable=Utility.CreateKeyCanvas(Config)
 	local KeyGui=KeyTable.Gui
 	KeyGui.Name=GuiName
@@ -1523,28 +1492,27 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	local Status=KeyTable.Status
 	local SaveStatus={TextColor3=Status.TextColor3,Text=Status.Text}
 
-	local newMetaTable={}
+	local ProxyKey={}
 
-	local funcs={}
+    function KeyInfo:WaitForKey()
+      	repeat if Config.Rejected==true or Config.Closed==true then break end task.wait() until Config.Pass==true 
+    end
 
-	funcs.WaitForKey=function()
-		repeat if Config.Rejected==true or Config.Closed==true then break end task.wait(1) until Config.Pass==true
-	end
-
-	funcs.Destroy=function(this)
-		Config.Parent=nil
-		cleanResizeUI()
-		KeyGui:Destroy()
-		funcs={}
-		Config={}
-		CopyLink,RedeemKey,VerifyKey,GetFlag=nil,nil,nil,nil
-		setmetatable(this,nil)
-	end
+    function KeyInfo:Destroy()
+        KeyGui.Name=KeyGui.Name.."-Old"
+        KeyGui.Enabled=false
+        setmetatable(ProxyKey,nil)
+        cleanResizeUI()
+        local k,v=next(Cache)
+        while v do
+           Cache[k]=nil
+           v:Disconnect()
+           k,v=next(Cache)
+        end
+    end
 
 	local ApplyKey=function(key)
-		if Config.Pass==true then return end
-		if Config.Rejected==true then return end
-		if Config.Closed==true then return end
+		if KeyInfo.Pass==true or KeyInfo.Rejected==true or KeyInfo.Closed==true then return end
 		if key=="" then Status.Text="Enter a key!" return end
 		Status.Text="Verifying..."
 		local success,message=RedeemKey(key)
@@ -1555,13 +1523,13 @@ function UILibrary:CreateKeySystem(KeyInfo)
 				Status.Text="Success! Loading..."
 				Status.TextColor3=Color3.fromRGB(0,255,100)
 				task.wait(2)
-				funcs.Destroy(newMetaTable)
+                KeyInfo:Destroy()
 				StartScriptURL()
 			end
 		else
 			verifyAccept+=1
 			if verifyAccept>=maxVerifyAccept then 
-				Config.Rejected=true
+				KeyInfo.Rejected=true
 				return
 			end
 			Status.Text=message
@@ -1573,22 +1541,22 @@ function UILibrary:CreateKeySystem(KeyInfo)
 	end
 
 	-- Logic
-	CloseButton.MouseButton1Click:Connect(function() newMetaTable:Destroy() Config.Closed=true end)
-	KeyInput.FocusLost:Connect(function(enter)
-		if not enter then return end
+	Cache.Activated=CloseButton.MouseButton1Click:Connect(function() newMetaTable:Destroy() Config.Closed=true end)
+	Cache.FocusLost=KeyInput.FocusLost:Connect(function(submit)
+		if not submit then return end
 		ApplyKey(KeyInput.Text)
 	end)
-	VerifyButton.MouseButton1Click:Connect(function()
+	Cache.VerifyActivated=VerifyButton.MouseButton1Click:Connect(function()
 		ApplyKey(KeyInput.Text)
 	end)
-	GetKeyButton.MouseButton1Click:Connect(function()
+	Cache.GetKeyActivated=GetKeyButton.MouseButton1Click:Connect(function()
 		Status.Text = "Getting Link..."
-		local success,link=CopyLink()
-		if success then
+		local Success,Link=CopyLink()
+		if Success then
 			Status.Text="Link Copied!"
 			Status.TextColor3=Color3.fromRGB(0, 170, 255)
 		else
-			Status.Text="Error: ".. tostring(link)
+			Status.Text="Error: ".. tostring(Link)
 			Status.TextColor3=Color3.fromRGB(255,50,50)
 			task.wait(2)
 			Status.Text=SaveStatus.Text
@@ -1596,17 +1564,10 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		end
 	end)
 
-	local keyClass={Type=Config.Type}
-
-	newMetaTable=setmetatable(keyClass,{
+	local KeyClass={}
+	ProxyKey=setmetatable(KeyClass,{
 		__index=function(this,key)
-			local resolve=funcs[key]
-			if resolve then
-				return function(_,...)
-					return resolve(this,...)
-				end
-			end
-			local value=Config[key]
+			local value=KeyInfo[key]
 			if value~=nil then return value end
 			return nil
 		end,
@@ -1614,7 +1575,7 @@ function UILibrary:CreateKeySystem(KeyInfo)
 		__newindex=function(this,key,value)
 		end,
 	})
-	return newMetaTable
+	return ProxyKey
 end
 
 local Gui=nil
