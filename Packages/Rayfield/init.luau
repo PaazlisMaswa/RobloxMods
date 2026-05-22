@@ -28,7 +28,7 @@ local Players,UserInputService,TweenService,HttpService,RunService,UserService,C
 
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
 -- Errors with the function are caught and logged to the output
-local function loadWithTimeout(url: string,timeout: number?): ...any
+local function loadWithTimeout(url,timeout): ...any
 	assert(type(url)=="string","Expected string,got " .. type(url))
 	timeout=timeout or 5
 	local requestCompleted=false
@@ -499,7 +499,7 @@ local RayfieldLibrary={
 
 			PlayerPickerSelected=Color3.fromRGB(70,130,180)
 		},
-	}
+	},
 }
 
 local secureWarnings,customAssets={},{}
@@ -552,12 +552,20 @@ local useStudio=RunService:IsStudio() or false
 local settingsCreated=false
 local settingsInitialized=false -- Whether the UI elements in the settings page have been set to the proper values
 local prompt=useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
-local requestFunc=(syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 
 -- Validate prompt loaded correctly
 if not prompt and not useStudio then
 	warn("Failed to load prompt library, using fallback")
 	prompt={create=function() end}
+end
+
+local function requestSafely(options)
+	local func=(syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
+	if func then 
+		local success,result=pcall(func,options)
+		if success then return result end return nil,result
+	end
+	return nil
 end
 
 -- The function below provides a safe alternative for calling error-prone functions
@@ -621,18 +629,18 @@ if debugX then warn("Now Loading Settings Configuration") end
 
 loadSettings()
 
-local ANALYTICS_TOKEN="05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
+--local ANALYTICS_TOKEN="05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
 
 local reporter=nil
-if not requestsDisabled and not useStudio then
-	local fetchSuccess,fetchResult=pcall(game.HttpGet,game,"https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/reporter.lua")
-	if fetchSuccess and #fetchResult>0 then
-		local execSuccess,Analytics=pcall(function() return (loadstring(fetchResult))() end)
-		if execSuccess and Analytics then
-			pcall(function() reporter=Analytics.new({url="https://rayfield-collect.sirius-software-ltd.workers.dev",token=ANALYTICS_TOKEN,product_name="Rayfield",category="UILibrary"}) end)
-		end
-	end
-end
+--if not requestsDisabled and not useStudio then
+--	local fetchSuccess,fetchResult=pcall(game.HttpGet,game,"https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/reporter.lua")
+--	if fetchSuccess and #fetchResult>0 then
+--		local execSuccess,Analytics=pcall(function() return (loadstring(fetchResult))() end)
+--		if execSuccess and Analytics then
+--			pcall(function() reporter=Analytics.new({url="https://rayfield-collect.sirius-software-ltd.workers.dev",token=ANALYTICS_TOKEN,product_name="Rayfield",category="UILibrary"}) end)
+--		end
+--	end
+--end
 
 local promptUser=2
 
@@ -1606,7 +1614,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if getgenv and not getgenv().rayfieldCached then
 			Rayfield.Enabled=true
 			Rayfield.Loading.Visible=true
-
 			task.wait(1.4)
 			Rayfield.Loading.Visible=false
 		end
@@ -1615,10 +1622,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	if getgenv then getgenv().rayfieldCached=true end
 
 	if not correctBuild and not Settings.DisableBuildWarnings then
-		task.delay(3,
-			function() 
-				RayfieldLibrary:Notify({Title='Build Mismatch',Content='Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.',Image=4335487866,Duration=15})		
-			end)
+		task.delay(3,function() RayfieldLibrary:Notify({Title='Build Mismatch',Content='Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.',Image=4335487866,Duration=15})	end)
 	end
 
 	if Settings.ToggleUIKeybind then -- Can either be a string or an Enum.KeyCode
@@ -1641,26 +1645,20 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	local Passthrough=false
 	Topbar.Title.Text=Settings.Name
-
 	Main.Size=UDim2.new(0,420,0,100)
 	Main.Visible=true
 	Main.BackgroundTransparency=1
-	if Main:FindFirstChild('Notice') then Main.Notice.Visible=false end
+	if Main:FindFirstChild("Notice") then Main.Notice.Visible=false end
 	Main.Shadow.Image.ImageTransparency=1
-
 	LoadingFrame.Title.TextTransparency=1
 	LoadingFrame.Subtitle.TextTransparency=1
-
-	if Settings.ShowText then
-		MPrompt.Title.Text='Show '..Settings.ShowText
-	end
-
+	if Settings.ShowText then MPrompt.Title.Text="Show "..Settings.ShowText end
 	LoadingFrame.Version.TextTransparency=1
 	LoadingFrame.Title.Text=Settings.LoadingTitle or "Rayfield"
 	LoadingFrame.Subtitle.Text=Settings.LoadingSubtitle or "Interface Suite"
 
 	if Settings.LoadingTitle~="Rayfield Interface Suite" then
-		LoadingFrame.Version.Text="Rayfield UI"
+		LoadingFrame.Version.Text="Rayfield Lite"
 	end
 
 	if Settings.Icon and Settings.Icon~=0 and Topbar:FindFirstChild('Icon') then
@@ -1686,21 +1684,21 @@ function RayfieldLibrary:CreateWindow(Settings)
 	if Settings.Theme then
 		local success,result=pcall(ChangeTheme,Settings.Theme)
 		if not success then
-			local success,result2=pcall(ChangeTheme,'Default')
+			warn("Rayfield | issue rendering theme. no theme on file")
+			print(result)
+			local success,result2=pcall(ChangeTheme,"Default")
 			if not success then
-				warn('Rayfield | CRITICAL ERROR-NO DEFAULT THEME')
+				warn("Rayfield | CRITICAL ERROR-NO DEFAULT THEME")
 				print(result2)
 			end
-			warn('Rayfield | issue rendering theme. no theme on file')
-			print(result)
 		end
 	end
 
 	Topbar.Visible=false
 	Elements.Visible=false
 	LoadingFrame.Visible=true
-
-	pcall(function()
+	
+	if Settings.ConfigurationSaving then
 		if not Settings.ConfigurationSaving.FileName then
 			Settings.ConfigurationSaving.FileName=tostring(game.PlaceId)
 		end
@@ -1716,7 +1714,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		if Settings.ConfigurationSaving.Enabled then
 			ensureFolder(ConfigurationFolder)
 		end
-	end)
+	end
 
 	makeDraggable(Main,Topbar,false,{dragOffset,dragOffsetMobile})
 	if dragBar then dragBar.Position=useMobileSizing and UDim2.new(0.5,0,0.5,dragOffsetMobile) or UDim2.new(0.5,0,0.5,dragOffset) makeDraggable(Main,dragInteract,true,{dragOffset,dragOffsetMobile}) end
@@ -1730,49 +1728,38 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 	end
 
-	if Settings.Discord and Settings.Discord.Enabled and not useStudio and not secureMode then
+	if Settings.Discord and Settings.Discord.Enabled and Settings.Discord.Invite and not useStudio and not secureMode then
 		ensureFolder(RayfieldFolder.."/Discord Invites")
-
-		if not callSafely(isfile,RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension) then
-			if requestFunc then
-				pcall(function()
-					requestFunc({
-						Url='http://127.0.0.1:6463/rpc?v=1',
-						Method='POST',
-						Headers={
-							['Content-Type']='application/json',
-							Origin='https://discord.com'
-						},
-						Body=HttpService:JSONEncode({
-							cmd='INVITE_BROWSER',
-							nonce=HttpService:GenerateGUID(false),
-							args={code=Settings.Discord.Invite}
-						})
-					})
-				end)
-			end
-
+		if isfile and not callSafely(isfile,RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension) then
+			requestSafely({
+				Url="http://127.0.0.1:6463/rpc?v=1",
+				Method="POST",
+				Headers={
+					["Content-Type"]="application/json",
+					Origin="https://discord.com"
+				},
+				Body=HttpService:JSONEncode({
+					cmd="INVITE_BROWSER",
+					nonce=HttpService:GenerateGUID(false),
+					args={code=Settings.Discord.Invite}
+				})
+			})
 			if Settings.Discord.RememberJoins then -- We do logic this way so if the developer changes this setting,the user still won't be prompted,only new users
 				callSafely(writefile,RayfieldFolder.."/Discord Invites".."/"..Settings.Discord.Invite..ConfigurationExtension,"Rayfield RememberJoins is true for this invite,this invite will not ask you to join again")
 			end
 		end
 	end
 	
-	if (Settings.KeySystem) then
-		if not Settings.KeySettings then
-			Passthrough=true
-			return
-		end
-
+	if Settings.KeyInfo and Settings.KeyInfo.Enabled then
 		ensureFolder(RayfieldFolder.."/Key System")
 
-		if typeof(Settings.KeySettings.Key)=="string" then Settings.KeySettings.Key={Settings.KeySettings.Key} end
+		if typeof(Settings.KeyInfo.Key)=="string" then Settings.KeyInfo.Key={Settings.KeyInfo.Key} end
 
-		if Settings.KeySettings.GrabKeyFromSite then
-			for i,Key in ipairs(Settings.KeySettings.Key) do
+		if Settings.KeyInfo.GrabKeyFromSite then
+			for i,Key in ipairs(Settings.KeyInfo.Key) do
 				local Success,Response=pcall(function()
-					Settings.KeySettings.Key[i]=tostring(game:HttpGet(Key):gsub("[\n\r]"," "))
-					Settings.KeySettings.Key[i]=string.gsub(Settings.KeySettings.Key[i]," ","")
+					Settings.KeyInfo.Key[i]=tostring(game:HttpGet(Key):gsub("[\n\r]"," "))
+					Settings.KeyInfo.Key[i]=string.gsub(Settings.KeyInfo.Key[i]," ","")
 				end)
 				if not Success then
 					print("Rayfield | "..Key.." Error " ..tostring(Response))
@@ -1781,13 +1768,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 			end
 		end
 
-		if not Settings.KeySettings.FileName then
-			Settings.KeySettings.FileName="No file name specified"
+		if not Settings.KeyInfo.FileName then
+			Settings.KeyInfo.FileName="No file name specified"
 		end
 
-		if callSafely(isfile,RayfieldFolder.."/Key System".."/"..Settings.KeySettings.FileName..ConfigurationExtension) then
-			for _,MKey in ipairs(Settings.KeySettings.Key) do
-				local savedKeys=callSafely(readfile,RayfieldFolder.."/Key System".."/"..Settings.KeySettings.FileName..ConfigurationExtension)
+		if callSafely(isfile,RayfieldFolder.."/Key System".."/"..Settings.KeyInfo.FileName..ConfigurationExtension) then
+			for _,MKey in ipairs(Settings.KeyInfo.Key) do
+				local savedKeys=callSafely(readfile,RayfieldFolder.."/Key System".."/"..Settings.KeyInfo.FileName..ConfigurationExtension)
 				if savedKeys and string.find(savedKeys,MKey) then
 					Passthrough=true
 				end
@@ -1801,12 +1788,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 
 		if not Passthrough then
-			local AttemptsRemaining=Settings.KeySettings.MaxAttempts or 5
+			local AttemptsRemaining=Settings.KeyInfo.MaxAttempts or 5
 			Rayfield.Enabled=false
 			local KeyUI=useStudio and script.Parent:FindFirstChild('Key') or game:GetObjects("rbxassetid://11380036235")[1]
-
 			KeyUI.Enabled=true
-
 			if gethui then
 				KeyUI.Parent=gethui()
 			elseif syn and syn.protect_gui then 
@@ -1817,7 +1802,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 			elseif not useStudio then
 				KeyUI.Parent=CoreGui
 			end
-
 			if gethui then
 				for _,Interface in ipairs(gethui():GetChildren()) do
 					if Interface.Name==KeyUI.Name and Interface~=KeyUI then
@@ -1833,12 +1817,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 					end
 				end
 			end
-
 			local KeyMain=KeyUI.Main
-			KeyMain.Title.Text=Settings.KeySettings.Title or Settings.Name
-			KeyMain.Subtitle.Text=Settings.KeySettings.Subtitle or "Key System"
-			KeyMain.NoteMessage.Text=Settings.KeySettings.Note or "No instructions"
-
+			KeyMain.Title.Text=Settings.KeyInfo.Title or Settings.Name
+			KeyMain.Subtitle.Text=Settings.KeyInfo.Subtitle or "Key System"
+			KeyMain.NoteMessage.Text=Settings.KeyInfo.Note or "No instructions"
 			KeyMain.Size=UDim2.new(0,467,0,175)
 			KeyMain.BackgroundTransparency=1
 			KeyMain.Shadow.Image.ImageTransparency=1
@@ -1851,7 +1833,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 			KeyMain.NoteTitle.TextTransparency=1
 			KeyMain.NoteMessage.TextTransparency=1
 			KeyMain.Hide.ImageTransparency=1
-
 			TweenService:Create(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0}):Play()
 			TweenService:Create(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,187)}):Play()
 			TweenService:Create(KeyMain.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.5}):Play()
@@ -1868,31 +1849,24 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TweenService:Create(KeyMain.NoteMessage,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0}):Play()
 			task.wait(0.15)
 			TweenService:Create(KeyMain.Hide,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{ImageTransparency=0.3}):Play()
-
 			KeyUI.Main.Input.InputBox.FocusLost:Connect(function()
 				if #KeyUI.Main.Input.InputBox.Text==0 then return end
-				local KeyFound=false
-				local FoundKey=''
-				for _,MKey in ipairs(Settings.KeySettings.Key) do
-					--if string.find(KeyMain.Input.InputBox.Text,MKey) then
-					--	KeyFound=true
-					--	FoundKey=MKey
-					--end
-
-
+				local keyFound=false
+				local savedKey=""
+				for _,MKey in ipairs(Settings.KeyInfo.Key) do
 					-- stricter key check
 					if KeyMain.Input.InputBox.Text==MKey then
-						KeyFound=true
-						FoundKey=MKey
+						keyFound=true
+						savedKey=MKey
 					end
 				end
-				if KeyFound then
+				if keyFound then
 					fadeOutKeyUI(KeyMain)
 					task.wait(0.51)
 					Passthrough=true
 					KeyMain.Visible=false
-					if Settings.KeySettings.SaveKey then
-						callSafely(writefile,RayfieldFolder.."/Key System".."/"..Settings.KeySettings.FileName..ConfigurationExtension,FoundKey)
+					if Settings.KeyInfo.SaveKey then
+						callSafely(writefile,RayfieldFolder.."/Key System".."/"..Settings.KeyInfo.FileName..ConfigurationExtension,FoundKey)
 						RayfieldLibrary:Notify({Title="Key System",Content="The key for this script has been saved successfully.",Image=3605522284})
 					end
 				else
@@ -1926,8 +1900,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 		end
 	end
 	
-	if Settings.KeySystem then
+	if Settings.KeyInfo and Settings.KeyInfo.Enabled then
 		repeat task.wait() until Passthrough
+		-- Prevents animation from trying to play if the button's callback called RayfieldLibrary:Destroy()
 		if rayfieldDestroyed then return end
 	end
 
@@ -1944,7 +1919,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 	TweenService:Create(LoadingFrame.Subtitle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0}):Play()
 	task.wait(0.05)
 	TweenService:Create(LoadingFrame.Version,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0}):Play()
-
+	task.wait(1)
+	
 	Elements.Template.LayoutOrder=100000
 	Elements.Template.Visible=false
 
@@ -2080,7 +2056,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			["Slider"]={Type="Slider",Name="Slider Here",["Version"]=1,Increment=1,Value=1,Range={1,10},Ext=false,Callback=function(Value) end},
 			["Keybind"]={Type="Keybind",Name="Keybind Here",Keybind=nil,Ext=false,Callback=function(Value) end}
 		}
-		
+
 		local function PackTab(info,data,disabled)
 			if not disabled then
 				info=type(info)=="table" and info or {}
@@ -2117,10 +2093,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TweenService:Create(Button.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0}):Play()	
 			Button.Interact.MouseButton1Click:Connect(function()
 				local Success,Response=pcall(ButtonInfo.Callback)
-				-- Prevents animation from trying to play if the button's callback called RayfieldLibrary:Destroy()
-				if rayfieldDestroyed then
-					return
-				end
 				if not Success then
 					TweenService:Create(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)}):Play()
 					TweenService:Create(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=1}):Play()
@@ -2877,8 +2849,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 					DropdownOption.Interact.ZIndex=50
 					DropdownOption.Interact.MouseButton1Click:Connect(function()
 						if not DropdownInfo.MultipleOptions and table.find(DropdownInfo.Option,v) then return end
-						if table.find(DropdownInfo.Option,v) then
-							table.remove(DropdownInfo.Option,table.find(DropdownInfo.Option,v))
+						local foundIndex=table.find(DropdownInfo.Option,v)
+						if foundIndex then
+							table.remove(DropdownInfo.Option,foundIndex)
 							if DropdownInfo.MultipleOptions then
 								if #DropdownInfo.Option==1 then
 									Dropdown.Selected.Text=DropdownInfo.Option[1]
@@ -4125,6 +4098,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 			if TabFunc~=nil then
 				if TypeName=="Label" then
 					MainInfo=TabFunc(Tab,ContextInfo.Name or ContextInfo.Text,ContextInfo.Icon,ContextInfo.Color,ContextInfo.IgnoreTheme)
+				elseif TypeName=="Section" then
+					MainInfo=TabFunc(Tab,ContextInfo.Name or ContextInfo.Text)
 				else
 					MainInfo=TabFunc(Tab,ContextInfo)
 				end
@@ -4277,19 +4252,19 @@ function RayfieldLibrary:CreateWindow(Settings)
 			sampleSend=true
 		end
 
-		--if Settings.ScriptID then
-		reporter:windowCreated({
-			script_name       =Settings.Name or "Unknown",
-			script_version    =Release,
-			interface_version =InterfaceBuild,
-			theme             =themeName,
-			is_mobile         =useMobileSizing and true or false,
-			has_key_system    =Settings.KeySystem and true or false,
-			discord_invite    =discordInvite,
-			config_saving     =(Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
-			script_id         =Settings.ScriptID or sampleSend and 'sid_tzfyxawonjx9' or nil,
-			verification_token=Settings.VerificationToken,
-		})
+		----if Settings.ScriptID then
+		--reporter:windowCreated({
+		--	script_name       =Settings.Name or "Unknown",
+		--	script_version    =Release,
+		--	interface_version =InterfaceBuild,
+		--	theme             =themeName,
+		--	is_mobile         =useMobileSizing and true or false,
+		--	has_key_system    =Settings.KeySystem and true or false,
+		--	discord_invite    =discordInvite,
+		--	config_saving     =(Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
+		--	script_id         =Settings.ScriptID or sampleSend and 'sid_tzfyxawonjx9' or nil,
+		--	verification_token=Settings.VerificationToken,
+		--})
 		--end
 	end
 
@@ -4729,5 +4704,4 @@ task.delay(4,function()
 end)
 
 RayfieldLibrary.Gui=Rayfield
-
 return RayfieldLibrary
