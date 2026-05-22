@@ -2,6 +2,7 @@ local function Missing(t,v,f)
 	return typeof(v)==t and v or f
 end
 
+getgenv=Missing("function",getgenv,function() local _getgenv=rawget(_G,"getgenv") if not _getgenv then return _G end return _getgenv end)	
 cloneref,setclipboard=Missing("function",cloneref,function(v) return v end),Missing("function",setclipboard,function(x) warn(x) return x end)
 
 local function GetService(name)
@@ -54,20 +55,6 @@ local Players,UserInputService,TweenService,StarterGui,RunService=Services["Play
 local Module={}
 local GlobalData={
 	{
-		["PlayerPicker"]=true,
-		["Label"]=true,
-		["Switch"]=true,
-		["TextLabel"]=true,
-		["Button"]=true,
-		["Field"]=true,
-		["TextBox"]=true,
-		["TextButton"]=true,
-		["Selector"]=true,
-		["Toggle"]=true,
-		["Select"]=true,
-		["Dropdown"]=true,
-	},
-	{
 		[true]="■",
 		[false]="□"
 	},
@@ -82,7 +69,7 @@ local LocalPlayer=Players.LocalPlayer
 local Mouse=LocalPlayer:GetMouse()
 local OFFSET=UDim2.new(0,100,0,50)
 
-local NameTypes,TurnSysmbols,TurnColors=unpack(GlobalData)
+local TurnSysmbols,TurnColors=unpack(GlobalData)
 local baseX,baseY=1024,768
 local UseStudio=RunService:IsStudio()
 
@@ -1569,7 +1556,7 @@ end
 local Gui=nil
 local Canvas={}
 
-if not _G.PazuiCanvas then
+if not getgenv().PazuiCanvas then
 	Gui=Instance.new("ScreenGui")
 	Gui.Name="Pazui"
 	Gui.DisplayOrder=0
@@ -1588,14 +1575,14 @@ if not _G.PazuiCanvas then
 	Utility.SetProtectUI(Gui)
 	
 	Canvas=NewCanvas
-	_G.PazuiCanvas=NewCanvas
+	getgenv().PazuiCanvas=NewCanvas
 else
-	Canvas=_G.PazuiCanvas
+	Canvas=getgenv().PazuiCanvas
 	Gui=Canvas.Gui
 end
 
-if not _G.PazuiWindows then
-	_G.PazuiWindows={}
+if not getgenv().PazuiWindows then
+	getgenv().PazuiWindows={}
 end
 
 UILibrary.Gui=Gui
@@ -1647,12 +1634,12 @@ function UILibrary:CreateWindow(WindowInfo)
 		end)
 	end
 	
-	local lastFrame=_G.LastPazuiFrame
+	local lastFrame=getgenv().LastPazuiFrame
 	if lastFrame and lastFrame.Position==frame.Position then
 		lastFrame.Position=frame.Position+OFFSET
 	end
 	
-	_G.LastPazuiFrame=frame
+	getgenv().LastPazuiFrame=frame
 	
 	-- Recalculate the window height
 	function Window:ApplyWindowHeight()
@@ -1778,6 +1765,12 @@ function UILibrary:CreateWindow(WindowInfo)
 			Cache.Activated=Toggle.Interact.Activated:Connect(function()
 				ContextInfo:Set(not ContextInfo.Value)
 			end)
+			function ContextInfo:Replace(Value)
+				if ContextInfo.Value~=Value then
+					ContextInfo.Value=Value
+					Toggle.Interact.Text=TurnSysmbols[Value]
+				end
+			end
 			function ContextInfo:Set(Value)
 				ContextInfo.Value=Value
 				Toggle.Interact.Text=TurnSysmbols[Value]
@@ -2066,12 +2059,12 @@ function UILibrary:CreateWindow(WindowInfo)
 			if Key=="SelectedTheme" and type(Value)=="table" then SelectedTheme=Value end
 		end,
 	})
-	_G.PazuiWindows[WindowName]=ProxyWindow
+	getgenv().PazuiWindows[WindowName]=ProxyWindow
 	return ProxyWindow
 end
 
 function UILibrary:GetWindow(Name)
-	return _G.PazuiWindows[Name]
+	return getgenv().PazuiWindows[Name]
 end
 
 function UILibrary:Notify(...)
