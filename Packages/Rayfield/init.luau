@@ -803,7 +803,7 @@ do
 					while true do
 						local id=nextMissing()
 						if not id then break end
-						writefile(AssetPath.."/"..tostring(id)..".png",requestFunc({Url=assetFiles[id],Method="GET"}).Body)
+						writefile(AssetPath.."/"..tostring(id)..".png",requestSafely({Url=assetFiles[id],Method="GET"}).Body)
 						task.wait()
 					end
 				end)
