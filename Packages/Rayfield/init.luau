@@ -3351,7 +3351,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				UpdateBar()
 				local ThisIndex,ThisValue=GetIndex(SliderInfo.Value)
 				SliderInfo.Index=ThisIndex
-				SliderInfo.Value=ThisValue
+				if ThisValue then SliderInfo.Value=ThisValue else ThisValue=SliderInfo.Value end
 				UpdateMinusOrPlus()
 				ApplyTextLabel(Slider.TextBox,ThisValue)
 				ApplyTheme()
@@ -3365,10 +3365,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 				function SliderInfo:Set(value,index)
 					if SliderInfo.Index~=index then
 						SliderInfo.Index=index
-						SliderInfo.Value=value or List[index]
+						local nextValue=value or List[index]
+						SliderInfo.Value=nextValue
 						UpdateMinusOrPlus()
-						ApplyTextLabel(Slider.TextBox,value)
-						callSafely(SliderInfo.Callback,value)
+						ApplyTextLabel(Slider.TextBox,nextValue)
+						callSafely(SliderInfo.Callback,nextValue)
 					end
 				end
 				for i,v in ipairs(Bars) do
@@ -3862,13 +3863,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 					data.Template=template
 					PlayerCache[index]=data
 					if userId==ThisPlayer.UserId then
-						SelectPlayerIndex,SelectPlayerInfo=index,{['Value']=player,['Name']=userName,['UserId']=userId,['Template']=template}
+						SelectPlayerIndex,SelectPlayerInfo=index,data
 						ApplyPlayerFrame()
 					end
-					task.spawn(function()
-						table.sort(data,function(a,b) return a.Age < b.Age end)
-						for i,v in ipairs(data) do if v.Template then data.Template.LayoutOrder=i end end
-					end)
 					return function()
 						template:Destroy()
 						PlayerCache[index]=nil
@@ -3961,14 +3958,17 @@ function RayfieldLibrary:CreateWindow(Settings)
 				PlayerPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 				local cleanObservePlayer=ObservePlayer(function(player)
 					task.wait(1)
-					if player:IsDescendantOf(Players) then
+					if player and player.Parent then
 						local index=#PlayerCache+1
 						PlayerCache[index]={["Index"]=index,["Value"]=player,["UserId"]=player.UserId,["Name"]=player.Name,["DisplayName"]=player.DisplayName,["Age"]=player.AccountAge}
 						local cleanAddPlayer=AddPlayerFrame(player,index)
-						table.sort(PlayerCache,function(a,b) return a.Age<b.Age end)
-						for i,v in ipairs(PlayerCache) do if v and v.Template and v.Template.Parent then v.Template.LayoutOrder=i end end
+						local sortThread=task.defer(function()
+							table.sort(PlayerCache,function(a,b) return a.Age<b.Age end)
+							for i,v in ipairs(PlayerCache) do if player and player.Parent then if v and v.Template and v.Template.Parent then v.Template.LayoutOrder=i end else break end end
+						end)
 						local onPlayerRemoving=callSafely(PlayerPickerInfo.Observe,player)
 						return function()
+							local wasCancelled=nil if coroutine.running()~=sortThread then wasCancelled=pcall(function() task.cancel(sortThread) end) end if not wasCancelled then local toClean=sortThread task.defer(function() task.cancel(toClean) end) end
 							cleanAddPlayer()
 							callSafely(onPlayerRemoving,player)
 						end
