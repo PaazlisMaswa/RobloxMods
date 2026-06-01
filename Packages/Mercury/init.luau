@@ -156,7 +156,7 @@ function Library:object(class, properties)
 	methods.AbsoluteObject = localObject
 
 	function methods:tween(options, callback)
-		local options = Library:set_defaults({
+		local options = Library:setdefaults({
 			Length = 0.2,
 			Style = Enum.EasingStyle.Linear,
 			Direction = Enum.EasingDirection.InOut
