@@ -5,48 +5,14 @@ local gui = Library:create{
     Theme = Library.Themes.Serika
 }
 
-for index=1,10 do
-    local tab2 = gui:tab{
+local tab2 = gui:tab{
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot2"
 }
-
-tab2:button({
-    Name = "show prompt",
-    Callback = function()
-        tab2:prompt{
-            Title = "baby",
-            Text = "shark doo doo doo doo im blank lmao",
-            Buttons = {
-                Ok = function()
-                    tab2:prompt{
-                        Followup = true,
-                        Title = "really?",
-                        Text = "you sure?=",
-                        Buttons = {
-                            Yes = function()
-                                tab2:prompt{
-                                    Followup = true,
-                                    Title = "xd",
-                                    Text = "sus",
-                                    Buttons = {
-                                        balls = function()
-                                            gui:set_status("github")
-                                        end,
-                                        anal = function()
-                                            gui:set_Status("money")
-                                        end
-                                    }
-                                }
-                            end,
-                        }
-                    }
-                end,
-            }
-        }
-    end,
-})
-end
+local tab3 = gui:tab{
+    Icon = "rbxassetid://6034996695",
+    Name = "Aimbot3"
+}
 
 
 local tab = gui:tab{
