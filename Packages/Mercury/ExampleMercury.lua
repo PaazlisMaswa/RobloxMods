@@ -1,39 +1,39 @@
 -- loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Mercury/ExampleMercury.lua"))()
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Mercury/init.luau"))()
 
-local Window = Library:Create({
+local gui = Library:create{
     Theme = Library.Themes.Serika
-})
+}
 
-local Tab = Window:Tab({
+local tab = gui:tab{
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot"
 }
 
-Tab:Button({
-    Name = "Show Prompt",
+tab:button({
+    Name = "show prompt",
     Callback = function()
-        tab:Prompt{
+        tab:prompt{
             Title = "baby",
-            Text = "nice to meet you",
+            Text = "shark doo doo doo doo im blank lmao",
             Buttons = {
                 Ok = function()
-                    Window:Prompt{
+                    tab:prompt{
                         Followup = true,
                         Title = "really?",
                         Text = "you sure?=",
                         Buttons = {
                             Yes = function()
-                                Window:Prompt{
+                                tab:prompt{
                                     Followup = true,
-                                    Title = "lol",
-                                    Text = "Welcome",
+                                    Title = "xd",
+                                    Text = "sus",
                                     Buttons = {
-                                        Learn = function()
-                                            Window:set_status("money")
+                                        balls = function()
+                                            gui:set_status("github")
                                         end,
-                                        Lazy = function()
-                                            Window:set_Status("homeless")
+                                        anal = function()
+                                            gui:set_Status("money")
                                         end
                                     }
                                 }
@@ -43,16 +43,14 @@ Tab:Button({
                 end,
             }
         }
-    end
+    end,
 })
-
-Tab:Keybind({Callback = function()
-    Window:Prompt()
-end})
-
-Tab:Dropdown({
+tab:keybind({Callback = function()
+    gui:prompt()
+end,})
+tab:dropdown({
     Name = "Dropdown",
-    Description = "Dropdown Description",
+    Description = "yeeeeeeeeeeeeeeeeeeeboi",
     StartingText = "Bodypart",
     Items = {
         "Head",
@@ -60,22 +58,29 @@ Tab:Dropdown({
         "Random"
     }
 })
-
-Tab:Slider({
-    Name = "Slider",
-    Description = "Slider Description",
-    StartingText = "Aimbot Speed",
+tab:dropdown({
+    Name = "yes",
+    StartingText = "Number",
+    Items = {
+        {"One", 1},
+        {"Two", 2},
+        {"Three", 3}
+    },
+    Description = "amongu s",
     Callback = function(v)
-       Window:set_status(v)
-    end
+        print(v, "clicked")
+    end,
 })
+local cum = tab:slider({Callback = function(v)
+    gui:set_status(v)
+end})
 
-Tab:Textbox({Callback = function(v)
-    Window:Prompt{Text = v}
+tab:textbox({Callback = function(v)
+    gui:prompt{Text = v}
 end,})
 
-Tab:color_picker({
-    Name = "Color Picker",
+tab:color_picker({
+    Name = "your mom's color",
     Style = Library.ColorPickerStyles.Legacy,
     Description = "Click to adjust color...",
     Callback = function(color)
