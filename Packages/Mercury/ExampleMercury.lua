@@ -11,16 +11,6 @@ local tab = gui:tab{
     Name = "Aimbot"
 }
 
-for i=1,10 do
-  local otherTab = gui:tab({
-    Icon = "",
-    Name = "Other".. tostring(i)
-  })
-  otherTab:button({
-     Name = "what".. tostring(i),
-     Callback = function() end
-  end})
-end
 
 tab:button({
     Name = "show prompt",
