@@ -16,19 +16,19 @@ if debugX then
 	warn('Initialising Rayfield')
 end
 
-local function getService(name)
+local function GetService(name)
 	local service=game:GetService(name)
 	return if cloneref then cloneref(service) else service
 end
 
 -- Services
 local Services={}
-for i,v in ipairs({"Players","UserInputService","TweenService","HttpService","RunService","UserService","ContextActionService"}) do if Services[v]==nil then Services[v]=getService(v) end end
+for i,v in ipairs({"Players","UserInputService","TweenService","HttpService","RunService","UserService","ContextActionService"}) do if Services[v]==nil then Services[v]=GetService(v) end end
 local Players,UserInputService,TweenService,HttpService,RunService,UserService,ContextActionService=Services["Players"],Services["UserInputService"],Services["TweenService"],Services["HttpService"],Services["RunService"],Services["UserService"],Services["ContextActionService"]
 
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
 -- Errors with the function are caught and logged to the output
-local function loadWithTimeout(url,timeout)
+local function LoadWithTimeout(url,timeout)
 	assert(type(url)=="string","Expected string,got " .. type(url))
 	timeout=timeout or 5
 	local requestCompleted=false
@@ -76,18 +76,18 @@ local function loadWithTimeout(url,timeout)
 	return if success then result else nil
 end
 
-local _getgenv,requestsDisabled,secureMode,customAssetId=rawget(_G,"getgenv"),false,false,nil
+local _getgenv,RequestsDisabled,SecureMode,CustomAssetId=rawget(_G,"getgenv"),false,false,nil
 
 if _getgenv then
 	local ok,result=pcall(function() return _getgenv().DISABLE_RAYFIELD_REQUESTS end)
-	if ok and result then requestsDisabled=true end
+	if ok and result then RequestsDisabled=true end
 	local ok2,result2=pcall(function() return _getgenv().RAYFIELD_ASSET_ID end)
-	if ok2 and type(result2)=="number" then customAssetId=result2 end
+	if ok2 and type(result2)=="number" then CustomAssetId=result2 end
 	local ok3,result3=pcall(function() return _getgenv().RAYFIELD_SECURE end)
-	if ok3 and result3 then secureMode=true end
+	if ok3 and result3 then SecureMode=true end
 end
 
-if secureMode then
+if SecureMode then
 	local _error=error
 	local _assert=assert
 	warn=function(...) end
@@ -502,63 +502,62 @@ local Library={
 	},
 }
 
-local secureWarnings,customAssets={},{}
+local SecureWarnings,CustomAssets={},{}
 
-local function secureNotify(wType,title,content)
-	if secureWarnings[wType] then return end
-	secureWarnings[wType]=true
+local function SecureNotify(key,title,content)
+	if SecureWarnings[key] then return end
+	SecureWarnings[key]=true
 	task.spawn(function()
 		while not Library or not Library.Notify do task.wait(1) end
 		Library:Notify({Title=title,Content=content,Duration=8})
 	end)
 end
 
-local InterfaceBuild,Release,RayfieldFolder,ConfigurationExtension="UU2NX","Build 1.746","Rayfield",".rfld"
-local ConfigurationFolder=RayfieldFolder.."/Configurations"
-local settingsData={
+local InterfaceBuild,Release,RayfieldFolder,ConfigExtension="UU2NX","Build 1.746","Rayfield",".rfld"
+local ConfigFolder=RayfieldFolder.."/Configurations"
+local SettingsData={
 	General={
-		-- if needs be in order just make getSetting(name)
-		rayfieldOpen={Type='bind',Value='K',Name='Rayfield Keybind'},
+		rayfieldOpen={Type="bind",Value="K",Name="Rayfield Keybind"},
 	},
 	System={
-		usageAnalytics={Type='toggle',Value=true,Name='Anonymised Analytics'},
+		usageAnalytics={Type="toggle",Value=true,Name="Anonymised Analytics"},
 	}
 }
 
 -- Settings that have been overridden by the developer. These will not be saved to the user's configuration file
 -- Overridden settings always take precedence over settings in the configuration file,and are cleared if the user changes the setting in the UI
-local overriddenSettings={} -- For example,overriddenSettings["System.rayfieldOpen"]="J"
+local OverriddenSettings={} -- For example,overriddenSettings["System.rayfieldOpen"]="J"
 
-local function overrideSetting(category,name,value)
-	overriddenSettings[category .. "." .. name]=value
+local function OverrideSetting(category,name,value)
+	OverriddenSettings[category .. "." .. name]=value
 end
 
-local function getSetting(category,name)
-	if overriddenSettings[category.."."..name]~=nil then
-		return overriddenSettings[category.."."..name]
-	elseif settingsData[category][name]~=nil then
-		return settingsData[category][name].Value
+local function GetSetting(category,name)
+	if OverriddenSettings[category.."."..name]~=nil then
+		return OverriddenSettings[category.."."..name]
+	elseif SettingsData[category][name]~=nil then
+		return SettingsData[category][name].Value
 	end
 end
 
 -- If requests/analytics have been disabled by developer, set the user-facing setting to false as well
-if requestsDisabled then
-	overrideSetting("System","usageAnalytics",false)
+if RequestsDisabled then
+	OverrideSetting("System","usageAnalytics",false)
 end
 
 -- Environment Check
-local useStudio=RunService:IsStudio() or false
-local settingsCreated=false
-local settingsInitialized=false -- Whether the UI elements in the settings page have been set to the proper values
-local prompt=useStudio and require(script.Parent.prompt) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua')
+local UseStudio=RunService:IsStudio() or false
+local SettingsCreated=false
+local SettingsInitialized=false -- Whether the UI elements in the settings page have been set to the proper values
+local Prompt=UseStudio and require(script.Parent.prompt) or LoadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua")
 
 -- Validate prompt loaded correctly
-if not prompt and not useStudio then
+if not Prompt and not UseStudio then
 	warn("Failed to load prompt library, using fallback")
 	prompt={create=function() end}
 end
 
-local function requestSafely(options)
+local function RequestSafely(options)
 	local func=(syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
 	if func then 
 		local success,result=pcall(func,options)
@@ -569,53 +568,65 @@ end
 
 -- The function below provides a safe alternative for calling error-prone functions
 -- Especially useful for filesystem function (writefile,makefolder,etc.)
-local function callSafely(func,...)
+local function CallSafely(func,...)
 	if func then local success,result=pcall(func,...) if not success then warn("Rayfield | Function failed with error: ",result) return false else return result end end
 end
 
+--local function DeepMerge(defaults,options)
+--	defaults=defaults or {}
+--	options=options or {}
+--	for key,value in pairs(options) do
+--		if value and type(value)=="table" and type(defaults[key])=="table" then
+--			defaults[key]=DeepMerge(defaults[key],value)
+--		else
+--			defaults[key]=value
+--		end
+--	end
+--	return defaults
+--end
+
 -- Ensures a folder exists by creating it if needed
-local function ensureFolder(folderPath)
-	if isfolder and not callSafely(isfolder,folderPath) then callSafely(makefolder,folderPath) end
+local function EnsureFolder(folderPath)
+	if isfolder and not CallSafely(isfolder,folderPath) then CallSafely(makefolder,folderPath) end
 end
 
-local function loadSettings()
+local function LoadSettings()
 	local file=nil
-
 	local success,result=pcall(function()
-		if isfolder and callSafely(isfolder,RayfieldFolder) then if isfile and readfile and callSafely(isfile,RayfieldFolder..'/settings'..ConfigurationExtension) then file=callSafely(readfile,RayfieldFolder..'/settings'..ConfigurationExtension) end end
-
+		if isfolder and CallSafely(isfolder,RayfieldFolder) then 
+			if isfile and readfile and 
+				CallSafely(isfile,RayfieldFolder..'/settings'..ConfigExtension) then 
+				file=CallSafely(readfile,RayfieldFolder..'/settings'..ConfigExtension) 
+			end 
+		end
 		-- for debug in studio
-		if useStudio then file=[[{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"Keybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}]] end
-
+		if UseStudio then file=[[{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"Keybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}]] end
 		if file then local decodeSuccess,decodedFile=pcall(function() return HttpService:JSONDecode(file) end) if decodeSuccess then file=decodedFile else file={} end else file={} end
-
-		if not settingsCreated then return end
-
+		if not SettingsCreated then return end
 		if next(file)~=nil then
-			for categoryName,settingCategory in pairs(settingsData) do
+			for categoryName,settingCategory in pairs(SettingsData) do
 				if file[categoryName] then
 					for settingName,setting in pairs(settingCategory) do
 						if file[categoryName][settingName] then
 							setting.Value=file[categoryName][settingName].Value
-							setting.Element:Set(getSetting(categoryName,settingName))
+							setting.Element:Set(GetSetting(categoryName,settingName))
 						end
 					end
 				end
 			end
-		else -- If no settings saved,apply overridden settings only
-			for settingName,settingValue in overriddenSettings do
+		else -- If no settings saved, apply overridden settings only
+			for settingName,settingValue in OverriddenSettings do
 				local split=string.split(settingName,".")
 				assert(#split==2,"Rayfield | Invalid overridden setting name: " .. settingName)
 				local categoryName=split[1]
 				local settingNameOnly=split[2]
-				if settingsData[categoryName] and settingsData[categoryName][settingNameOnly] then
-					settingsData[categoryName][settingNameOnly].Element:Set(settingValue)
+				if SettingsData[categoryName] and SettingsData[categoryName][settingNameOnly] then
+					SettingsData[categoryName][settingNameOnly].Element:Set(settingValue)
 				end
 			end
 		end
-		settingsInitialized=true
+		SettingsInitialized=true
 	end)
-
 	if not success then  
 		if writefile then warn("Rayfield had an issue accessing configuration saving capability.") end 
 	else
@@ -625,12 +636,12 @@ end
 
 if debugX then warn("Now Loading Settings Configuration") end
 
-loadSettings()
+LoadSettings()
 
---local ANALYTICS_TOKEN="05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
+local ANALYTICS_TOKEN="05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
 
-local reporter=nil
---if not requestsDisabled and not useStudio then
+local Reporter=nil
+--if not requestsDisabled and not UseStudio then
 --	local fetchSuccess,fetchResult=pcall(game.HttpGet,game,"https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/reporter.lua")
 --	if fetchSuccess and #fetchResult>0 then
 --		local execSuccess,Analytics=pcall(function() return (loadstring(fetchResult))() end)
@@ -648,10 +659,9 @@ local reporter=nil
 
 if debugX then warn("Moving on to continue initialisation") end
 
-
 -- Interface Management
-local RayfieldAssetId=customAssetId or 134923138597588 --10804731440
-local Rayfield=useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
+local RayfieldAssetId=CustomAssetId or 134923138597588
+local Rayfield=UseStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
 local buildAttempts=0
 local correctBuild=false
 local warned
@@ -673,8 +683,8 @@ repeat
 	end
 
 	local toDestroy
-	toDestroy,Rayfield=Rayfield,useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
-	if toDestroy and not useStudio then toDestroy:Destroy() end
+	toDestroy,Rayfield=Rayfield,UseStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
+	if toDestroy and not UseStudio then toDestroy:Destroy() end
 
 	buildAttempts=buildAttempts+1
 until buildAttempts >= 2
@@ -686,37 +696,35 @@ local baseSize=Vector2.new(1024,768)
 local Main=Rayfield.Main
 local Elements=Main.Elements
 
-local CoreGui=not useStudio and getService("CoreGui")
+local CoreGui=not UseStudio and GetService("CoreGui")
 if gethui then
 	Rayfield.Parent=gethui()
 elseif syn and syn.protect_gui then 
 	syn.protect_gui(Rayfield)
 	Rayfield.Parent=CoreGui
-elseif not useStudio and CoreGui:FindFirstChild("RobloxGui") then
-	Rayfield.Parent=CoreGui:FindFirstChild("RobloxGui")
-elseif not useStudio then
+elseif not UseStudio then
 	Rayfield.Parent=CoreGui
 else
 	Rayfield.Parent=Players.LocalPlayer:WaitForChild("PlayerGui")
 end
 
 if gethui then
-	for _,Interface in ipairs(gethui():GetChildren()) do
-		if Interface.Name==Rayfield.Name and Interface~=Rayfield then
-			Interface.Enabled=false
-			Interface.Name="Rayfield-Old"
+	for _,interface in ipairs(gethui():GetChildren()) do
+		if interface.Name==Rayfield.Name and interface~=Rayfield then
+			interface.Enabled=false
+			interface.Name="Rayfield-Old"
 		end
 	end
-elseif not useStudio then
-	for _,Interface in ipairs(CoreGui:GetChildren()) do
-		if Interface.Name==Rayfield.Name and Interface~=Rayfield then
-			Interface.Enabled=false
-			Interface.Name="Rayfield-Old"
+elseif not UseStudio then
+	for _,interface in ipairs(CoreGui:GetChildren()) do
+		if interface.Name==Rayfield.Name and interface~=Rayfield then
+			interface.Enabled=false
+			interface.Name="Rayfield-Old"
 		end
 	end
 end
 
-local function resizeUIScale(ui,screenSize)
+local function ResizeUIScale(ui,screenSize)
 	local scaleX=screenSize.X/baseSize.X
 	local scaleY=screenSize.Y/baseSize.Y
 	local scale=math.min(scaleX,scaleY)
@@ -735,13 +743,13 @@ local function resizeUIScale(ui,screenSize)
 	uiScale.Scale=result
 end
 
-resizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
+ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
 workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-	resizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
+	ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
 end)
 
-if secureMode and not customAssetId then
-	secureNotify("default_asset","Secure Mode","You are using the default Rayfield asset ID. Set RAYFIELD_ASSET_ID to a custom upload to avoid detection.")
+if SecureMode and not CustomAssetId then
+	SecureNotify("default_asset","Secure Mode","You are using the default Rayfield asset ID. Set RAYFIELD_ASSET_ID to a custom upload to avoid detection.")
 end
 
 do
@@ -768,18 +776,18 @@ do
 		["IconMagnifyingGlass2"]=AssetBaseURL.."IconMagnifyingGlass2.png?raw=true",
 	}
 	for id,_ in assetFiles do
-		customAssets[id]=""
+		CustomAssets[id]=""
 	end
 	local hasCustomAsset=type(getcustomasset)=="function"
 	local hasFilesystem=type(writefile)=="function" and type(makefolder)=="function" and type(isfile)=="function" and type(isfolder)=="function"
 	if hasCustomAsset and hasFilesystem then
 		local ok,err=pcall(function()
-			ensureFolder(RayfieldFolder)
-			ensureFolder(AssetPath)
+			EnsureFolder(RayfieldFolder)
+			EnsureFolder(AssetPath)
 
 			local function nextMissing()
 				for id,_ in assetFiles do
-					if not isfile(AssetPath.."/"..tostring(id)..".png") then
+					if isfile and not isfile(AssetPath.."/"..tostring(id)..".png") then
 						return id
 					end
 				end
@@ -791,7 +799,7 @@ do
 					while true do
 						local id=nextMissing()
 						if not id then break end
-						writefile(AssetPath.."/"..tostring(id)..".png",requestSafely({Url=assetFiles[id],Method="GET"}).Body)
+						if writefile then writefile(AssetPath.."/"..tostring(id)..".png",RequestSafely({Url=assetFiles[id],Method="GET"}).Body) end
 						task.wait()
 					end
 				end)
@@ -804,44 +812,43 @@ do
 			for id,_ in assetFiles do
 				local success,asset=pcall(getcustomasset,AssetPath.."/"..tostring(id)..".png")
 				if success then
-					customAssets[tostring(id)]=asset
+					CustomAssets[tostring(id)]=asset
 				else
 					warn("Rayfield | Failed to load custom asset: "..tostring(id).."-"..tostring(asset))
 				end
 			end
 		end)
-
 		if not ok then
 			warn("Rayfield | Failed to load custom assets: "..tostring(err))
-			secureNotify("asset_load_fail","Rayfield","Failed to load custom assets. UI images may not display correctly.")
+			SecureNotify("asset_load_fail","Rayfield","Failed to load custom assets. UI images may not display correctly.")
 		end
 	else
-		secureNotify("no_getcustomasset","Rayfield","Your executor does not support getcustomasset. Some UI images may not render correctly.")
+		SecureNotify("no_getcustomasset","Rayfield","Your executor does not support getcustomasset. Some UI images may not render correctly.")
 	end
-	Rayfield.Main.Shadow.Image.Image=customAssets["5587865193"]
-	Rayfield.Main.Topbar.Hide.Image=customAssets["10137832201"]
-	Rayfield.Main.Topbar.ChangeSize.Image=customAssets["10137941941"]
-	Rayfield.Main.Topbar.Settings.Image=customAssets["80503127983237"]
-	Rayfield.Main.Topbar.Icon.Image=customAssets["78137979054938"]
-	Rayfield.Main.Topbar.Search.Image=customAssets["IconMagnifyingGlass2"]
+	Rayfield.Main.Shadow.Image.Image=CustomAssets["5587865193"]
+	Rayfield.Main.Topbar.Hide.Image=CustomAssets["10137832201"]
+	Rayfield.Main.Topbar.ChangeSize.Image=CustomAssets["10137941941"]
+	Rayfield.Main.Topbar.Settings.Image=CustomAssets["80503127983237"]
+	Rayfield.Main.Topbar.Icon.Image=CustomAssets["78137979054938"]
+	Rayfield.Main.Topbar.Search.Image=CustomAssets["IconMagnifyingGlass2"]
 	Rayfield.Main.Topbar.Search.ImageRectOffset=Vector2.new(0,0)
 	Rayfield.Main.Topbar.Search.ImageRectSize=Vector2.new(0,0)
-	Rayfield.Main.Elements.Template.Toggle.Switch.Shadow.Image=customAssets["3602733521"]
-	Rayfield.Main.Elements.Template.Slider.Main.Shadow.Image=customAssets["3602733521"]
-	Rayfield.Main.Elements.Template.Dropdown.Toggle.Image=customAssets["IconChevronTopMedium"]
+	Rayfield.Main.Elements.Template.Toggle.Switch.Shadow.Image=CustomAssets["3602733521"]
+	Rayfield.Main.Elements.Template.Slider.Main.Shadow.Image=CustomAssets["3602733521"]
+	Rayfield.Main.Elements.Template.Dropdown.Toggle.Image=CustomAssets["IconChevronTopMedium"]
 	Rayfield.Main.Elements.Template.Dropdown.Toggle.ImageRectOffset=Vector2.new(0,0)
 	Rayfield.Main.Elements.Template.Dropdown.Toggle.ImageRectSize=Vector2.new(0,0)
-	Rayfield.Main.Elements.Template.Label.Icon.Image=customAssets["11745872910"]
-	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.Image=customAssets["11413591840"]
-	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.MainPoint.Image=customAssets["3259050989"]
-	Rayfield.Main.Elements.Template.ColorPicker.ColorSlider.SliderPoint.Image=customAssets["3259050989"]
-	Rayfield.Main.TabList.Template.Image.Image=customAssets["4483362458"]
-	Rayfield.Main.Search.Search.Image=customAssets["18458939117"]
-	Rayfield.Main.Search.Shadow.Image=customAssets["5587865193"]
-	Rayfield.Notifications.Template.Icon.Image=customAssets["77891951053543"]
-	Rayfield.Notifications.Template.Shadow.Image=customAssets["3523728077"]
-	Rayfield.Loading.Banner.Image=customAssets["111263549366178"]
-end -- custom asset block
+	Rayfield.Main.Elements.Template.Label.Icon.Image=CustomAssets["11745872910"]
+	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.Image=CustomAssets["11413591840"]
+	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.MainPoint.Image=CustomAssets["3259050989"]
+	Rayfield.Main.Elements.Template.ColorPicker.ColorSlider.SliderPoint.Image=CustomAssets["3259050989"]
+	Rayfield.Main.TabList.Template.Image.Image=CustomAssets["4483362458"]
+	Rayfield.Main.Search.Search.Image=CustomAssets["18458939117"]
+	Rayfield.Main.Search.Shadow.Image=CustomAssets["5587865193"]
+	Rayfield.Notifications.Template.Icon.Image=CustomAssets["77891951053543"]
+	Rayfield.Notifications.Template.Shadow.Image=CustomAssets["3523728077"]
+	Rayfield.Loading.Banner.Image=CustomAssets["111263549366178"]
+end
 
 local useMobileSizing
 if Rayfield.AbsoluteSize.X<baseSize.X and Rayfield.AbsoluteSize.Y<baseSize.Y then
@@ -867,8 +874,8 @@ Rayfield.DisplayOrder=100
 LoadingFrame.Version.Text=Release
 
 -- Thanks to Latte Softworks for the Lucide integration for Roblox
-local Icons=useStudio and require(script.Parent.icons) or loadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
-local Strs=useStudio and require(game.ReplicatedStorage.Packages.Strs) or loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau"))()
+local Icons=UseStudio and require(script.Parent.icons) or loadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
+local Strs=UseStudio and require(game.ReplicatedStorage.Packages.Strs) or loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau"))()
 
 -- Variables
 local CFileName=nil
@@ -883,7 +890,7 @@ local keybindConnections={} -- For storing keybind connections to disconnect whe
 local SelectedTheme=Library.Theme.Default
 Library.SelectedTheme=SelectedTheme
 
-local function tween(instance,tweenInfo,properties)
+local function Tween(instance,tweenInfo,properties)
 	TweenService:Create(instance,tweenInfo,properties):Play()
 end
 
@@ -912,7 +919,7 @@ local function ChangeTheme(theme)
 	Main.Search.Input.PlaceholderColor3=SelectedTheme.TextColor
 	Main.Search.UIStroke.Color=SelectedTheme.SecondaryElementStroke
 
-	if Main:FindFirstChild('Notice') then
+	if Main:FindFirstChild("Notice") then
 		Main.Notice.BackgroundColor3=SelectedTheme.Background
 	end
 
@@ -932,7 +939,7 @@ local function ChangeTheme(theme)
 	end
 end
 
-local function getIcon(name)
+local function GetIcon(name)
 	if not Icons then
 		warn("Lucide Icons: Cannot use icons as icons library is not loaded")
 		return
@@ -963,100 +970,88 @@ local function getIcon(name)
 	return asset
 end
 
-local function getAssetUri(id)
-	local idType,assetUri=type(id),""
+local function GetAssetUrl(id)
+	local idType,assetUrl=type(id),""
 	if idType=="number" then
-		assetUri="rbxassetid://" .. id
+		assetUrl="rbxassetid://" .. id
 	elseif idType=="string" and not Icons then
 		warn("Rayfield | Cannot use Lucide icons as icons library is not loaded")
 	else
 		warn("Rayfield | The icon argument must either be an icon ID (number) or a Lucide icon name (string)")
 	end
-	return assetUri
+	return assetUrl
 end
 
-local function isCustomAsset(value)
+local function IsCustomAsset(value)
 	return type(value)=="string" and (string.find(value,"rbxasset://")==1 or string.find(value,"rbxthumb://")==1)
 end
 
-local function resolveIcon(icon)
-	if not icon or icon==0 then
+local function ResolveIcon(icon)
+	if not icon or icon==0 then return "",nil,nil end
+	if IsCustomAsset(icon) then return icon,nil,nil end
+	if SecureMode then
+		SecureNotify("icon_blocked","Secure Mode","Element icons using asset IDs or Lucide names are blocked. Use getcustomasset() for icons to stay undetected.")
 		return "",nil,nil
 	end
-
-	if isCustomAsset(icon) then
-		return icon,nil,nil
-	end
-
-	if secureMode then
-		secureNotify("icon_blocked","Secure Mode","Element icons using asset IDs or Lucide names are blocked. Use getcustomasset() for icons to stay undetected.")
-		return "",nil,nil
-	end
-
 	if typeof(icon)=="string" and Icons then
-		local asset=getIcon(icon)
+		local asset=GetIcon(icon)
 		return "rbxassetid://" .. asset.id,asset.imageRectOffset,asset.imageRectSize
 	else
-		return getAssetUri(icon),nil,nil
+		return GetAssetUrl(icon),nil,nil
 	end
 end
 
-local function makeDraggable(object,dragObject,enableTaptic,tapticOffset)
+local GuiService=GetService("GuiService")
+
+local function MakeDraggable(object,dragObject,enableTaptic,tapticOffset)
 	local dragging,relative,inputConnection=false,nil,nil
 	local offset=Vector2.zero
 	local screenGui=object:FindFirstAncestorWhichIsA("ScreenGui")
 	if screenGui and screenGui.IgnoreGuiInset then
-		offset += getService('GuiService'):GetGuiInset()
+		offset+=GuiService:GetGuiInset()
 	end
-
-	local function connectFunctions()
+	local function ConnectHover()
 		if dragBar and enableTaptic then
 			dragBar.MouseEnter:Connect(function()
 				if not dragging and not Hidden then
-					tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.5,Size=UDim2.new(0,120,0,4)})
+					Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.5,Size=UDim2.new(0,120,0,4)})
 				end
 			end)
-
 			dragBar.MouseLeave:Connect(function()
 				if not dragging and not Hidden then
-					tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.7,Size=UDim2.new(0,100,0,4)})
+					Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.7,Size=UDim2.new(0,100,0,4)})
 				end
 			end)
 		end
 	end
-
-	connectFunctions()
-
+	ConnectHover()
 	dragObject.InputBegan:Connect(function(input,processed)
 		if processed then return end
 		local inputType=input.UserInputType.Name
 		if inputType=="MouseButton1" or inputType=="Touch" then
 			dragging=true
-			relative=object.AbsolutePosition+object.AbsoluteSize * object.AnchorPoint-UserInputService:GetMouseLocation()
+			relative=object.AbsolutePosition+object.AbsoluteSize*object.AnchorPoint-UserInputService:GetMouseLocation()
 			if enableTaptic and not Hidden then
-				tween(dragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,110,0,4),BackgroundTransparency=0})
+				Tween(dragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,110,0,4),BackgroundTransparency=0})
 			end
 		end
 	end)
-
 	local inputEnded=UserInputService.InputEnded:Connect(function(input)
 		if not dragging then return end
 		local inputType=input.UserInputType.Name
 		if inputType=="MouseButton1" or inputType=="Touch" then
 			dragging=false
-			--if inputConnection then inputConnection:Disconnect() inputConnection=nil end
 			if enableTaptic and not Hidden then
-				tween(dragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,100,0,4),BackgroundTransparency=0.7})
+				Tween(dragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,100,0,4),BackgroundTransparency=0.7})
 			end
 		end
 	end)
-
 	local renderStepped=RunService.RenderStepped:Connect(function()
 		if dragging and not Hidden then
 			local position=UserInputService:GetMouseLocation()+relative+offset
 			if enableTaptic and tapticOffset then
-				tween(object,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(position.X,position.Y)})
-				tween(dragObject.Parent,TweenInfo.new(0.05,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(position.X,position.Y+((useMobileSizing and tapticOffset[2]) or tapticOffset[1]))})
+				Tween(object,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(position.X,position.Y)})
+				Tween(dragObject.Parent,TweenInfo.new(0.05,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(position.X,position.Y+((useMobileSizing and tapticOffset[2]) or tapticOffset[1]))})
 			else
 				if dragBar and tapticOffset then
 					dragBar.Position=UDim2.fromOffset(position.X,position.Y+((useMobileSizing and tapticOffset[2]) or tapticOffset[1]))
@@ -1065,7 +1060,6 @@ local function makeDraggable(object,dragObject,enableTaptic,tapticOffset)
 			end
 		end
 	end)
-
 	object.Destroying:Connect(function()
 		if inputConnection then inputConnection:Disconnect() inputConnection=nil end
 		if inputEnded then inputEnded:Disconnect() end
@@ -1073,59 +1067,62 @@ local function makeDraggable(object,dragObject,enableTaptic,tapticOffset)
 	end)
 end
 
-local function packColor(Color)
-	return {R=Color.R * 255,G=Color.G * 255,B=Color.B * 255}
+local function PackColor(Color)
+	return {R=Color.R*255,G=Color.G*255,B=Color.B*255}
 end    
 
-local function unpackColor(Color)
+local function UnpackColor(Color)
 	return Color3.fromRGB(Color.R,Color.G,Color.B)
 end
 
-local function LoadConfiguration(Configuration)
-	local success,data=pcall(function() return HttpService:JSONDecode(Configuration) end)
+local function LoadConfig(config)
+	local success,data=pcall(function() return HttpService:JSONDecode(config) end)
 	local changed=false
 	if not success then warn("Rayfield had an issue decoding the configuration file,please try delete the file and reopen Rayfield.") return end
-	-- Iterate through current UI elements' flags
-	for flagName,flag in pairs(Library.Flags) do
-		local flagValue=data[flagName]
-		if (typeof(flagValue)=="boolean" and flagValue==false) or flagValue~=nil then
+	for name,flag in pairs(Library.Flags) do
+		local value=data[name]
+		if (typeof(value)=="boolean" and value==false) or value~=nil then
 			task.spawn(function()
 				if flag.Type=="ColorPicker" then
 					changed=true
-					flag:Set(unpackColor(flagValue))
+					flag:Set(UnpackColor(value))
 				else
-					if (flag.Value or flag.Keybind or flag.Option or flag.Color)~=flagValue then 
+					if (flag.Value or flag.Keybind or flag.Option or flag.Color)~=value then 
 						changed=true
-						flag:Set(flagValue) 	
+						flag:Set(value) 	
 					end
 				end
 			end)
 		else
-			warn("Rayfield | Unable to find '"..flagName.. "' in the save file.")
+			warn("Rayfield | Unable to find '"..name.. "' in the save file.")
 			print("The error above may not be an issue if new elements have been added or not been set values.")
 		end
 	end
 	return changed
 end
 
-local function SaveConfiguration()
+local function SaveConfig()
 	if not CEnabled or not globalLoaded then return end
 	if debugX then print("Saving") end
 	local data={}
 	for i,v in pairs(Library.Flags) do
 		if v.Type=="ColorPicker" then
-			data[i]=packColor(v.Color)
+			data[i]=PackColor(v.Color)
 		else
 			if type(v.Value)=="boolean" then
-				if v.Value==false then data[i]=false else data[i]=v.Keybind or v.Option or v.Color or v.Value end
+				if v.Value==false then 
+					data[i]=false 
+				else 
+					data[i]=v.Keybind or v.Option or v.Color or v.Value 
+				end
 			else
 				data[i]=v.Keybind or v.Option or v.Color or v.Value
 			end
 		end
 	end
 	local dataStr=HttpService:JSONEncode(data)
-	if useStudio then
-		if script.Parent:FindFirstChild("Configuration") then script.Parent.Configuration:Destroy() end
+	if UseStudio then
+		if script.Parent:FindFirstChild("Config") then script.Parent.Config:Destroy() end
 		local ScreenGui=Instance.new("ScreenGui")
 		ScreenGui.Parent=script.Parent
 		ScreenGui.Name="Configuration"
@@ -1138,29 +1135,27 @@ local function SaveConfiguration()
 		TextBox.ClearTextOnFocus=false
 	end
 	if debugX then warn(dataStr) end
-	if writefile then callSafely(writefile,ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension,dataStr) end
+	if writefile then CallSafely(writefile,ConfigurationFolder .. "/" .. CFileName .. ConfigExtension,dataStr) end
 end
 
-function Library:Notify(data) -- action e.g open messages
+function Library:Notify(data)
 	task.spawn(function()
-		-- Notification Object Creation
 		local newNotification=Notifications.Template:Clone()
 		newNotification.Name=data.Title or 'No Title Provided'
 		newNotification.Parent=Notifications
 		newNotification.LayoutOrder=#Notifications:GetChildren()
 		newNotification.Visible=false
-		-- Set Data
 		newNotification.Title.Text=data.Title or "Unknown Title"
 		newNotification.Description.Text=data.Content or "Unknown Content"
-		if data.Image then
-			local img,rectOffset,rectSize=resolveIcon(data.Image)
-			newNotification.Icon.Image=img
+		local icon=data.Image or data.Icon
+		if icon then
+			local image,rectOffset,rectSize=ResolveIcon(icon)
+			newNotification.Icon.Image=image
 			if rectOffset then newNotification.Icon.ImageRectOffset=rectOffset end
 			if rectSize then newNotification.Icon.ImageRectSize=rectSize end
 		else
 			newNotification.Icon.Image=""
 		end
-		-- Set initial transparency values
 		newNotification.Title.TextColor3=SelectedTheme.TextColor
 		newNotification.Description.TextColor3=SelectedTheme.TextColor
 		newNotification.BackgroundColor3=SelectedTheme.Background
@@ -1176,41 +1171,40 @@ function Library:Notify(data) -- action e.g open messages
 		newNotification.Icon.BackgroundTransparency=1
 		newNotification.Visible=true
 		if data.Actions then
-			warn('Rayfield | Not seeing your actions in notifications?')
+			warn("Rayfield | Not seeing your actions in notifications?")
 			print("Notification Actions are being sunset for now, keep up to date on when they're back in the discord. (sirius.menu/discord)")
 		end
-		-- Calculate textbounds and set initial values
 		local bounds={newNotification.Title.TextBounds.Y,newNotification.Description.TextBounds.Y}
 		newNotification.Size=UDim2.new(1,-60,0,-Notifications:FindFirstChild("UIListLayout").Padding.Offset)
 		newNotification.Icon.Size=UDim2.new(0,32,0,32)
 		newNotification.Icon.Position=UDim2.new(0,20,0.5,0)
-		tween(newNotification,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,0,0,math.max(bounds[1]+bounds[2]+31,60))})
+		Tween(newNotification,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,0,0,math.max(bounds[1]+bounds[2]+31,60))})
 		task.wait(0.15)
-		tween(newNotification,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.45})
-		tween(newNotification.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
+		Tween(newNotification,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.45})
+		Tween(newNotification.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
 		task.wait(0.05)
-		tween(newNotification.Icon,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+		Tween(newNotification.Icon,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0})
 		task.wait(0.05)
-		tween(newNotification.Description,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.35})
-		tween(newNotification.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=0.95})
-		tween(newNotification.Shadow,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.82})
+		Tween(newNotification.Description,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.35})
+		Tween(newNotification.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=0.95})
+		Tween(newNotification.Shadow,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.82})
 		local cooldown=math.min(math.max((#newNotification.Description.Text * 0.1)+2.5,3),10)
 		task.wait(data.Duration or cooldown)
 		newNotification.Icon.Visible=false
-		tween(newNotification,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-		tween(newNotification.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1})
-		tween(newNotification.Shadow,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-		tween(newNotification.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
-		tween(newNotification.Description,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
-		tween(newNotification,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-90,0,0)})
+		Tween(newNotification,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+		Tween(newNotification.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1})
+		Tween(newNotification.Shadow,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+		Tween(newNotification.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+		Tween(newNotification.Description,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+		Tween(newNotification,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-90,0,0)})
 		task.wait(1)
-		tween(newNotification,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-90,0,-Notifications:FindFirstChild("UIListLayout").Padding.Offset)})
+		Tween(newNotification,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-90,0,-Notifications:FindFirstChild("UIListLayout").Padding.Offset)})
 		newNotification.Visible=false
 		newNotification:Destroy()
 	end)
 end
 
-local function openSearch()
+local function OpenSearch()
 	searchOpen=true
 	Main.Search.BackgroundTransparency=1
 	Main.Search.Shadow.ImageTransparency=1
@@ -1221,44 +1215,44 @@ local function openSearch()
 	Main.Search.Position=UDim2.new(0.5,0,0,70)
 	Main.Search.Input.Interactable=true
 	Main.Search.Visible=true
-	for i,v in ipairs(TabList:GetChildren()) do
-		if v.ClassName=="Frame" and v.Name~="Placeholder" then
-			v.Interact.Visible=false
-			tween(v,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-			tween(v.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
-			tween(v.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-			tween(v.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
+	for _,TabButton in ipairs(TabList:GetChildren()) do
+		if TabButton.ClassName=="Frame" and TabButton.Name~="Placeholder" then
+			TabButton.Interact.Visible=false
+			Tween(TabButton,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+			Tween(TabButton.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+			Tween(TabButton.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+			Tween(TabButton.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
 		end
 	end
 	Main.Search.Input:CaptureFocus()
-	tween(Main.Search.Shadow,TweenInfo.new(0.05,Enum.EasingStyle.Quint),{ImageTransparency=0.95})
-	tween(Main.Search,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Position=UDim2.new(0.5,0,0,57),BackgroundTransparency=0.9})
-	tween(Main.Search.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=0.8})
-	tween(Main.Search.Input,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
-	tween(Main.Search.Search,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.5})
-	tween(Main.Search,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-35,0,35)})
+	Tween(Main.Search.Shadow,TweenInfo.new(0.05,Enum.EasingStyle.Quint),{ImageTransparency=0.95})
+	Tween(Main.Search,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Position=UDim2.new(0.5,0,0,57),BackgroundTransparency=0.9})
+	Tween(Main.Search.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=0.8})
+	Tween(Main.Search.Input,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
+	Tween(Main.Search.Search,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.5})
+	Tween(Main.Search,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-35,0,35)})
 end
 
-local function closeSearch()
+local function CloseSearch()
 	searchOpen=false
-	tween(Main.Search,TweenInfo.new(0.35,Enum.EasingStyle.Quint),{BackgroundTransparency=1,Size=UDim2.new(1,-55,0,30)})
-	tween(Main.Search.Search,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{ImageTransparency=1})
-	tween(Main.Search.Shadow,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{ImageTransparency=1})
-	tween(Main.Search.UIStroke,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{Transparency=1})
-	tween(Main.Search.Input,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{TextTransparency=1})
-	for _,tabbtn in ipairs(TabList:GetChildren()) do
-		if tabbtn.ClassName=="Frame" and tabbtn.Name~="Placeholder" then
-			tabbtn.Interact.Visible=true
-			if tostring(Elements.UIPageLayout.CurrentPage)==tabbtn.Title.Text then
-				tween(tabbtn,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-				tween(tabbtn.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0})
-				tween(tabbtn.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
-				tween(tabbtn.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
+	Tween(Main.Search,TweenInfo.new(0.35,Enum.EasingStyle.Quint),{BackgroundTransparency=1,Size=UDim2.new(1,-55,0,30)})
+	Tween(Main.Search.Search,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{ImageTransparency=1})
+	Tween(Main.Search.Shadow,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{ImageTransparency=1})
+	Tween(Main.Search.UIStroke,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{Transparency=1})
+	Tween(Main.Search.Input,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{TextTransparency=1})
+	for _,TabButton in ipairs(TabList:GetChildren()) do
+		if TabButton.ClassName=="Frame" and TabButton.Name~="Placeholder" then
+			TabButton.Interact.Visible=true
+			if tostring(Elements.UIPageLayout.CurrentPage)==TabButton.Title.Text then
+				Tween(TabButton,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+				Tween(TabButton.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+				Tween(TabButton.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
+				Tween(TabButton.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
 			else
-				tween(tabbtn,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
-				tween(tabbtn.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
-				tween(tabbtn.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
-				tween(tabbtn.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=0.5})
+				Tween(TabButton,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
+				Tween(TabButton.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
+				Tween(TabButton.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
+				Tween(TabButton.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=0.5})
 			end
 		end
 	end
@@ -1267,7 +1261,7 @@ local function closeSearch()
 end
 
 -- Sets element visibility across all tab pages (used by Hide,Unhide,Maximise,Minimise)
-local function setElementsVisible(show)
+local function SetElementsVisible(show)
 	for _,tab in ipairs(Elements:GetChildren()) do
 		if tab.Name~="Template" and tab.ClassName=="ScrollingFrame" and tab.Name~="Placeholder" then
 			for _,element in ipairs(tab:GetChildren()) do
@@ -1278,13 +1272,13 @@ local function setElementsVisible(show)
 					end
 					if element.Name~="SectionSpacing" and element.Name~="Placeholder" then
 						if element.Name=="SectionTitle" or element.Name=='SearchTitle-fsefsefesfsefesfesfThanks' then
-							tween(element.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=show and 0.4 or 1})
+							Tween(element.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=show and 0.4 or 1})
 						elseif element.Name=="Divider" then
-							tween(element.Divider,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=show and 0.85 or 1})
+							Tween(element.Divider,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=show and 0.85 or 1})
 						else
-							tween(element,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=show and 0 or 1})
-							tween(element.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=show and 0 or 1})
-							tween(element.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=show and 0 or 1})
+							Tween(element,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=show and 0 or 1})
+							Tween(element.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=show and 0 or 1})
+							Tween(element.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=show and 0 or 1})
 						end
 						for _,child in ipairs(element:GetChildren()) do
 							if child.ClassName=="Frame" or child.ClassName=="TextLabel" or child.ClassName=="TextBox" or child.ClassName=="ImageButton" or child.ClassName=="ImageLabel" then
@@ -1299,26 +1293,26 @@ local function setElementsVisible(show)
 end
 
 -- Sets tab button visibility (used by Hide,Unhide,Maximise,Minimise)
-local function setTabButtonsVisible(show)
+local function SetTabButtonsVisible(show)
 	for _,tab in ipairs(TabList:GetChildren()) do
 		if tab.ClassName=="Frame" and tab.Name~="Placeholder" then
 			if show then
 				if tostring(Elements.UIPageLayout.CurrentPage)==tab.Title.Text then
-					tween(tab,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-					tween(tab.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0})
-					tween(tab.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
-					tween(tab.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(tab,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+					Tween(tab.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+					Tween(tab.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
+					Tween(tab.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
 				else
-					tween(tab,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
-					tween(tab.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
-					tween(tab.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
-					tween(tab.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=0.5})
+					Tween(tab,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
+					Tween(tab.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
+					Tween(tab.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
+					Tween(tab.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=0.5})
 				end
 			else
-				tween(tab,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-				tween(tab.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
-				tween(tab.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-				tween(tab.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
+				Tween(tab,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+				Tween(tab.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+				Tween(tab.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+				Tween(tab.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
 			end
 		end
 	end
@@ -1333,39 +1327,39 @@ local function Hide(notify)
 		MPrompt.Title.TextTransparency=1
 		MPrompt.Visible=true
 	end
-	task.spawn(closeSearch)
+	task.spawn(CloseSearch)
 	Debounce=true
 	if notify then
 		if useMobilePrompt then 
 			Library:Notify({Title="Interface Hidden",Content="The interface has been hidden, you can unhide the interface by tapping 'Show'.",Duration=7,Image=4400697855})
 		else
-			Library:Notify({Title="Interface Hidden",Content="The interface has been hidden, you can unhide the interface by tapping " .. tostring(getSetting("General","rayfieldOpen")) .. ".",Duration=7,Image=4400697855})
+			Library:Notify({Title="Interface Hidden",Content="The interface has been hidden, you can unhide the interface by tapping " .. tostring(GetSetting("General","rayfieldOpen")) .. ".",Duration=7,Image=4400697855})
 		end
 	end
-	tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,470,0,0)})
-	tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,470,0,45)})
-	tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-	tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-	tween(Main.Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-	tween(Main.Topbar.CornerRepair,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-	tween(Main.Topbar.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-	tween(Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=1})
+	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,470,0,0)})
+	Tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,470,0,45)})
+	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(Main.Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(Main.Topbar.CornerRepair,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(Main.Topbar.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+	Tween(Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=1})
 	if dragBarCosmetic then
-		tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=1})
+		Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=1})
 	end
 	if useMobilePrompt and MPrompt then
-		tween(MPrompt,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,120,0,30),Position=UDim2.new(0.5,0,0,20),BackgroundTransparency=0.3})
-		tween(MPrompt.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0.3})
+		Tween(MPrompt,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,120,0,30),Position=UDim2.new(0.5,0,0,20),BackgroundTransparency=0.3})
+		Tween(MPrompt.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0.3})
 	end
-	for _,topbarButton in ipairs(Topbar:GetChildren()) do
-		if topbarButton.ClassName=="ImageButton" then
-			tween(topbarButton,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+	for _,TopbarButton in ipairs(Topbar:GetChildren()) do
+		if TopbarButton.ClassName=="ImageButton" then
+			Tween(TopbarButton,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
 		end
 	end
-	setTabButtonsVisible(false)
+	SetTabButtonsVisible(false)
 	if dragInteract then dragInteract.Visible=false end
-	setElementsVisible(false)
+	SetElementsVisible(false)
 	task.wait(0.5)
 	Main.Visible=false
 	Debounce=false
@@ -1373,20 +1367,20 @@ end
 
 local function Maximise()
 	Debounce=true
-	Topbar.ChangeSize.Image=customAssets[tostring(10137941941)]
-	tween(Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=1})
-	tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
-	tween(Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	tween(Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.7})
-	tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
-	tween(Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,45)})
+	Topbar.ChangeSize.Image=CustomAssets["10137941941"]
+	Tween(Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=1})
+	Tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
+	Tween(Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.7})
+	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
+	Tween(Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,45)})
 	TabList.Visible=true
 	task.wait(0.2)
 	Elements.Visible=true
-	setElementsVisible(true)
+	SetElementsVisible(true)
 	task.wait(0.1)
-	setTabButtonsVisible(true)
+	SetTabButtonsVisible(true)
 	task.wait(0.5)
 	Debounce=false
 end
@@ -1395,49 +1389,39 @@ local function Unhide()
 	Debounce=true
 	Main.Position=UDim2.new(0.5,0,0.5,0)
 	Main.Visible=true
-	tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
-	tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,45)})
-	tween(Main.Shadow.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
-	tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	tween(Main.Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	tween(Main.Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	tween(Main.Topbar.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
-
+	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
+	Tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,45)})
+	Tween(Main.Shadow.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
+	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(Main.Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(Main.Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(Main.Topbar.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
 	if MPrompt then
-		tween(MPrompt,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,40,0,10),Position=UDim2.new(0.5,0,0,-50),BackgroundTransparency=1})
-		tween(MPrompt.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
-
+		Tween(MPrompt,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,40,0,10),Position=UDim2.new(0.5,0,0,-50),BackgroundTransparency=1})
+		Tween(MPrompt.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
 		task.spawn(function()
 			task.wait(0.5)
 			MPrompt.Visible=false
 		end)
 	end
-
 	if Minimised then
 		task.spawn(Maximise)
 	end
-
 	dragBar.Position=useMobileSizing and UDim2.new(0.5,0,0.5,dragOffsetMobile) or UDim2.new(0.5,0,0.5,dragOffset)
-
 	dragInteract.Visible=true
-
-	for _,TopbarButton in ipairs(Topbar:GetChildren()) do
-		if TopbarButton.ClassName=="ImageButton" then
-			if TopbarButton.Name=='Icon' then
-				tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+	for _,topbarButton in ipairs(Topbar:GetChildren()) do
+		if topbarButton.ClassName=="ImageButton" then
+			if topbarButton.Name=="Icon" then
+				Tween(topbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
 			else
-				tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
+				Tween(topbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 			end
 		end
 	end
-
-	setTabButtonsVisible(true)
-
-	setElementsVisible(true)
-
-	tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.5})
-
+	SetTabButtonsVisible(true)
+	SetElementsVisible(true)
+	Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.5})
 	task.wait(0.5)
 	Minimised=false
 	Debounce=false
@@ -1445,167 +1429,146 @@ end
 
 local function Minimise()
 	Debounce=true
-	Topbar.ChangeSize.Image=customAssets[tostring(11036884234)]
-
+	Topbar.ChangeSize.Image=CustomAssets["11036884234"]
 	Topbar.UIStroke.Color=SelectedTheme.ElementStroke
-
-	task.spawn(closeSearch)
-
-	setTabButtonsVisible(false)
-
-	setElementsVisible(false)
-
-	tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=1})
-	tween(Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=0})
-	tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-	tween(Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-	tween(Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-	tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,495,0,45)})
-	tween(Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,495,0,45)})
-
+	task.spawn(CloseSearch)
+	SetTabButtonsVisible(false)
+	SetElementsVisible(false)
+	Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=1})
+	Tween(Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=0})
+	Tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+	Tween(Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,495,0,45)})
+	Tween(Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,495,0,45)})
 	task.wait(0.3)
-
 	Elements.Visible=false
 	TabList.Visible=false
-
 	task.wait(0.2)
 	Debounce=false
 end
 
-local function saveSettings() -- Save settings to config file
-	local encoded
-	local success,err=pcall(function()
-		encoded=HttpService:JSONEncode(settingsTable)
+local function SaveSettings()
+	local data=nil
+	local success,reponse=pcall(function()
+		data=HttpService:JSONEncode(settingsTable)
 	end)
-
-	if success then
-		if useStudio then
-			if script.Parent['get.val'] then
-				script.Parent['get.val'].Value=encoded
-			end
-		end
-		callSafely(writefile,RayfieldFolder..'/settings'..ConfigurationExtension,encoded)
+	if success and data then
+		if writefile then CallSafely(writefile,RayfieldFolder.."/settings"..ConfigExtension,data) end
 	end
 end
 
-local function updateSetting(category: string,setting: string,value: any)
-	if not settingsInitialized then
-		return
-	end
-	settingsTable[category][setting].Value=value
-	overriddenSettings[category .. "." .. setting]=nil -- If user changes an overriden setting,remove the override
-	saveSettings()
+local function UpdateSettings(category,setting,value)
+	if not SettingsInitialized then return end
+	SettingsData[category][setting].Value=value
+	OverriddenSettings[category.."."..setting]=nil 
+	SaveSettings()
 end
 
-local function createSettings(window)
-	if not (writefile and isfile and readfile and isfolder and makefolder) and not useStudio then
+local function CreateSettings(settingsTab)
+	if not (writefile and isfile and readfile and isfolder and makefolder) and not UseStudio then
 		if Topbar["Settings"] then Topbar.Settings.Visible=false end
 		Topbar["Search"].Position=UDim2.new(1,-75,0.5,0)
 		warn("Can't create settings as no file-saving functionality is available.")
 		return
 	end
-
-	local newTab=window:CreateTab('Rayfield Settings',0,true)
-
-	if TabList["Rayfield Settings"] then
-		TabList["Rayfield Settings"].LayoutOrder=1000
-	end
-
-	if Elements["Rayfield Settings"] then
-		Elements["Rayfield Settings"].LayoutOrder=1000
-	end
-
-	-- Create sections and elements
-	for categoryName,settingCategory in pairs(settingsTable) do
-		newTab:CreateSection(categoryName)
-
+	for _,gui in ipairs({TabList,Elements}) do local v=gui["Rayfield Settings"] if v then v.LayoutOrder=1000 end end
+	for categoryName,settingCategory in pairs(SettingsData) do
+		settingsTab:CreateSection(categoryName)
 		for settingName,setting in pairs(settingCategory) do
 			if setting.Type=='input' then
-				setting.Element=newTab:CreateInput({
+				setting.Element=settingsTab:CreateInput({
 					Name=setting.Name,
 					CurrentValue=setting.Value,
 					PlaceholderText=setting.Placeholder,
 					Ext=true,
 					RemoveTextAfterFocusLost=setting.ClearOnFocus,
 					Callback=function(Value)
-						updateSetting(categoryName,settingName,Value)
-					end,
+						UpdateSettings(categoryName,settingName,Value)
+					end
 				})
 			elseif setting.Type=='toggle' then
-				setting.Element=newTab:CreateToggle({
+				setting.Element=settingsTab:CreateToggle({
 					Name=setting.Name,
 					CurrentValue=setting.Value,
 					Ext=true,
 					Callback=function(Value)
-						updateSetting(categoryName,settingName,Value)
-					end,
+						UpdateSettings(categoryName,settingName,Value)
+					end
 				})
 			elseif setting.Type=='bind' then
-				setting.Element=newTab:CreateKeybind({
+				setting.Element=settingsTab:CreateKeybind({
 					Name=setting.Name,
 					Keybind=setting.Value,
 					HoldToInteract=false,
 					Ext=true,
 					CallOnChange=true,
 					Callback=function(Value)
-						updateSetting(categoryName,settingName,Value)
-					end,
+						UpdateSettings(categoryName,settingName,Value)
+					end
 				})
 			end
 		end
 	end
-
-	settingsCreated=true
-	loadSettings()
-	saveSettings()
+	SettingsCreated=true
+	LoadSettings()
+	SaveSettings()
 end
 
-local function fadeOutKeyUI(KeyMain)
-	tween(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-	tween(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,467,0,175)})
-	tween(KeyMain.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-	tween(KeyMain.Title,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	tween(KeyMain.Subtitle,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	tween(KeyMain.KeyNote,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	tween(KeyMain.Input,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-	tween(KeyMain.Input.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=1})
-	tween(KeyMain.Input.InputBox,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	tween(KeyMain.NoteTitle,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	tween(KeyMain.NoteMessage,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	tween(KeyMain.Hide,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+local function FadeOutKeyUI(KeyMain)
+	Tween(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,467,0,175)})
+	Tween(KeyMain.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+	Tween(KeyMain.Title,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(KeyMain.Subtitle,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(KeyMain.KeyNote,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(KeyMain.Input,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(KeyMain.Input.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=1})
+	Tween(KeyMain.Input.InputBox,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(KeyMain.NoteTitle,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(KeyMain.NoteMessage,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(KeyMain.Hide,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{ImageTransparency=1})
 end
 
-function Library:CreateWindow(windowInfo)
-	if Rayfield:FindFirstChild("Loading") then
-		if getgenv and not getgenv().rayfieldCached then
+function Library:CreateWindow(WindowInfo)
+	local introInfo=WindowInfo.IntroInfo
+	if introInfo==nil or type(introInfo)~="table" then introInfo={Enabled=true} end
+	local introFrame=Rayfield:FindFirstChild("Loading")
+	if introFrame then
+		if introInfo.Enabled then
+			if getgenv and not getgenv().rayfieldCached then
+				Rayfield.Enabled=true
+				introFrame.Visible=true
+				task.wait(1.4)
+				introFrame.Visible=false
+			end
+		else
+			introFrame.Visible=false
 			Rayfield.Enabled=true
-			Rayfield.Loading.Visible=true
-			task.wait(1.4)
-			Rayfield.Loading.Visible=false
 		end
 	end
 	if getgenv then getgenv().rayfieldCached=true end
-	if not correctBuild and not windowInfo.DisableBuildWarnings then
-		task.delay(3,function() Library:Notify({Title='Build Mismatch',Content='Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.',Image=4335487866,Duration=15})	end)
+	if not correctBuild and not WindowInfo.DisableBuildWarnings then
+		task.delay(3,function() Library:Notify({Title="Build Mismatch",Content='Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.',Image=4335487866,Duration=15})	end)
 	end
-	if windowInfo.ToggleUIKeybind then -- Can either be a string or an Enum.KeyCode
-		local keybind=windowInfo.ToggleUIKeybind
+	if WindowInfo.ToggleUIKeybind then -- Can either be a string or an Enum.KeyCode
+		local keybind=WindowInfo.ToggleUIKeybind
 		if type(keybind)=="string" then
 			keybind=string.upper(keybind)
 			assert(pcall(function()
 				return Enum.KeyCode[keybind]
 			end),"ToggleUIKeybind must be a valid KeyCode")
-			overrideSetting("General","rayfieldOpen",keybind)
+			OverrideSetting("General","rayfieldOpen",keybind)
 		elseif typeof(keybind)=="EnumItem" then
 			assert(keybind.EnumType==Enum.KeyCode,"ToggleUIKeybind must be a KeyCode enum")
-			overrideSetting("General","rayfieldOpen",keybind.Name)
+			OverrideSetting("General","rayfieldOpen",keybind.Name)
 		else
 			error("ToggleUIKeybind must be a string or KeyCode enum")
 		end
 	end
-	ensureFolder(RayfieldFolder)
+	EnsureFolder(RayfieldFolder)
 	local Pass=false
-	Topbar.Title.Text=windowInfo.Name or windowInfo.Text or windowInfo.Title
+	Topbar.Title.Text=WindowInfo.Name or WindowInfo.Text or WindowInfo.Title
 	Main.Size=UDim2.new(0,420,0,100)
 	Main.Visible=true
 	Main.BackgroundTransparency=1
@@ -1613,20 +1576,20 @@ function Library:CreateWindow(windowInfo)
 	Main.Shadow.Image.ImageTransparency=1
 	LoadingFrame.Title.TextTransparency=1
 	LoadingFrame.Subtitle.TextTransparency=1
-	if windowInfo.ShowText then MPrompt.Title.Text="Show "..windowInfo.ShowText end
+	if WindowInfo.ShowText then MPrompt.Title.Text="Show "..WindowInfo.ShowText end
 	LoadingFrame.Version.TextTransparency=1
-	LoadingFrame.Title.Text=windowInfo.LoadingTitle or "Rayfield"
-	LoadingFrame.Subtitle.Text=windowInfo.LoadingSubtitle or "Interface Suite"
-	if windowInfo.LoadingTitle~="Rayfield Interface Suite" then
+	LoadingFrame.Title.Text=WindowInfo.LoadingTitle or "Rayfield"
+	LoadingFrame.Subtitle.Text=WindowInfo.LoadingSubtitle or "Interface Suite"
+	if WindowInfo.LoadingTitle~="Rayfield Interface Suite" then
 		LoadingFrame.Version.Text="Rayfield Lite"
 	end
-	if windowInfo.Icon and windowInfo.Icon~=0 and Topbar:FindFirstChild("Icon") then
+	local windowIcon=WindowInfo.Icon
+	if windowIcon and windowIcon~=0 and Topbar:FindFirstChild("Icon") then
 		Topbar.Icon.Visible=true
 		Topbar.Title.Position=UDim2.new(0,47,0.5,0)
-
-		if windowInfo.Icon then
-			local img,rectOffset,rectSize=resolveIcon(windowInfo.Icon)
-			Topbar.Icon.Image=img
+		if windowIcon then
+			local image,rectOffset,rectSize=ResolveIcon(WindowInfo.Icon)
+			Topbar.Icon.Image=image
 			if rectOffset then Topbar.Icon.ImageRectOffset=rectOffset end
 			if rectSize then Topbar.Icon.ImageRectSize=rectSize end
 		else
@@ -1638,8 +1601,8 @@ function Library:CreateWindow(windowInfo)
 		dragBarCosmetic.BackgroundTransparency=1
 		dragBar.Visible=true
 	end
-	if windowInfo.Theme then
-		local success1,result=pcall(ChangeTheme,windowInfo.Theme)
+	if WindowInfo.Theme then
+		local success1,result=pcall(ChangeTheme,WindowInfo.Theme)
 		if not success1 then
 			warn("Rayfield | issue rendering theme. no theme on file")
 			print(result)
@@ -1653,34 +1616,38 @@ function Library:CreateWindow(windowInfo)
 	Topbar.Visible=false
 	Elements.Visible=false
 	LoadingFrame.Visible=true
-	local configurationSaving=windowInfo.ConfigurationSaving
-	if configurationSaving then
-		if not configurationSaving.FileName then
-			configurationSaving.FileName=tostring(game.PlaceId)
+	local savingInfo=WindowInfo.SavingInfo or {}
+	if savingInfo then
+		if not savingInfo.FileName then
+			savingInfo.FileName=tostring(game.PlaceId)
 		end
-		if configurationSaving.Enabled==nil then
-			configurationSaving.Enabled=false
+		if savingInfo.Enabled==nil then
+			savingInfo.Enabled=false
 		end
-		CFileName=configurationSaving.FileName
-		ConfigurationFolder=configurationSaving.FolderName or ConfigurationFolder
-		CEnabled=configurationSaving.Enabled
-		if configurationSaving.Enabled then ensureFolder(ConfigurationFolder) end
+		CFileName=savingInfo.FileName
+		ConfigFolder=savingInfo.FolderName or ConfigFolder
+		CEnabled=savingInfo.Enabled
+		if savingInfo.Enabled then EnsureFolder(ConfigFolder) end
 	end
-	makeDraggable(Main,Topbar,false,{dragOffset,dragOffsetMobile})
-	if dragBar then dragBar.Position=useMobileSizing and UDim2.new(0.5,0,0.5,dragOffsetMobile) or UDim2.new(0.5,0,0.5,dragOffset) makeDraggable(Main,dragInteract,true,{dragOffset,dragOffsetMobile}) end
-	for _,tabButton in ipairs(TabList:GetChildren()) do
-		if tabButton.ClassName=="Frame" and tabButton.Name~="Placeholder" then
-			tabButton.BackgroundTransparency=1
-			tabButton.Title.TextTransparency=1
-			tabButton.Image.ImageTransparency=1
-			tabButton.UIStroke.Transparency=1
+	WindowInfo.SavingInfo=savingInfo
+	MakeDraggable(Main,Topbar,false,{dragOffset,dragOffsetMobile})
+	if dragBar then 
+		dragBar.Position=useMobileSizing and UDim2.new(0.5,0,0.5,dragOffsetMobile) or UDim2.new(0.5,0,0.5,dragOffset) 
+		MakeDraggable(Main,dragInteract,true,{dragOffset,dragOffsetMobile}) 
+	end
+	for _,TabButton in ipairs(TabList:GetChildren()) do
+		if TabButton.ClassName=="Frame" and TabButton.Name~="Placeholder" then
+			TabButton.BackgroundTransparency=1
+			TabButton.Title.TextTransparency=1
+			TabButton.Image.ImageTransparency=1
+			TabButton.UIStroke.Transparency=1
 		end
 	end
-	local discordInfo=windowInfo.Discord
-	if discordInfo and discordInfo.Enabled and discordInfo.Invite and not useStudio and not secureMode then
-		ensureFolder(RayfieldFolder.."/Discord Invites")
-		if isfile and not callSafely(isfile,RayfieldFolder.."/Discord Invites".."/"..discordInfo.Invite..ConfigurationExtension) then
-			requestSafely({
+	local discordInfo=WindowInfo.Discord
+	if discordInfo and discordInfo.Enabled and discordInfo.Invite and not UseStudio and not SecureMode then
+		EnsureFolder(RayfieldFolder.."/Discord Invites")
+		if isfile and not CallSafely(isfile,RayfieldFolder.."/Discord Invites".."/"..discordInfo.Invite..ConfigExtension) then
+			RequestSafely({
 				Url="http://127.0.0.1:6463/rpc?v=1",
 				Method="POST",
 				Headers={
@@ -1693,20 +1660,21 @@ function Library:CreateWindow(windowInfo)
 					args={code=discordInfo.Invite}
 				})
 			})
-			if discordInfo.RememberJoins then -- We do logic this way so if the developer changes this setting,the user still won't be prompted,only new users
-				callSafely(writefile,RayfieldFolder.."/Discord Invites".."/"..discordInfo.Invite..ConfigurationExtension,"Rayfield RememberJoins is true for this invite,this invite will not ask you to join again")
+			if discordInfo.RememberJoins and writefile then -- We do logic this way so if the developer changes this setting,the user still won't be prompted,only new users
+				CallSafely(writefile,RayfieldFolder.."/Discord Invites".."/"..discordInfo.Invite..ConfigExtension,"Rayfield RememberJoins is true for this invite,this invite will not ask you to join again")
 			end
 		end
 	end
-	local keyInfo=windowInfo.KeyInfo
+	local keyInfo=WindowInfo.KeyInfo
 	if keyInfo and keyInfo.Enabled then
-		ensureFolder(RayfieldFolder.."/Key System")
+		EnsureFolder(RayfieldFolder.."/Key System")
 		if type(keyInfo.Key)=="string" then keyInfo.Key={keyInfo.Key} end
+		local keys=keyInfo.Key
 		if keyInfo.GrabKeyFromSite then
-			for i,key in ipairs(keyInfo.Key) do
+			for name,key in ipairs(keys) do
 				local success,response=pcall(function()
-					keyInfo.Key[i]=tostring(game:HttpGet(key):gsub("[\n\r]"," "))
-					keyInfo.Key[i]=string.gsub(keyInfo.Key[i]," ","")
+					keys[name]=tostring(game:HttpGet(key):gsub("[\n\r]"," "))
+					keys[name]=string.gsub(keyInfo.Key[name]," ","")
 				end)
 				if not success then
 					print("Rayfield | "..key.." Error " ..tostring(response))
@@ -1715,130 +1683,131 @@ function Library:CreateWindow(windowInfo)
 			end
 		end
 		if not keyInfo.FileName then keyInfo.FileName="No file name specified" end
-		if isfile and readfile and callSafely(isfile,RayfieldFolder.."/Key System".."/"..keyInfo.FileName..ConfigurationExtension) then
-			for _,mKey in ipairs(KeyInfo.Key) do
-				local savedKeys=callSafely(readfile,RayfieldFolder.."/Key System".."/"..keyInfo.FileName..ConfigurationExtension)
-				if savedKeys and string.find(savedKeys,mKey) then
-					Pass=true
+		if isfile and CallSafely(isfile,RayfieldFolder.."/Key System".."/"..keyInfo.FileName..ConfigExtension) then
+			for _,key in ipairs(keys) do
+				if readfile then
+					local savedKeys=CallSafely(readfile,RayfieldFolder.."/Key System".."/"..keyInfo.FileName..ConfigExtension)
+					if savedKeys and string.find(savedKeys,key) then
+						Pass=true
+					end
 				end
 			end
 		end
-		if not Pass and secureMode then
+		if not Pass and SecureMode then
 			warn("Rayfield | Secure Mode: Key system requires a valid saved key. The key UI cannot be shown as it requires loading detectable assets.")
 			Rayfield.Enabled=false
+			Rayfield.Name="Rayfield-Old"
 			return Library
 		end
 		if not Pass then
 			local AttemptsRemaining=keyInfo.MaxAttempts or 5
 			Rayfield.Enabled=false
-			local KeyUI=useStudio and script.Parent:FindFirstChild('Key') or game:GetObjects("rbxassetid://11380036235")[1]
-			KeyUI.Enabled=true
+			local keyUI=UseStudio and script.Parent:FindFirstChild("Key") or game:GetObjects("rbxassetid://11380036235")[1]
+			keyUI.Enabled=true
 			if gethui then
-				KeyUI.Parent=gethui()
+				keyUI.Parent=gethui()
 			elseif syn and syn.protect_gui then 
-				syn.protect_gui(KeyUI)
-				KeyUI.Parent=CoreGui
-			elseif not useStudio and CoreGui:FindFirstChild("RobloxGui") then
-				KeyUI.Parent=CoreGui:FindFirstChild("RobloxGui")
-			elseif not useStudio then
-				KeyUI.Parent=CoreGui
+				syn.protect_gui(keyUI)
+				keyUI.Parent=CoreGui
+			elseif not UseStudio then
+				keyUI.Parent=CoreGui
 			end
 			if gethui then
-				for _,Interface in ipairs(gethui():GetChildren()) do
-					if Interface.Name==KeyUI.Name and Interface~=KeyUI then
-						Interface.Enabled=false
-						Interface.Name="KeyUI-Old"
+				for _,interface in ipairs(gethui():GetChildren()) do
+					if interface.Name==keyUI.Name and interface~=keyUI then
+						interface.Enabled=false
+						interface.Name="KeyUI-Old"
 					end
 				end
-			elseif not useStudio then
-				for _,Interface in ipairs(CoreGui:GetChildren()) do
-					if Interface.Name==KeyUI.Name and Interface~=KeyUI then
-						Interface.Enabled=false
-						Interface.Name="KeyUI-Old"
+			elseif not UseStudio then
+				for _,interface in ipairs(CoreGui:GetChildren()) do
+					if interface.Name==keyUI.Name and interface~=KeyUI then
+						interface.Enabled=false
+						interface.Name="KeyUI-Old"
 					end
 				end
 			end
-			local KeyMain=KeyUI.Main
-			KeyMain.Title.Text=keyInfo.Title or keyInfo.Name or keyInfo.Text
-			KeyMain.Subtitle.Text=keyInfo.Subtitle or "Key System"
-			KeyMain.NoteMessage.Text=keyInfo.Note or "No instructions"
-			KeyMain.Size=UDim2.new(0,467,0,175)
-			KeyMain.BackgroundTransparency=1
-			KeyMain.Shadow.Image.ImageTransparency=1
-			KeyMain.Title.TextTransparency=1
-			KeyMain.Subtitle.TextTransparency=1
-			KeyMain.KeyNote.TextTransparency=1
-			KeyMain.Input.BackgroundTransparency=1
-			KeyMain.Input.UIStroke.Transparency=1
-			KeyMain.Input.InputBox.TextTransparency=1
-			KeyMain.NoteTitle.TextTransparency=1
-			KeyMain.NoteMessage.TextTransparency=1
-			KeyMain.Hide.ImageTransparency=1
-			tween(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,187)})
-			tween(KeyMain.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.5})
+			local keyMain=keyUI.Main
+			keyMain.Title.Text=keyInfo.Title or keyInfo.Name or keyInfo.Text
+			keyMain.Subtitle.Text=keyInfo.Subtitle or "Key System"
+			keyMain.NoteMessage.Text=keyInfo.Note or "No instructions"
+			keyMain.Size=UDim2.new(0,467,0,175)
+			keyMain.BackgroundTransparency=1
+			keyMain.Shadow.Image.ImageTransparency=1
+			keyMain.Title.TextTransparency=1
+			keyMain.Subtitle.TextTransparency=1
+			keyMain.KeyNote.TextTransparency=1
+			keyMain.Input.BackgroundTransparency=1
+			keyMain.Input.UIStroke.Transparency=1
+			keyMain.Input.InputBox.TextTransparency=1
+			keyMain.NoteTitle.TextTransparency=1
+			keyMain.NoteMessage.TextTransparency=1
+			keyMain.Hide.ImageTransparency=1
+			Tween(keyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(keyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,187)})
+			Tween(keyMain.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.5})
 			task.wait(0.05)
-			tween(KeyMain.Title,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0})
-			tween(KeyMain.Subtitle,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
+			Tween(keyMain.Title,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0})
+			Tween(keyMain.Subtitle,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
 			task.wait(0.05)
-			tween(KeyMain.KeyNote,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
-			tween(KeyMain.Input,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(KeyMain.Input.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=0})
-			tween(KeyMain.Input.InputBox,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
+			Tween(keyMain.KeyNote,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
+			Tween(keyMain.Input,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(keyMain.Input.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(keyMain.Input.InputBox,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
 			task.wait(0.05)
-			tween(KeyMain.NoteTitle,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0})
-			tween(KeyMain.NoteMessage,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0})
+			Tween(keyMain.NoteTitle,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0})
+			Tween(keyMain.NoteMessage,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0})
 			task.wait(0.15)
-			tween(KeyMain.Hide,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{ImageTransparency=0.3})
-			KeyUI.Main.Input.InputBox.FocusLost:Connect(function()
-				if #KeyUI.Main.Input.InputBox.Text==0 then return end
+			Tween(keyMain.Hide,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{ImageTransparency=0.3})
+			keyUI.Main.Input.InputBox.FocusLost:Connect(function(enter)
+				if Strs.IsEmpty(keyMain.Input.InputBox.Text) or not enter then return end
 				local keyFound=false
 				local savedKey=""
-				for _,MKey in ipairs(keyInfo.Key) do
-					-- stricter key check
-					if KeyMain.Input.InputBox.Text==MKey then
+				for _,key in ipairs(keyInfo.Key) do
+					if keyMain.Input.InputBox.Text==key then
 						keyFound=true
-						savedKey=MKey
+						savedKey=key
 					end
 				end
 				if keyFound then
-					fadeOutKeyUI(KeyMain)
+					FadeOutKeyUI(keyMain)
 					task.wait(0.51)
 					Pass=true
-					KeyMain.Visible=false
+					keyMain.Visible=false
 					if keyInfo.SaveKey and writefile then
-						callSafely(writefile,RayfieldFolder.."/Key System".."/"..keyInfo.FileName..ConfigurationExtension,FoundKey)
+						CallSafely(writefile,RayfieldFolder.."/Key System".."/"..keyInfo.FileName..ConfigExtension,savedKey)
 						Library:Notify({Title="Key System",Content="The key for this script has been saved successfully.",Image=3605522284})
 					end
 				else
 					if AttemptsRemaining==0 then
-						fadeOutKeyUI(KeyMain)
+						FadeOutKeyUI(keyMain)
 						task.wait(0.45)
 						Players.LocalPlayer:Kick("No Attempts Remaining")
 						game:Shutdown()
 					end
-					KeyMain.Input.InputBox.Text=""
+					keyMain.Input.InputBox.Text=""
 					AttemptsRemaining=AttemptsRemaining-1
-					tween(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,467,0,175)})
-					tween(KeyMain,TweenInfo.new(0.4,Enum.EasingStyle.Elastic),{Position=UDim2.new(0.495,0,0.5,0)})
+					Tween(keyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,467,0,175)})
+					Tween(keyMain,TweenInfo.new(0.4,Enum.EasingStyle.Elastic),{Position=UDim2.new(0.495,0,0.5,0)})
 					task.wait(0.1)
-					tween(KeyMain,TweenInfo.new(0.4,Enum.EasingStyle.Elastic),{Position=UDim2.new(0.505,0,0.5,0)})
+					Tween(keyMain,TweenInfo.new(0.4,Enum.EasingStyle.Elastic),{Position=UDim2.new(0.505,0,0.5,0)})
 					task.wait(0.1)
-					tween(KeyMain,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Position=UDim2.new(0.5,0,0.5,0)})
-					tween(KeyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,187)})
+					Tween(keyMain,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Position=UDim2.new(0.5,0,0.5,0)})
+					Tween(keyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,187)})
 				end
 			end)
-			KeyMain.Hide.MouseButton1Click:Connect(function()
-				fadeOutKeyUI(KeyMain)
+			keyMain.Hide.MouseButton1Click:Connect(function()
+				FadeOutKeyUI(keyMain)
 				task.wait(0.51)
 				Pass=true
 				Library:Destroy()
-				KeyUI:Destroy()
+				keyUI:Destroy()
 			end)
 		else
 			Pass=true
 		end
 		repeat task.wait() until Pass
+		task.wait(0.2)
 		-- Prevents animation from trying to play if the button's callback called Library:Destroy()
 		if rayfieldDestroyed then return end
 	end
@@ -1846,15 +1815,14 @@ function Library:CreateWindow(windowInfo)
 	Notifications.Visible=true
 	Rayfield.Enabled=true
 	task.wait(0.5)
-	tween(Main,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	tween(Main.Shadow.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
+	Tween(Main,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(Main.Shadow.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
 	task.wait(0.1)
-	tween(LoadingFrame.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
+	Tween(LoadingFrame.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
 	task.wait(0.05)
-	tween(LoadingFrame.Subtitle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
+	Tween(LoadingFrame.Subtitle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
 	task.wait(0.05)
-	tween(LoadingFrame.Version,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
-	task.wait(1)
+	Tween(LoadingFrame.Version,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
 	Elements.Template.LayoutOrder=100000
 	Elements.Template.Visible=false
 	Elements.UIPageLayout.FillDirection=Enum.FillDirection.Horizontal
@@ -1862,60 +1830,48 @@ function Library:CreateWindow(windowInfo)
 	Elements.UIPageLayout.GamepadInputEnabled=false
 	Elements.UIPageLayout.TouchInputEnabled=false
 	TabList.Template.Visible=false
-	-- Tab
 	local FirstTab=false
 	local Window={}
-	function Window:CreateTab(Name,Image,Ext)
-		local TabPrivate={Order=0}
-		local SDone=false
+	function Window:CreateTab(name,image,Ext)
+		local Tab={Order=0}
 		local TabButton=TabList.Template:Clone()
-		TabButton.Name=Name
-		TabButton.Title.Text=Name
+		TabButton.Name=name
+		TabButton.Title.Text=name
 		TabButton.Parent=TabList
 		TabButton.Title.TextWrapped=false
 		TabButton.Size=UDim2.new(0,TabButton.Title.TextBounds.X+30,0,30)
-		if Image and Image~=0 then
-			local img,rectOffset,rectSize=resolveIcon(Image)
+		if image and image~=0 then
+			local img,rectOffset,rectSize=ResolveIcon(image)
 			TabButton.Image.Image=img
 			if rectOffset then TabButton.Image.ImageRectOffset=rectOffset end
 			if rectSize then TabButton.Image.ImageRectSize=rectSize end
-
 			TabButton.Title.AnchorPoint=Vector2.new(0,0.5)
 			TabButton.Title.Position=UDim2.new(0,37,0.5,0)
 			TabButton.Image.Visible=true
 			TabButton.Title.TextXAlignment=Enum.TextXAlignment.Left
 			TabButton.Size=UDim2.new(0,TabButton.Title.TextBounds.X+52,0,30)
 		end
-
 		TabButton.BackgroundTransparency=1
 		TabButton.Title.TextTransparency=1
 		TabButton.Image.ImageTransparency=1
 		TabButton.UIStroke.Transparency=1
-
 		TabButton.Visible=not Ext or false
-
-		-- Create Elements Page
 		local TabPage=Elements.Template:Clone()
-		TabPage.Name=Name
+		TabPage.Name=name
 		TabPage.Visible=true
-
 		TabPage.LayoutOrder=Ext and 10000 or #Elements:GetChildren()
-
 		for _,TemplateElement in ipairs(TabPage:GetChildren()) do
 			if TemplateElement.ClassName=="Frame" and TemplateElement.Name~="Placeholder" then
 				TemplateElement:Destroy()
 			end
 		end
-
 		TabPage.Parent=Elements
 		if not FirstTab and not Ext then
 			Elements.UIPageLayout.Animated=false
 			Elements.UIPageLayout:JumpTo(TabPage)
 			Elements.UIPageLayout.Animated=true
 		end
-
 		TabButton.UIStroke.Color=SelectedTheme.TabStroke
-
 		if Elements.UIPageLayout.CurrentPage==TabPage then
 			TabButton.BackgroundColor3=SelectedTheme.TabBackgroundSelected
 			TabButton.Image.ImageColor3=SelectedTheme.SelectedTabTextColor
@@ -1925,54 +1881,50 @@ function Library:CreateWindow(windowInfo)
 			TabButton.Image.ImageColor3=SelectedTheme.TabTextColor
 			TabButton.Title.TextColor3=SelectedTheme.TabTextColor
 		end
-
 		-- Animate
 		task.wait(0.1)
 		if FirstTab or Ext then
 			TabButton.BackgroundColor3=SelectedTheme.TabBackground
 			TabButton.Image.ImageColor3=SelectedTheme.TabTextColor
 			TabButton.Title.TextColor3=SelectedTheme.TabTextColor
-			tween(TabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
-			tween(TabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
-			tween(TabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
-			tween(TabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0.5})
+			Tween(TabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
+			Tween(TabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
+			Tween(TabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
+			Tween(TabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0.5})
 		elseif not Ext then
-			FirstTab=Name
+			FirstTab=name
 			TabButton.BackgroundColor3=SelectedTheme.TabBackgroundSelected
 			TabButton.Image.ImageColor3=SelectedTheme.SelectedTabTextColor
 			TabButton.Title.TextColor3=SelectedTheme.SelectedTabTextColor
-			tween(TabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
-			tween(TabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(TabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
+			Tween(TabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+			Tween(TabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(TabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
 		end
 
 		TabButton.Interact.MouseButton1Click:Connect(function()
 			if Minimised then return end
-			tween(TabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(TabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=1})
-			tween(TabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
-			tween(TabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
-			tween(TabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.TabBackgroundSelected})
-			tween(TabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextColor3=SelectedTheme.SelectedTabTextColor})
-			tween(TabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageColor3=SelectedTheme.SelectedTabTextColor})
-
+			Tween(TabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(TabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=1})
+			Tween(TabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
+			Tween(TabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+			Tween(TabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.TabBackgroundSelected})
+			Tween(TabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextColor3=SelectedTheme.SelectedTabTextColor})
+			Tween(TabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageColor3=SelectedTheme.SelectedTabTextColor})
 			for _,OtherTabButton in ipairs(TabList:GetChildren()) do
 				if OtherTabButton.Name~="Template" and OtherTabButton.ClassName=="Frame" and OtherTabButton~=TabButton and OtherTabButton.Name~="Placeholder" then
-					tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.TabBackground})
-					tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextColor3=SelectedTheme.TabTextColor})
-					tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageColor3=SelectedTheme.TabTextColor})
-					tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
-					tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
-					tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
-					tween(OtherTabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0.5})
+					Tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.TabBackground})
+					Tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextColor3=SelectedTheme.TabTextColor})
+					Tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageColor3=SelectedTheme.TabTextColor})
+					Tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
+					Tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
+					Tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
+					Tween(OtherTabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0.5})
 				end
 			end
-
 			if Elements.UIPageLayout.CurrentPage~=TabPage then
 				Elements.UIPageLayout:JumpTo(TabPage)
 			end
 		end)
-		
 		local DefaultData={
 			["Toggle"]={Type="Toggle",Name="Toggle Here",Value=false,Ext=false,Callback=function(Value) end},
 			["Button"]={Type="Button",Name="Button Here",Callback=function() end,Set=function(Value) end},
@@ -1987,91 +1939,99 @@ function Library:CreateWindow(windowInfo)
 			["Slider"]={Type="Slider",Name="Slider Here",["Version"]=1,Increment=1,Value=1,Range={1,10},Ext=false,Callback=function(Value) end},
 			["Keybind"]={Type="Keybind",Name="Keybind Here",Keybind="E",Value="E",Ext=false,Callback=function(Value) end}
 		}
-
-		local function PackTab(info,data,disabled)
+		local function PackTab(options,defaults,disabled)
 			if not disabled then
-				info=type(info)=="table" and info or {}
+				options=type(options)=="table" and options or {}
 			end
-			for k,v in pairs(data) do 
-				local x=info[k]
+			for k,v in pairs(defaults) do 
+				local x=options[k]
 				if x==nil then 
-					info[k]=v 
+					options[k]=v 
 				elseif v~=nil and typeof(x)~=typeof(v) then
-					info[k]=v
+					options[k]=v
 				end 
 			end
-			return info
+			return options
 		end
-		
-		local Tab={}
-
 		-- Button
 		function Tab:CreateButton(ButtonInfo)
 			ButtonInfo=PackTab(ButtonInfo,DefaultData.Button)
 			local Button=Elements.Template.Button:Clone()
+			local ButtonTitle=Button:FindFirstChild("Title")
+			local ButtonIcon=Button:FindFirstChild("Icon")
+			local ButtonElementIndicator=Button:FindFirstChild("ElementIndicator")
 			ButtonInfo.Template=Button
-			TabPrivate.Order+=1
-			Button.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			ButtonTitle.TextColor3=SelectedTheme.TextColor
+			if ButtonIcon and ButtonElementIndicator then
+				ButtonElementIndicator.Visible=false
+				ButtonIcon.Visible=true
+			end
+			Button.LayoutOrder=Tab.Order
 			Button.Name=ButtonInfo.Name
-			Button.Title.Text=ButtonInfo.Name
+			ButtonTitle.Text=ButtonInfo.Name
 			Button.Visible=true
 			Button.Parent=TabPage
 			Button.BackgroundTransparency=1
 			Button.UIStroke.Transparency=1
-			Button.Title.TextTransparency=1
-			tween(Button,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(Button.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-			tween(Button.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			ButtonTitle.TextTransparency=1
+			Tween(Button,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(Button.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(Button.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			function ButtonInfo:Set(NewButton)
+				ButtonTitle.Text=NewButton
+				Button.Name=NewButton
+			end
 			Button.Interact.MouseButton1Click:Connect(function()
 				local Success,Response=pcall(ButtonInfo.Callback)
 				if not Success then
-					tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=1})
-					tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=1})
+					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					Button.Title.Text="Callback Error"
 					print("Rayfield | "..ButtonInfo.Name.." Callback Error " ..tostring(Response))
 					warn('Check docs.sirius.menu for help with Rayfield specific development.')
 					task.wait(0.5)
 					Button.Title.Text=ButtonInfo.Name
-					tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
-					tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
+					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				else
 					if not ButtonInfo.Ext then
-						SaveConfiguration(ButtonInfo.Name..'\n')
+						SaveConfig(ButtonInfo.Name..'\n')
 					end
-					tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=1})
-					tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=1})
+					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					task.wait(0.2)
-					tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
-					tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
+					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
 			end)
 			Button.MouseEnter:Connect(function()
-				tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-				tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.7})
+				Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+				Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.7})
 			end)
 			Button.MouseLeave:Connect(function()
-				tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-				tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
+				Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+				Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
 			end)
-			function ButtonInfo:Set(NewButton)
-				Button.Title.Text=NewButton
-				Button.Name=NewButton
-			end
+			if ButtonIcon then ButtonIcon.ImageColor3=SelectedTheme.TextColor end
+			Button:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+				ButtonTitle.TextColor3=SelectedTheme.TextColor
+				if ButtonIcon then ButtonIcon.ImageColor3=SelectedTheme.TextColor end
+			end)
 			return ButtonInfo
 		end
-
 		-- Selector
 		function Tab:CreateSelector(SelectorInfo)
 			SelectorInfo=PackTab(SelectorInfo,DefaultData.Selector)
 			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("Selector") then warn("Rayfield | Selector not found.") return SelectorInfo end
 			local Selector=Elements.Template.Selector:Clone()
 			SelectorInfo.Template=Selector
-			TabPrivate.Order+=1
-			Selector.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Selector.LayoutOrder=Tab.Order
 			Selector.Name=SelectorInfo.Name
 			Selector.Title.Text=SelectorInfo.Name
 			Selector.Visible=true
@@ -2079,9 +2039,9 @@ function Library:CreateWindow(windowInfo)
 			Selector.BackgroundTransparency=1
 			Selector.UIStroke.Transparency=1
 			Selector.Title.TextTransparency=1
-			tween(Selector,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(Selector.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-			tween(Selector.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			Tween(Selector,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(Selector.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(Selector.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 			local PreviousButton=Selector:FindFirstChild("Previous")
 			local NextButton=Selector:FindFirstChild("Next")
 			local Information=Selector:FindFirstChild("Information")
@@ -2099,28 +2059,28 @@ function Library:CreateWindow(windowInfo)
 					if SelectorInfo.Callback then SelectorInfo.Callback(value,index) end
 				end)
 				if not Success then
-					tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+					Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					SelectorInfo.Title.Text="Callback Error"
 					print("Rayfield | "..SelectorInfo.Name.." Callback Error " ..tostring(Response))
 					warn('Check docs.sirius.menu for help with Rayfield specific development.')
 					task.wait(0.5)
 					SelectorInfo.Title.Text=SelectorInfo.Name
-					tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
 			end
 			function SelectorInfo:Add(value)
 				if not table.find(SelectorInfo.Options,value) then
 					table.insert(SelectorInfo.Options,value)
-					if SelectorInfo.Added then callSafely(SelectorInfo.Added,value) end
+					if SelectorInfo.Added then CallSafely(SelectorInfo.Added,value) end
 				end
 			end
 			function SelectorInfo:Remove(value)
 				local pos=table.find(SelectorInfo.Options,value)
 				if pos~=nil then
 					table.remove(SelectorInfo.Options,pos)
-					if SelectorInfo.Removing then callSafely(SelectorInfo.Removing,value) end
+					if SelectorInfo.Removing then CallSafely(SelectorInfo.Removing,value) end
 				end
 			end
 			PreviousButton.Activated:Connect(function()
@@ -2146,12 +2106,11 @@ function Library:CreateWindow(windowInfo)
 				SelectorInfo.Index=index
 				SelectorInfo:Set(tostring(optionList[index]),index)
 			end)
-			if windowInfo.ConfigurationSaving and windowInfo.ConfigurationSaving.Enabled and SelectorInfo.Flag then
+			if WindowInfo.ConfigurationSaving and WindowInfo.ConfigurationSaving.Enabled and SelectorInfo.Flag then
 				Library.Flags[SelectorInfo.Flag]=SelectorInfo
 			end
 			return SelectorInfo
 		end
-
 		-- Expand
 		function Tab:CreateExpand(ExpandInfo)
 			ExpandInfo=PackTab(ExpandInfo,DefaultData.Expand)
@@ -2159,8 +2118,8 @@ function Library:CreateWindow(windowInfo)
 				local List={}
 				local Expand=Elements.Template.Expand:Clone()
 				ExpandInfo.Template=Expand
-				TabPrivate.Order+=1
-				Expand.LayoutOrder=TabPrivate.Order
+				Tab.Order+=1
+				Expand.LayoutOrder=Tab.Order
 				Expand.Name=ExpandInfo.Name
 				Expand.Title.Text=ExpandInfo.Name
 				Expand.Visible=true
@@ -2168,24 +2127,24 @@ function Library:CreateWindow(windowInfo)
 				function ExpandInfo:Remove(Context)
 					if Context["_expandAncestryChanged"] then Context._expandAncestryChanged:Disconnect() Context._expandAncestryChanged=nil end
 					local pos=table.find(List,Context) if pos then table.remove(List,Context) end
-					if ExpandInfo.Removing then callSafely(ExpandInfo.Removing,Context) end
+					if ExpandInfo.Removing then CallSafely(ExpandInfo.Removing,Context) end
 				end
 				function ExpandInfo:Add(Context)
 					if type(Context)=="table" and Context.Type and Context.Template and Context.Template.Parent and not table.find(List,Context) then
 						local OtherTemplate=Context.Template
 						OtherTemplate.Visible=ExpandInfo.Active
 						table.insert(List,Context)
-						local ancestryChanged;
-						ancestryChanged=OtherTemplate.AncestryChanged:Connect(function(_,Parent)
+						local AncestryChanged
+						AncestryChanged=OtherTemplate.AncestryChanged:Connect(function(_,Parent)
 							if not Parent then
-								ancestryChanged:Disconnect()
+								AncestryChanged:Disconnect()
 								Context._expandAncestryChanged=nil
 								local pos=table.find(List,Context)
 								if pos then table.remove(List,pos) end
 							end
 						end)
-						Context._expandAncestryChanged=ancestryChanged
-						if ExpandInfo.Added then callSafely(ExpandInfo.Added,Context) end
+						Context._expandAncestryChanged=AncestryChanged
+						if ExpandInfo.Added then CallSafely(ExpandInfo.Added,Context) end
 					end
 				end
 				Expand.Interact.MouseButton1Click:Connect(function()
@@ -2194,7 +2153,7 @@ function Library:CreateWindow(windowInfo)
 					local active=not ExpandInfo.Active
 					ExpandInfo.Active=active
 					for i,v in ipairs(List) do if v and v.Template and v.Template.Parent then v.Template.Visible=active end end
-					callSafely(ExpandInfo.Callback,active)
+					CallSafely(ExpandInfo.Callback,active)
 					ExpandInfo.Debounce=nil
 				end)
 			else
@@ -2204,7 +2163,6 @@ function Library:CreateWindow(windowInfo)
 			end
 			return ExpandInfo
 		end
-
 		-- ColorPicker
 		function Tab:CreateColorPicker(ColorPickerInfo) -- by Throit
 			ColorPickerInfo=PackTab(ColorPickerInfo,DefaultData.ColorPicker)
@@ -2214,8 +2172,8 @@ function Library:CreateWindow(windowInfo)
 			local Main=Background.MainCP
 			local Slider=ColorPicker.ColorSlider
 			ColorPickerInfo.Template=ColorPicker
-			TabPrivate.Order+=1
-			ColorPicker.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			ColorPicker.LayoutOrder=Tab.Order
 			ColorPicker.ClipsDescendants=true
 			ColorPicker.Name=ColorPickerInfo.Name
 			ColorPicker.Title.Text=ColorPickerInfo.Name
@@ -2238,38 +2196,38 @@ function Library:CreateWindow(windowInfo)
 			local mouse=Players.LocalPlayer:GetMouse()
 			ColorPicker.Interact.MouseButton1Down:Connect(function()
 				task.spawn(function()
-					tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					tween(ColorPicker.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(ColorPicker.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					task.wait(0.2)
-					tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(ColorPicker.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(ColorPicker.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end)
 				if not opened then
 					opened=true 
-					tween(Background,TweenInfo.new(0.45,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,18,0,15)})
+					Tween(Background,TweenInfo.new(0.45,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,18,0,15)})
 					task.wait(0.1)
-					tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,120)})
-					tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,173,0,86)})
-					tween(Display,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-					tween(ColorPicker.Interact,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Position=UDim2.new(0.289,0,0.5,0)})
-					tween(ColorPicker.RGB,TweenInfo.new(0.8,Enum.EasingStyle.Exponential),{Position=UDim2.new(0,17,0,40)})
-					tween(ColorPicker.HexInput,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Position=UDim2.new(0,17,0,73)})
-					tween(ColorPicker.Interact,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0.574,0,1,0)})
-					tween(Main.MainPoint,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{ImageTransparency=0})
-					tween(Main,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{ImageTransparency=SelectedTheme~=Library.Theme.Default and 0.25 or 0.1})
-					tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+					Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,120)})
+					Tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,173,0,86)})
+					Tween(Display,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+					Tween(ColorPicker.Interact,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Position=UDim2.new(0.289,0,0.5,0)})
+					Tween(ColorPicker.RGB,TweenInfo.new(0.8,Enum.EasingStyle.Exponential),{Position=UDim2.new(0,17,0,40)})
+					Tween(ColorPicker.HexInput,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Position=UDim2.new(0,17,0,73)})
+					Tween(ColorPicker.Interact,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0.574,0,1,0)})
+					Tween(Main.MainPoint,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+					Tween(Main,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{ImageTransparency=SelectedTheme~=Library.Theme.Default and 0.25 or 0.1})
+					Tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 				else
 					opened=false
-					tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,45)})
-					tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,39,0,22)})
-					tween(ColorPicker.Interact,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,0,1,0)})
-					tween(ColorPicker.Interact,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Position=UDim2.new(0.5,0,0.5,0)})
-					tween(ColorPicker.RGB,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Position=UDim2.new(0,17,0,70)})
-					tween(ColorPicker.HexInput,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Position=UDim2.new(0,17,0,90)})
-					tween(Display,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-					tween(Main.MainPoint,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-					tween(Main,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-					tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+					Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,45)})
+					Tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,39,0,22)})
+					Tween(ColorPicker.Interact,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,0,1,0)})
+					Tween(ColorPicker.Interact,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Position=UDim2.new(0.5,0,0.5,0)})
+					Tween(ColorPicker.RGB,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Position=UDim2.new(0,17,0,70)})
+					Tween(ColorPicker.HexInput,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Position=UDim2.new(0,17,0,90)})
+					Tween(Display,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+					Tween(Main.MainPoint,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+					Tween(Main,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+					Tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
 				end
 			end)
 			local colorPickerInputEnded=UserInputService.InputEnded:Connect(function(input,gameProcessed) 
@@ -2326,7 +2284,7 @@ function Library:CreateWindow(windowInfo)
 				then 
 					ColorPicker.HexInput.InputBox.Text=hex 
 				end
-				callSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
+				CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 				local r,g,b=math.floor((h*255)+0.5),math.floor((s*255)+0.5),math.floor((v*255)+0.5)
 				ColorPickerInfo.Color=Color3.fromRGB(r,g,b)
 				if not ColorPickerInfo.Ext then
@@ -2355,15 +2313,15 @@ function Library:CreateWindow(windowInfo)
 			end
 			ColorPicker.RGB.RInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.RInput.InputBox,"R")
-				callSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
+				CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 			end)
 			ColorPicker.RGB.GInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.GInput.InputBox,"G")
-				callSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
+				CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 			end)
 			ColorPicker.RGB.BInput.InputBox.FocusLost:connect(function()
 				rgbBoxes(ColorPicker.RGB.BInput.InputBox,"B")
-				callSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
+				CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 			end)
 			local colorPickerLooped=RunService.RenderStepped:connect(function()
 				if mainDragging then
@@ -2381,7 +2339,7 @@ function Library:CreateWindow(windowInfo)
 					ColorPicker.RGB.GInput.InputBox.Text=tostring(g)
 					ColorPicker.RGB.BInput.InputBox.Text=tostring(b)
 					ColorPicker.HexInput.InputBox.Text=string.format("#%02X%02X%02X",color.R*0xFF,color.G*0xFF,color.B*0xFF)
-					callSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
+					CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 					local value=Color3.fromRGB(r,g,b)
 					ColorPickerInfo.Color=value
 					if not ColorPickerInfo.Ext then
@@ -2402,7 +2360,7 @@ function Library:CreateWindow(windowInfo)
 					ColorPicker.RGB.GInput.InputBox.Text=tostring(g)
 					ColorPicker.RGB.BInput.InputBox.Text=tostring(b)
 					ColorPicker.HexInput.InputBox.Text=string.format("#%02X%02X%02X",color.R*0xFF,color.G*0xFF,color.B*0xFF)
-					callSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
+					CallSafely(ColorPickerInfo.Callback,Color3.fromHSV(h,s,v))
 					ColorPickerInfo.Color=Color3.fromRGB(r,g,b)
 					if not ColorPickerInfo.Ext then
 						SaveConfiguration()
@@ -2413,104 +2371,99 @@ function Library:CreateWindow(windowInfo)
 				if colorPickerLooped then colorPickerLooped:Disconnect() end
 				if colorPickerInputEnded then colorPickerInputEnded:Disconnect() end
 			end)
-			if windowInfo.ConfigurationSaving then if windowInfo.ConfigurationSaving.Enabled and ColorPickerInfo.Flag then Library.Flags[ColorPickerInfo.Flag]=ColorPickerInfo end end
+			if WindowInfo.ConfigurationSaving then if WindowInfo.ConfigurationSaving.Enabled and ColorPickerInfo.Flag then Library.Flags[ColorPickerInfo.Flag]=ColorPickerInfo end end
 			function ColorPickerInfo:Set(RGBColor)
 				ColorPickerInfo.Color=RGBColor h,s,v=ColorPickerInfo.Color:ToHSV() color=Color3.fromHSV(h,s,v) setDisplay()
 			end
 			ColorPicker.MouseEnter:Connect(function()
-				tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+				Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 			end)
 			ColorPicker.MouseLeave:Connect(function()
-				tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+				Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
 			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
 				for i,v in ipairs(ColorPicker.RGB:GetChildren()) do if v:IsA("Frame") then v.BackgroundColor3=SelectedTheme.InputBackground v.UIStroke.Color=SelectedTheme.InputStroke end end ColorPicker.HexInput.BackgroundColor3=SelectedTheme.InputBackground ColorPicker.HexInput.UIStroke.Color=SelectedTheme.InputStroke
 			end)
 			return ColorPickerInfo
 		end
-
 		-- Section
+		local SectionDone=false
 		function Tab:CreateSection(SectionName)
 			local SectionInfo={Name=SectionName}
 			SectionInfo=PackTab(SectionInfo,DefaultData.Section)
-			if SDone then
+			if SectionDone then
 				local SectionSpace=Elements.Template.SectionSpacing:Clone()
-				TabPrivate.Order+=1
-				SectionSpace.LayoutOrder=TabPrivate.Order
+				Tab.Order+=1
+				SectionSpace.LayoutOrder=Tab.Order
 				SectionSpace.Visible=true
 				SectionSpace.Parent=TabPage
 			end
-			SDone=true
+			SectionDone=true
 			local Section=Elements.Template.SectionTitle:Clone()
 			SectionInfo.Template=Section
-			TabPrivate.Order+=1
-			Section.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Section.LayoutOrder=Tab.Order
 			Section.Title.Text=SectionName
 			Section.Visible=true
 			Section.Parent=TabPage
 			Section.Title.TextTransparency=1
-			tween(Section.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.4})
+			Tween(Section.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.4})
 			function SectionInfo:Set(NewSection)
 				Section.Title.Text=NewSection
 				SectionInfo.Value=NewSection
 			end
 			return SectionInfo
 		end
-
 		-- Divider
 		function Tab:CreateDivider()
 			local DividerInfo={Type="Divider"}
 			local Divider=Elements.Template.Divider:Clone()
 			DividerInfo.Template=Divider
-			TabPrivate.Order+=1
-			Divider.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Divider.LayoutOrder=Tab.Order
 			Divider.Visible=true
 			Divider.Parent=TabPage
 			Divider.Divider.BackgroundTransparency=1
-			tween(Divider.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.85})
+			Tween(Divider.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.85})
 			function DividerInfo:Set(Value)
 				Divider.Visible=Value
 			end
 			return DividerInfo
 		end
-
 		-- Label
 		function Tab:CreateLabel(Text,Icon,Color,IgnoreTheme)
 			local LabelInfo={Text=Text,Icon=Icon,Color=Color,IgnoreTheme=IgnoreTheme}
 			LabelInfo=PackTab(LabelInfo,DefaultData.Label)
 			local Label=Elements.Template.Label:Clone()
 			LabelInfo.Template=Label
-			TabPrivate.Order+=1
-			Label.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Label.LayoutOrder=Tab.Order
 			Label.Title.Text=LabelInfo.Text
 			Label.Visible=true
 			Label.Parent=TabPage
 			Label.BackgroundColor3=LabelInfo.Color and LabelInfo.Color or SelectedTheme.SecondaryElementBackground
 			Label.UIStroke.Color=LabelInfo.Color and LabelInfo.Color or SelectedTheme.SecondaryElementStroke
 			if LabelInfo.Icon then
-				local img,rectOffset,rectSize=resolveIcon(LabelInfo.Icon)
+				local img,rectOffset,rectSize=ResolveIcon(LabelInfo.Icon)
 				Label.Icon.Image=img
 				if rectOffset then Label.Icon.ImageRectOffset=rectOffset end
 				if rectSize then Label.Icon.ImageRectSize=rectSize end
 			else
 				Label.Icon.Image=""
 			end
-			if LabelInfo.Icon and Label:FindFirstChild('Icon') then
+			if LabelInfo.Icon and Label:FindFirstChild("Icon") then
 				Label.Title.Position=UDim2.new(0,45,0.5,0)
 				Label.Title.Size=UDim2.new(1,-100,0,14)
 				Label.Icon.Visible=true
 			end
-
 			Label.Icon.ImageTransparency=1
 			Label.BackgroundTransparency=1
 			Label.UIStroke.Transparency=1
 			Label.Title.TextTransparency=1
-
-			tween(Label,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=Color and 0.8 or 0})
-			tween(Label.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=Color and 0.7 or 0})
-			tween(Label.Icon,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
-			tween(Label.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=Color and 0.2 or 0})	
-
+			Tween(Label,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=Color and 0.8 or 0})
+			Tween(Label.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=Color and 0.7 or 0})
+			Tween(Label.Icon,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
+			Tween(Label.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=Color and 0.2 or 0})	
 			function LabelInfo:Set(Text,Icon,Color)
 				local labelText=Text or LabelInfo.Text
 				if labelText then
@@ -2518,43 +2471,35 @@ function Library:CreateWindow(windowInfo)
 					Label.Title.Text=labelText
 					LabelInfo.Text=labelText
 				end
-
 				local labelColor=Color or SelectedTheme.SecondaryElementBackground
 				Label.BackgroundColor3=labelColor
 				Label.UIStroke.Color=labelColor
 				LabelInfo.COlor=labelColor
-
 				local labelIcon=Icon or LabelInfo.Icon
-				if labelIcon and Label:FindFirstChild('Icon') then
+				if labelIcon and Label:FindFirstChild("Icon") then
 					LabelInfo.Icon=labelIcon
-
 					Label.Title.Position=UDim2.new(0,45,0.5,0)
 					Label.Title.Size=UDim2.new(1,-100,0,14)
-
-					local img,rectOffset,rectSize=resolveIcon(labelIcon)
+					local img,rectOffset,rectSize=ResolveIcon(labelIcon)
 					Label.Icon.Image=img
 					if rectOffset then Label.Icon.ImageRectOffset=rectOffset end
 					if rectSize then Label.Icon.ImageRectSize=rectSize end
-
 					Label.Icon.Visible=true
 				end
 			end
-
-			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
+			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Label.BackgroundColor3=IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementBackground
 				Label.UIStroke.Color=IgnoreTheme and (Color or Label.BackgroundColor3) or SelectedTheme.SecondaryElementStroke
 			end)
-
 			return LabelInfo
 		end
-
 		-- Paragraph
 		function Tab:CreateParagraph(ParagraphInfo)
 			ParagraphInfo=PackTab(ParagraphInfo,DefaultData.Paragraph)
 			local Paragraph=Elements.Template.Paragraph:Clone()
 			ParagraphInfo.Template=Paragraph
-			TabPrivate.Order+=1
-			Paragraph.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Paragraph.LayoutOrder=Tab.Order
 			Paragraph.Title.Text=ParagraphInfo.Title
 			Paragraph.Content.Text=ParagraphInfo.Content
 			Paragraph.Visible=true
@@ -2565,21 +2510,20 @@ function Library:CreateWindow(windowInfo)
 			Paragraph.Content.TextTransparency=1
 			Paragraph.BackgroundColor3=SelectedTheme.SecondaryElementBackground
 			Paragraph.UIStroke.Color=SelectedTheme.SecondaryElementStroke
-			tween(Paragraph,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(Paragraph.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-			tween(Paragraph.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
-			tween(Paragraph.Content,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			Tween(Paragraph,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(Paragraph.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(Paragraph.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			Tween(Paragraph.Content,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 			function ParagraphInfo:Set(NewParagraphInfo)
 				Paragraph.Title.Text=NewParagraphInfo.Title
 				Paragraph.Content.Text=NewParagraphInfo.Content
 			end
-			Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
+			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 				Paragraph.BackgroundColor3=SelectedTheme.SecondaryElementBackground
 				Paragraph.UIStroke.Color=SelectedTheme.SecondaryElementStroke
 			end)
 			return ParagraphInfo
 		end
-
 		-- Input
 		function Tab:CreateInput(InputInfo)
 			InputInfo=type(InputInfo)=="table" and InputInfo or {}
@@ -2587,8 +2531,8 @@ function Library:CreateWindow(windowInfo)
 			InputInfo=PackTab(InputInfo,DefaultData.Input,true)
 			local Input=Elements.Template.Input:Clone()
 			InputInfo.Template=Input
-			TabPrivate.Order+=1
-			Input.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Input.LayoutOrder=Tab.Order
 			Input.Name=InputInfo.Name
 			Input.Title.Text=InputInfo.Name
 			Input.Visible=true
@@ -2599,50 +2543,51 @@ function Library:CreateWindow(windowInfo)
 			Input.InputFrame.InputBox.Text=tostring(InputInfo.Value)
 			Input.InputFrame.BackgroundColor3=SelectedTheme.InputBackground
 			Input.InputFrame.UIStroke.Color=SelectedTheme.InputStroke
-			tween(Input,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(Input.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-			tween(Input.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			Tween(Input,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(Input.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(Input.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 			Input.InputFrame.InputBox.PlaceholderText=InputInfo.PlaceholderText
 			Input.InputFrame.Size=UDim2.new(0,Input.InputFrame.InputBox.TextBounds.X+24,0,30)
 			Input.InputFrame.InputBox.FocusLost:Connect(function(enter)
+				if not InputInfo.NoEnter and not enter then return end
 				local Success,Response=pcall(InputInfo.Callback,Input.InputFrame.InputBox.Text)
 				if not Success then
-					tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					tween(Input.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+					Tween(Input.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					Input.Title.Text="Callback Error"
 					print("Rayfield | "..InputInfo.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
+					warn("Check docs.sirius.menu for help with Rayfield specific development.")
 					task.wait(0.5)
 					Input.Title.Text=InputInfo.Name
-					tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Input.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Input.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
 				if InputInfo.RemoveTextAfterFocusLost then Input.InputFrame.InputBox.Text="" end
-				if not InputInfo.Ext then SaveConfiguration() end
+				if not InputInfo.Ext then SaveConfig() end
 			end)
 			Input.MouseEnter:Connect(function()
-				tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+				Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 			end)
 			Input.MouseLeave:Connect(function()
-				tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+				Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
 			Input.InputFrame.InputBox:GetPropertyChangedSignal("Text"):Connect(function()
-				tween(Input.InputFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Input.InputFrame.InputBox.TextBounds.X+24,0,30)})
+				Tween(Input.InputFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Input.InputFrame.InputBox.TextBounds.X+24,0,30)})
 			end)
 			function InputInfo:Replace(text)
 				if InputInfo.Value~=text then
 					InputInfo.Value=text
 					Input.InputFrame.InputBox.Text=text
-					if not InputInfo.Ext then SaveConfiguration() end
+					if not InputInfo.Ext then SaveConfig() end
 				end
 			end
 			function InputInfo:Set(text)
 				Input.InputFrame.InputBox.Text=text
 				InputInfo.Value=text
-				callSafely(InputInfo.Callback,text)
-				if not InputInfo.Ext then SaveConfiguration() end
+				CallSafely(InputInfo.Callback,text)
+				if not InputInfo.Ext then SaveConfig() end
 			end
-			if windowInfo.ConfigurationSaving and windowInfo.ConfigurationSaving.Enabled and InputInfo.Flag then
+			if savingInfo and savingInfo.Enabled and InputInfo.Flag then
 				Library.Flags[InputInfo.Flag]=InputInfo
 			end
 			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
@@ -2651,14 +2596,18 @@ function Library:CreateWindow(windowInfo)
 			end)
 			return InputInfo
 		end
-
 		-- Dropdown
 		function Tab:CreateDropdown(DropdownInfo)
 			DropdownInfo=PackTab(DropdownInfo,DefaultData.Dropdown)
 			local Dropdown=Elements.Template.Dropdown:Clone()
+			local InputBox=Dropdown:FindFirstChild("InputBox")
+			if InputBox then
+				InputBox.Visible=false
+				InputBox.Text=DropdownInfo.Name
+			end
 			DropdownInfo.Template=Dropdown
-			TabPrivate.Order+=1
-			Dropdown.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Dropdown.LayoutOrder=Tab.Order
 			if string.find(DropdownInfo.Name,"closed") then Dropdown.Name="Dropdown" else Dropdown.Name=DropdownInfo.Name end
 			Dropdown.Title.Text=DropdownInfo.Name
 			Dropdown.Visible=true
@@ -2694,73 +2643,107 @@ function Library:CreateWindow(windowInfo)
 				Dropdown.Selected.Text=DropdownInfo.Option[1] or "None"
 			end
 			Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor
-			tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+			Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			Dropdown.BackgroundTransparency=1
 			Dropdown.UIStroke.Transparency=1
 			Dropdown.Title.TextTransparency=1
 			Dropdown.Size=UDim2.new(1,-10,0,45)
-			tween(Dropdown,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(Dropdown.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-			tween(Dropdown.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			Tween(Dropdown,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(Dropdown.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(Dropdown.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 			for _,ununusedoption in ipairs(Dropdown.List:GetChildren()) do if ununusedoption.ClassName=="Frame" and ununusedoption.Name~="Placeholder" then ununusedoption:Destroy() end end
 			Dropdown.Toggle.Rotation=180
+			if InputBox then
+				InputBox:GetPropertyChangedSignal("Text"):Connect(function()
+					if InputBox.Visible and Dropdown.List.Visible then
+						local inputText=string.lower(InputBox.Text)
+						for _,v in ipairs(Dropdown.List:GetChildren()) do
+							local visible=false
+							if v and v.Parent and v.ClassName=="Frame" and v.Name~="Placeholder" then
+								for j,text in ipairs({v.Name,string.lower(v.Name)}) do
+									visible=string.find(text,inputText,1,true) and true or false 
+									if visible then break end
+								end
+								if v and v.Parent then
+									v.Visible=visible
+								end
+							end
+						end
+					end
+				end)
+			end
+			local function SetInputVisible(visible)
+				if InputBox then
+					if visible then
+						InputBox.Text=DropdownInfo.Name
+						InputBox.Visible=false
+						Dropdown.Title.Visible=true
+					else
+						Dropdown.Title.Visible=false
+						InputBox.Text=DropdownInfo.Name
+						InputBox.Visible=true
+					end
+				end
+			end
 			Dropdown.Interact.MouseButton1Click:Connect(function()
-				tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-				tween(Dropdown.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1})
+				Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+				Tween(Dropdown.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1})
 				task.wait(0.1)
-				tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-				tween(Dropdown.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=0})
+				Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+				Tween(Dropdown.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=0})
 				if Dropdown.List.Visible then
 					if Debounce then return end
 					Debounce=true
-					tween(Dropdown,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,45)})
+					SetInputVisible(true)
+					Tween(Dropdown,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,45)})
 					for i,v in ipairs(Dropdown.List:GetChildren()) do
 						if v.ClassName=="Frame" and v.Name~="Placeholder" then
-							tween(v,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-							tween(v.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
-							tween(v.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+							Tween(v,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+							Tween(v.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
+							Tween(v.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
 						end
 					end
-					tween(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=1})
-					tween(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=180})	
+					Tween(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=1})
+					Tween(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=180})	
 					task.wait(0.35)
 					Dropdown.List.Visible=false
 					Debounce=false
 				else
-					tween(Dropdown,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,180)})
+					SetInputVisible(false)
+					Tween(Dropdown,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,180)})
 					Dropdown.List.Visible=true
-					tween(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=0.7})
-					tween(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=0})	
+					Tween(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=0.7})
+					Tween(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=0})	
 					for i,v in ipairs(Dropdown.List:GetChildren()) do
 						if v.ClassName=="Frame" and v.Name~="Placeholder" then
 							if v.Name~=Dropdown.Selected.Text then
-								tween(v.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=0})
+								Tween(v.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=0})
 							end
-							tween(v,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-							tween(v.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
+							Tween(v,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+							Tween(v.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
 						end
 					end
 				end
 			end)
 			Dropdown.MouseEnter:Connect(function()
 				if not Dropdown.List.Visible then
-					tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 				end
 			end)
 			Dropdown.MouseLeave:Connect(function()
-				tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+				Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
 			local function SetDropdownOptions()
 				for i,v in ipairs(DropdownInfo.Options) do
 					local DropdownOption=Elements.Template.Dropdown.List.Template:Clone()
 					DropdownOption.Name=v
 					DropdownOption.Title.Text=v
-					DropdownOption.Parent=Dropdown.List
 					DropdownOption.Visible=true
 					DropdownOption.BackgroundTransparency=1
 					DropdownOption.UIStroke.Transparency=1
 					DropdownOption.Title.TextTransparency=1
 					DropdownOption.Interact.ZIndex=50
+					DropdownOption.Parent=Dropdown.List
 					DropdownOption.Interact.MouseButton1Click:Connect(function()
 						if not DropdownInfo.MultipleOptions and table.find(DropdownInfo.Option,v) then return end
 						local foundIndex=table.find(DropdownInfo.Option,v)
@@ -2793,46 +2776,44 @@ function Library:CreateWindow(windowInfo)
 							else
 								Dropdown.Selected.Text=DropdownInfo.Option[1]
 							end
-							tween(DropdownOption.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
-							tween(DropdownOption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownSelected})
+							Tween(DropdownOption.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
+							Tween(DropdownOption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownSelected})
 							Debounce=true
 						end
-						local Success,Response=pcall(function()
-							if DropdownInfo.Callback then DropdownInfo.Callback(DropdownInfo.Option) end
-						end)
+						local Success,Response=pcall(DropdownInfo.Callback,DropdownInfo.Option)
 						if not Success then
-							tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-							tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+							Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+							Tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 							Dropdown.Title.Text="Callback Error"
 							print("Rayfield | "..DropdownInfo.Name.." Callback Error " ..tostring(Response))
-							warn('Check docs.sirius.menu for help with Rayfield specific development.')
+							warn("Check docs.sirius.menu for help with Rayfield specific development.")
 							task.wait(0.5)
 							Dropdown.Title.Text=DropdownInfo.Name
-							tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-							tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+							Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+							Tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 						end
-						for _,droption in ipairs(Dropdown.List:GetChildren()) do if droption.ClassName=="Frame" and droption.Name~="Placeholder" and not table.find(DropdownInfo.Option,droption.Name) then tween(droption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownUnselected}) end end
+						for _,droption in ipairs(Dropdown.List:GetChildren()) do if droption.ClassName=="Frame" and droption.Name~="Placeholder" and not table.find(DropdownInfo.Option,droption.Name) then Tween(droption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownUnselected}) end end
 						if not DropdownInfo.MultipleOptions then
 							task.wait(0.1)
-							tween(Dropdown,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,45)})
-							for _,DropdownOpt in ipairs(Dropdown.List:GetChildren()) do
-								if DropdownOpt.ClassName=="Frame" and DropdownOpt.Name~="Placeholder" then
-									tween(DropdownOpt,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-									tween(DropdownOpt.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
-									tween(DropdownOpt.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+							SetInputVisible(true)
+							Tween(Dropdown,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,45)})
+							for _,droption in ipairs(Dropdown.List:GetChildren()) do
+								if droption.ClassName=="Frame" and droption.Name~="Placeholder" then
+									Tween(droption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+									Tween(droption.UIStroke,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{Transparency=1})
+									Tween(droption.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+									droption.Visible=true
 								end
 							end
-							tween(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=1})
-							tween(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=180})	
+							Tween(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=1})
+							Tween(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=180})	
 							task.wait(0.35)
 							Dropdown.List.Visible=false
 						end
 						Debounce=false
-						if not DropdownInfo.Ext then
-							SaveConfiguration()
-						end
+						if not DropdownInfo.Ext then SaveConfig() end
 					end)
-					Rayfield.Main:GetPropertyChangedSignal('BackgroundColor3'):Connect(function()
+					Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 						DropdownOption.UIStroke.Color=SelectedTheme.ElementStroke
 					end)
 				end
@@ -2858,19 +2839,17 @@ function Library:CreateWindow(windowInfo)
 				else
 					Dropdown.Selected.Text=DropdownInfo.Option[1]
 				end
-				local Success,Response=pcall(function()
-					if DropdownInfo.Callback then DropdownInfo.Callback(NewOption) end
-				end)
+				local Success,Response=pcall(DropdownInfo.Callback)
 				if not Success then
-					tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+					Tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					Dropdown.Title.Text="Callback Error"
 					print("Rayfield | "..DropdownInfo.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
+					warn("Check docs.sirius.menu for help with Rayfield specific development.")
 					task.wait(0.5)
 					Dropdown.Title.Text=DropdownInfo.Name
-					tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
 				for _,droption in ipairs(Dropdown.List:GetChildren()) do
 					if droption.ClassName=="Frame" and droption.Name~="Placeholder" then
@@ -2881,10 +2860,9 @@ function Library:CreateWindow(windowInfo)
 						end
 					end
 				end
-				--SaveConfiguration()
 			end
-			function DropdownInfo:Refresh(optionsTable) -- updates a dropdown with new options from optionsTable
-				DropdownInfo.Options=optionsTable
+			function DropdownInfo:Refresh(options) -- updates a dropdown with new options from optionsTable
+				DropdownInfo.Options=options
 				for _,option in Dropdown.List:GetChildren() do if option.ClassName=="Frame" and option.Name~="Placeholder" then option:Destroy() end end
 				SetDropdownOptions()
 				-- Apply selected/unselected background colors to new options
@@ -2910,13 +2888,12 @@ function Library:CreateWindow(windowInfo)
 					end
 				end
 			end
-			if windowInfo.ConfigurationSaving then if windowInfo.ConfigurationSaving.Enabled and DropdownInfo.Flag then Library.Flags[DropdownInfo.Flag]=DropdownInfo end end
+			if WindowInfo.ConfigurationSaving then if WindowInfo.ConfigurationSaving.Enabled and DropdownInfo.Flag then Library.Flags[DropdownInfo.Flag]=DropdownInfo end end
 			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
-				Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+				Dropdown.Toggle.ImageColor3=SelectedTheme.TextColor Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
 			return DropdownInfo
 		end
-
 		-- Keybind
 		function Tab:CreateKeybind(KeybindInfo)
 			KeybindInfo=type(KeybindInfo)=="table" and KeybindInfo or {}
@@ -2925,8 +2902,8 @@ function Library:CreateWindow(windowInfo)
 			local CheckingForKey=false
 			local Keybind=Elements.Template.Keybind:Clone()
 			KeybindInfo.Template=Keybind
-			TabPrivate.Order+=1
-			Keybind.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Keybind.LayoutOrder=Tab.Order
 			Keybind.Name=KeybindInfo.Name
 			Keybind.Title.Text=KeybindInfo.Name
 			Keybind.Visible=true
@@ -2936,9 +2913,9 @@ function Library:CreateWindow(windowInfo)
 			Keybind.Title.TextTransparency=1
 			Keybind.KeybindFrame.BackgroundColor3=SelectedTheme.InputBackground
 			Keybind.KeybindFrame.UIStroke.Color=SelectedTheme.InputStroke
-			tween(Keybind,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(Keybind.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-			tween(Keybind.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			Tween(Keybind,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(Keybind.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(Keybind.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 			Keybind.KeybindFrame.KeybindBox.Text=KeybindInfo.Keybind
 			Keybind.KeybindFrame.Size=UDim2.new(0,Keybind.KeybindFrame.KeybindBox.TextBounds.X+24,0,30)
 			Keybind.KeybindFrame.KeybindBox.Focused:Connect(function()
@@ -2949,14 +2926,14 @@ function Library:CreateWindow(windowInfo)
 				local inputText=Keybind.KeybindFrame.KeybindBox.Text
 				if inputText==nil or inputText=="" then
 					Keybind.KeybindFrame.KeybindBox.Text=KeybindInfo.Keybind
-					if not KeybindInfo.Ext then SaveConfiguration() end
+					if not KeybindInfo.Ext then SaveConfig() end
 				end
 			end)
 			Keybind.MouseEnter:Connect(function()
-				tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+				Tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 			end)
 			Keybind.MouseLeave:Connect(function()
-				tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+				Tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
 			local keybindInputBegan=UserInputService.InputBegan:Connect(function(input,processed)
 				if CheckingForKey then
@@ -2967,7 +2944,7 @@ function Library:CreateWindow(windowInfo)
 						KeybindInfo.Keybind=tostring(NewKeyNoEnum)
 						KeybindInfo.Value=tostring(NewKeyNoEnum)
 						Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
-						if not KeybindInfo.Ext then SaveConfiguration() end
+						if not KeybindInfo.Ext then SaveConfig() end
 						if KeybindInfo.CallOnChange then KeybindInfo.Callback(tostring(NewKeyNoEnum)) end
 					end
 				elseif not KeybindInfo.CallOnChange and KeybindInfo.Keybind~=nil and (input.KeyCode==Enum.KeyCode[KeybindInfo.Keybind] and not processed) then -- Test
@@ -2982,15 +2959,15 @@ function Library:CreateWindow(windowInfo)
 					if not KeybindInfo.HoldToInteract then
 						local Success,Response=pcall(KeybindInfo.Callback)
 						if not Success then
-							tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-							tween(Keybind.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+							Tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+							Tween(Keybind.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 							Keybind.Title.Text="Callback Error"
 							print("Rayfield | "..KeybindInfo.Name.." Callback Error " ..tostring(Response))
 							warn('Check docs.sirius.menu for help with Rayfield specific development.')
 							task.wait(0.5)
 							Keybind.Title.Text=KeybindInfo.Name
-							tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-							tween(Keybind.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+							Tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+							Tween(Keybind.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 						end
 					else
 						task.wait(0.25)
@@ -3010,7 +2987,7 @@ function Library:CreateWindow(windowInfo)
 			end)
 			table.insert(keybindConnections,keybindInputBegan)
 			Keybind.KeybindFrame.KeybindBox:GetPropertyChangedSignal("Text"):Connect(function()
-				tween(Keybind.KeybindFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Keybind.KeybindFrame.KeybindBox.TextBounds.X+24,0,30)})
+				Tween(Keybind.KeybindFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Keybind.KeybindFrame.KeybindBox.TextBounds.X+24,0,30)})
 			end)
 			function KeybindInfo:Set(NewKeybind)
 				Keybind.KeybindFrame.KeybindBox.Text=tostring(NewKeybind)
@@ -3019,10 +2996,10 @@ function Library:CreateWindow(windowInfo)
 				if KeybindInfo.CurrentKeybind then KeybindInfo.Keybind=KeybindInfo.CurrentKeybind KeybindInfo.CurrentKeybind=nil end
 				if KeybindInfo.Value then KeybindInfo.Keybind=KeybindInfo.Value KeybindInfo.Value=nil end
 				Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
-				if not KeybindInfo.Ext then SaveConfiguration() end
-				if KeybindInfo.CallOnChange then callSafely(KeybindInfo.Callback,tostring(NewKeybind)) end
+				if not KeybindInfo.Ext then SaveConfig() end
+				if KeybindInfo.CallOnChange then CallSafely(KeybindInfo.Callback,tostring(NewKeybind)) end
 			end
-			if windowInfo.ConfigurationSaving and windowInfo.ConfigurationSaving.Enabled and KeybindInfo.Flag then
+			if savingInfo and savingInfo.Enabled and KeybindInfo.Flag then
 				Library.Flags[KeybindInfo.Flag]=KeybindInfo
 			end
 			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
@@ -3031,14 +3008,13 @@ function Library:CreateWindow(windowInfo)
 			end)
 			return KeybindInfo
 		end
-
 		-- Toggle
 		function Tab:CreateToggle(ToggleInfo)
 			ToggleInfo=PackTab(ToggleInfo,DefaultData.Toggle)
 			local Toggle=Elements.Template.Toggle:Clone()
 			ToggleInfo.Template=Toggle
-			TabPrivate.Order+=1
-			Toggle.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Toggle.LayoutOrder=Tab.Order
 			Toggle.Name=ToggleInfo.Name
 			Toggle.Title.Text=ToggleInfo.Name
 			Toggle.Visible=true
@@ -3050,9 +3026,9 @@ function Library:CreateWindow(windowInfo)
 			if SelectedTheme~=Library.Theme.Default then
 				Toggle.Switch.Shadow.Visible=false
 			end
-			tween(Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-			tween(Toggle.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-			tween(Toggle.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+			Tween(Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+			Tween(Toggle.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+			Tween(Toggle.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 			if ToggleInfo.Value==true then
 				Toggle.Switch.Indicator.Position=UDim2.new(1,-20,0.5,0)
 				Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleEnabledStroke
@@ -3065,121 +3041,121 @@ function Library:CreateWindow(windowInfo)
 				Toggle.Switch.UIStroke.Color=SelectedTheme.ToggleDisabledOuterStroke
 			end
 			Toggle.MouseEnter:Connect(function()
-				tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+				Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 			end)
 			Toggle.MouseLeave:Connect(function()
-				tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+				Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 			end)
 			Toggle.Interact.MouseButton1Click:Connect(function()
 				local NewValue=ToggleInfo.Value
 				if NewValue==true then
 					NewValue=false
 					ToggleInfo.Value=NewValue
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
-					tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
-					tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
+					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
+					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
 				else
 					NewValue=true
 					ToggleInfo.Value=NewValue
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
-					tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
-					tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})		
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
+					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
+					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})		
 				end
 				local Success,Response=pcall(ToggleInfo.Callback,NewValue)
 				if not Success then
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					Toggle.Title.Text="Callback Error"
 					print("Rayfield | "..ToggleInfo.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
+					warn("Check docs.sirius.menu for help with Rayfield specific development.")
 					task.wait(0.5)
 					Toggle.Title.Text=ToggleInfo.Name
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
-				if not ToggleInfo.Ext then SaveConfiguration() end
+				if not ToggleInfo.Ext then SaveConfig() end
 			end)
 			function ToggleInfo:Replace(NewValue)
 				if NewValue then NewValue=true else NewValue=false end
 				if ToggleInfo.Value~=NewValue then
 					ToggleInfo.Value=NewValue
 					if NewValue==true then
-						tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-						tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-						tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
-						tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
-						tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
-						tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
-						tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
-						tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})	
-						tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-						tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
+						Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
+						Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})	
+						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
 					else
-						tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-						tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-						tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
-						tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
-						tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
-						tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
-						tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
-						tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})
-						tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-						tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
+						Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
+						Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
+						Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})
+						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
 					end
-					if not ToggleInfo.Ext then SaveConfiguration() end
+					if not ToggleInfo.Ext then SaveConfig() end
 				end
 			end
 			function ToggleInfo:Set(NewValue)
 				if NewValue then NewValue=true else NewValue=false end
 				ToggleInfo.Value=NewValue
 				if NewValue==true then
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
-					tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
-					tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})	
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.5,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-20,0.5,0)})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
+					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleEnabled})
+					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleEnabledOuterStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})	
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
 				else
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
-					tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
-					tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
-					tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.45,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Position=UDim2.new(1,-40,0.5,0)})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,12,0,12)})
+					Tween(Toggle.Switch.Indicator.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.8,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{BackgroundColor3=SelectedTheme.ToggleDisabled})
+					Tween(Toggle.Switch.UIStroke,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Color=SelectedTheme.ToggleDisabledOuterStroke})
+					Tween(Toggle.Switch.Indicator,TweenInfo.new(0.4,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(0,17,0,17)})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
 				end
 				local Success,Response=pcall(ToggleInfo.Callback,ToggleInfo.Value)
 				if not Success then
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 					Toggle.Title.Text="Callback Error"
 					print("Rayfield | "..ToggleInfo.Name.." Callback Error " ..tostring(Response))
 					warn('Check docs.sirius.menu for help with Rayfield specific development.')
 					task.wait(0.5)
 					Toggle.Title.Text=ToggleInfo.Name
-					tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
-				if not ToggleInfo.Ext then SaveConfiguration() end
+				if not ToggleInfo.Ext then SaveConfig() end
 			end
-			if not ToggleInfo.Ext and windowInfo.ConfigurationSaving and windowInfo.ConfigurationSaving.Enabled and ToggleInfo.Flag then
+			if savingInfo and savingInfo.Enabled and ToggleInfo.Flag then
 				Library.Flags[ToggleInfo.Flag]=ToggleInfo
 			end
 			Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
@@ -3187,7 +3163,6 @@ function Library:CreateWindow(windowInfo)
 				if SelectedTheme~=Library.Theme.Default then
 					Toggle.Switch.Shadow.Visible=false
 				end
-				task.wait()
 				if not ToggleInfo.Value then
 					Toggle.Switch.Indicator.UIStroke.Color=SelectedTheme.ToggleDisabledStroke
 					Toggle.Switch.Indicator.BackgroundColor3=SelectedTheme.ToggleDisabled
@@ -3200,7 +3175,6 @@ function Library:CreateWindow(windowInfo)
 			end)
 			return ToggleInfo
 		end
-
 		-- Slider
 		function Tab:CreateSlider(SliderInfo) -- V1 by Rayfield, V2, by Paazlis
 			SliderInfo=type(SliderInfo)=="table" and SliderInfo or {}
@@ -3218,15 +3192,15 @@ function Library:CreateWindow(windowInfo)
 				if type(SliderInfo.Range)~="table" then SliderInfo.Range={10,100} end
 				for i=1,2 do if SliderInfo.Range[i]==nil then if i==1 then SliderInfo.Range[1]=10 else SliderInfo.Range[2]=100 end end end
 			end
-			TabPrivate.Order+=1
+			Tab.Order+=1
 			local ApplyTextLabel=function(label,value)
 				local valueStr,suffix=Strs.ToNumberString(value),SliderInfo.Suffix
 				if not Strs.IsEmpty(suffix) then label.Text=valueStr.." "..suffix else label.Text=valueStr end
 			end
-			if SliderInfo.Version==2 and Elements.Template:FindFirstChild("SliderPro")~=nil then
+			if SliderInfo.Version==2 and Elements.Template:FindFirstChild("SliderPro") then
 				Slider=Elements.Template.SliderPro:Clone()
 				SliderInfo.Template=Slider
-				Slider.LayoutOrder=TabPrivate.Order
+				Slider.LayoutOrder=Tab.Order
 				Slider.Name=SliderInfo.Name
 				Slider.Title.Text=SliderInfo.Name
 				Slider.Parent=TabPage
@@ -3298,7 +3272,7 @@ function Library:CreateWindow(windowInfo)
 						SliderInfo.Value=nextValue
 						UpdateMinusOrPlus()
 						ApplyTextLabel(Slider.TextBox,nextValue)
-						callSafely(SliderInfo.Callback,nextValue)
+						CallSafely(SliderInfo.Callback,nextValue)
 					end
 				end
 				for i,v in ipairs(Bars) do
@@ -3324,7 +3298,7 @@ function Library:CreateWindow(windowInfo)
 					SliderInfo.Value=NewValue
 					UpdateMinusOrPlus()
 					ApplyTextLabel(Slider.TextBox,NewValue)
-					callSafely(SliderInfo.Callback,NewValue)
+					CallSafely(SliderInfo.Callback,NewValue)
 				end)
 				SliderMinus.Activated:Connect(function()
 					local NewValue,NewIndex=SliderInfo.Value,SliderInfo.Index
@@ -3335,11 +3309,12 @@ function Library:CreateWindow(windowInfo)
 						SliderInfo.Value=NewValue
 						UpdateMinusOrPlus()
 						ApplyTextLabel(Slider.TextBox,NewValue)
-						callSafely(SliderInfo.Callback,NewValue)
+						CallSafely(SliderInfo.Callback,NewValue)
 					end
 				end)
 				SliderTextBox.FocusLost:Connect(function(enter)
 					if not enter then return end 
+					if Strs.IsEmpty(Slider.TextBox.Text) then ApplyTextLabel(Slider.TextBox,tostring(SliderInfo.Value)) return end
 					local NewIndex,NewValue,InputText=SliderInfo.Index,SliderInfo.Value,SliderTextBox.Text 
 					if Strs.IsOriginal(InputText) then 
 						SliderInfo:Set(List[1],1) 
@@ -3353,17 +3328,17 @@ function Library:CreateWindow(windowInfo)
 						SliderInfo.Value=NewValue 
 						UpdateMinusOrPlus() 
 						ApplyTextLabel(Slider.TextBox,NewValue)
-						callSafely(SliderInfo.Callback,NewValue)
+						CallSafely(SliderInfo.Callback,NewValue)
 					end
 				end)
-				if windowInfo.ConfigurationSaving and windowInfo.ConfigurationSaving.Enabled and SliderInfo.Flag then
+				if savingInfo and savingInfo.Enabled and SliderInfo.Flag then
 					Library.Flags[SliderInfo.Flag]=SliderInfo
 				end
 				Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 			else
 				Slider=Elements.Template.Slider:Clone()
 				SliderInfo.Template=Slider
-				Slider.LayoutOrder=TabPrivate.Order
+				Slider.LayoutOrder=Tab.Order
 				Slider.Name=SliderInfo.Name
 				Slider.Title.Text=SliderInfo.Name
 				Slider.Visible=true
@@ -3381,28 +3356,28 @@ function Library:CreateWindow(windowInfo)
 					Slider.Main.Progress.BackgroundColor3=SelectedTheme.SliderProgress
 				end
 				ApplyTheme()
-				tween(Slider,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-				tween(Slider.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
-				tween(Slider.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
+				Tween(Slider,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+				Tween(Slider.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
+				Tween(Slider.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 				Slider.Main.Progress.Size=UDim2.new(0,Slider.Main.AbsoluteSize.X * ((SliderInfo.Value-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1]))>5 and Slider.Main.AbsoluteSize.X * ((SliderInfo.Value-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1])) or 5,1,0)
 				ApplyTextLabel(Slider.Main.Information,SliderInfo.Value)
 				Slider.MouseEnter:Connect(function()
-					tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
+					Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 				end)
 				Slider.MouseLeave:Connect(function()
-					tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+					Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 				end)
 				Slider.Main.Interact.InputBegan:Connect(function(Input)
 					if Input.UserInputType==Enum.UserInputType.MouseButton1 or Input.UserInputType==Enum.UserInputType.Touch then 
-						tween(Slider.Main.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-						tween(Slider.Main.Progress.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						Tween(Slider.Main.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						Tween(Slider.Main.Progress.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 						SLDragging=true 
 					end 
 				end)
 				Slider.Main.Interact.InputEnded:Connect(function(Input) 
 					if Input.UserInputType==Enum.UserInputType.MouseButton1 or Input.UserInputType==Enum.UserInputType.Touch then 
-						tween(Slider.Main.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0.4})
-						tween(Slider.Main.Progress.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0.3})
+						Tween(Slider.Main.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0.4})
+						Tween(Slider.Main.Progress.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0.3})
 						SLDragging=false 
 					end 
 				end)
@@ -3419,84 +3394,77 @@ function Library:CreateWindow(windowInfo)
 							elseif Location>Slider.Main.AbsolutePosition.X+Slider.Main.AbsoluteSize.X then
 								Location=Slider.Main.AbsolutePosition.X+Slider.Main.AbsoluteSize.X
 							end
-
 							if Current<Slider.Main.AbsolutePosition.X+5 then
 								Current=Slider.Main.AbsolutePosition.X+5
 							elseif Current>Slider.Main.AbsolutePosition.X+Slider.Main.AbsoluteSize.X then
 								Current=Slider.Main.AbsolutePosition.X+Slider.Main.AbsoluteSize.X
 							end
-
 							if Current <= Location and (Location-Start)<0 then
 								Start=Location
 							elseif Current >= Location and (Location-Start)>0 then
 								Start=Location
 							end
-							tween(Slider.Main.Progress,TweenInfo.new(0.45,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Current-Slider.Main.AbsolutePosition.X,1,0)})
+							Tween(Slider.Main.Progress,TweenInfo.new(0.45,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Current-Slider.Main.AbsolutePosition.X,1,0)})
 							local NewValue=SliderInfo.Range[1]+(Location-Slider.Main.AbsolutePosition.X) / Slider.Main.AbsoluteSize.X * (SliderInfo.Range[2]-SliderInfo.Range[1])
-
 							NewValue=math.floor(NewValue / SliderInfo.Increment+0.5) * (SliderInfo.Increment * 10000000) / 10000000
 							NewValue=math.clamp(NewValue,SliderInfo.Range[1],SliderInfo.Range[2])
-
 							if not SliderInfo.Suffix then
 								Slider.Main.Information.Text=tostring(NewValue)
 							else
 								Slider.Main.Information.Text=tostring(NewValue) .. " " .. SliderInfo.Suffix
 							end
-
 							if SliderInfo.Value~=NewValue then
 								SliderInfo.Value=NewValue
 								local Success,Response=pcall(SliderInfo.Callback,NewValue)
 								if not Success then
-									tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-									tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+									Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+									Tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 									Slider.Title.Text="Callback Error"
 									print("Rayfield | "..SliderInfo.Name.." Callback Error " ..tostring(Response))
-									warn('Check docs.sirius.menu for help with Rayfield specific development.')
+									warn("Check docs.sirius.menu for help with Rayfield specific development.")
 									task.wait(0.5)
 									Slider.Title.Text=SliderInfo.Name
-									tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-									tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+									Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+									Tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 								end
-
 								if not SliderInfo.Ext then
-									SaveConfiguration()
+									SaveConfig()
 								end
 							end
 						else
-							tween(Slider.Main.Progress,TweenInfo.new(0.3,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Location-Slider.Main.AbsolutePosition.X>5 and Location-Slider.Main.AbsolutePosition.X or 5,1,0)})
+							Tween(Slider.Main.Progress,TweenInfo.new(0.3,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Location-Slider.Main.AbsolutePosition.X>5 and Location-Slider.Main.AbsolutePosition.X or 5,1,0)})
 							Loop:Disconnect()
 						end
 					end)
 				end)
 				function SliderInfo:Set(NewValue)
 					NewValue=math.clamp(NewValue,SliderInfo.Range[1],SliderInfo.Range[2])
-					tween(Slider.Main.Progress,TweenInfo.new(0.45,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Slider.Main.AbsoluteSize.X * ((NewValue-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1]))>5 and Slider.Main.AbsoluteSize.X * ((NewValue-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1])) or 5,1,0)})
+					Tween(Slider.Main.Progress,TweenInfo.new(0.45,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Slider.Main.AbsoluteSize.X * ((NewValue-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1]))>5 and Slider.Main.AbsoluteSize.X * ((NewValue-SliderInfo.Range[1]) / (SliderInfo.Range[2]-SliderInfo.Range[1])) or 5,1,0)})
 					Slider.Main.Information.Text=tostring(NewValue) .. " " .. (SliderInfo.Suffix or "")
 					local Success,Response=pcall(SliderInfo.Callback,NewValue)
 					if not Success then
-						tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-						tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+						Tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
 						Slider.Title.Text="Callback Error"
 						print("Rayfield | "..SliderInfo.Name.." Callback Error " ..tostring(Response))
 						warn('Check docs.sirius.menu for help with Rayfield specific development.')
 						task.wait(0.5)
 						Slider.Title.Text=SliderInfo.Name
-						tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-						tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+						Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+						Tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 					end
 					SliderInfo.Value=NewValue
 					if not SliderInfo.Ext then
-						SaveConfiguration()
+						SaveConfig()
 					end
 				end
-				if windowInfo.ConfigurationSaving and windowInfo.ConfigurationSaving.Enabled and SliderInfo.Flag then
+				if savingInfo and savingInfo.Enabled and SliderInfo.Flag then
 					Library.Flags[SliderInfo.Flag]=SliderInfo
 				end
 				Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 			end
 			return SliderInfo
 		end
-
 		-- Select
 		function Tab:CreateSelect(SelectInfo)
 			SelectInfo=type(SelectInfo)=="table" and SelectInfo or {}
@@ -3505,9 +3473,10 @@ function Library:CreateWindow(windowInfo)
 			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("Select") then warn("Rayfield | Select not found.") return SelectInfo end
 			local TurnSysmbols={[true]="■",[false]="□"}
 			local Select=Elements.Template.Select:Clone()
+			local DisplayFrame=Select:FindFirstChild("DisplayFrame")
 			SelectInfo.Template=Select
-			TabPrivate.Order+=1
-			Select.LayoutOrder=TabPrivate.Order
+			Tab.Order+=1
+			Select.LayoutOrder=Tab.Order
 			Select.Name=SelectInfo.Name
 			Select.Title.Text=SelectInfo.Name
 			Select.Visible=true
@@ -3527,7 +3496,18 @@ function Library:CreateWindow(windowInfo)
 					if name then
 						Select.Information.Text=name
 					end
-					callSafely(SelectInfo.Callback,value)
+					local Success,Response=pcall(SelectInfo.Callback,value)
+					if not Success then
+						Tween(Select,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+						Tween(Select.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						Select.Title.Text="Callback Error"
+						print("Rayfield | "..SelectInfo.Name.." Callback Error " ..tostring(Response))
+						warn("Check docs.sirius.menu for help with Rayfield specific development.")
+						task.wait(0.5)
+						Select.Title.Text=SelectInfo.Name
+						Tween(Select,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+						Tween(Select.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					end
 				end
 			end
 			Select.Interact.Activated:Connect(function()
@@ -3549,21 +3529,23 @@ function Library:CreateWindow(windowInfo)
 			return SelectInfo
 		end
 
+		-- Addon
 		-- PlayerPicker
+		local FirstPlayerPicker=false
 		function Tab:CreatePlayerPicker(PlayerPickerInfo) -- by HowToRoblox
 			PlayerPickerInfo=type(PlayerPickerInfo)=="table" and PlayerPickerInfo or {}
 			local DefaultInfo={Type="PlayerPicker",Name="Player Picker Here",Observe=function() return function() end end,Value="None",Callback=function() end,Set=function() end,View=function() end,Unview=function() end}
 			for key,value in pairs(DefaultInfo) do if PlayerPickerInfo[key]==nil then PlayerPickerInfo[key]=value end end
 			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("PlayerPicker") then warn("Rayfield | PlayerPicker not found.")  return PlayerPickerInfo end
 			local success,message=pcall(function()
-				if TabPrivate.FirstPlayerPicker then warn("Rayfield | You can only have one PlayerPicker in a single tab") return end
-				TabPrivate.FirstPlayerPicker=true
-				if not UserService then UserService=callSafely(getService,"UserService") end
+				if FirstPlayerPicker then warn("Rayfield | You can only have one PlayerPicker in a single tab") return end
+				FirstPlayerPicker=true
+				if not UserService then UserService=GetService("UserService") end
 				local PlayerCache={}
 				local PlayerPicker=Elements.Template.PlayerPicker:Clone()
 				PlayerPickerInfo.Template=PlayerPicker
-				TabPrivate.Order+=1
-				PlayerPicker.LayoutOrder=TabPrivate.Order
+				Tab.Order+=1
+				PlayerPicker.LayoutOrder=Tab.Order
 				local PlayerInfo=PlayerPicker.Info
 				local PlayerLabel=PlayerInfo.List.Label
 				local PlayerTemplate=PlayerPicker.List.Template
@@ -3573,14 +3555,26 @@ function Library:CreateWindow(windowInfo)
 				local PlayerTitles={}
 				local ThisPlayer=Players.LocalPlayer
 				local PlayerInstance=nil
+				local PlayerInfoConfig={["Name"]="Roblox",["Display"]="Roblox",["Age"]="0",["ID"]="1"}
 				local SelectPlayerIndex,SelectPlayerInfo,SelectedPlayerTemplate,ViewEnabled,ViewInstance,ViewCharAddedConnection=1,nil,nil,false,nil,nil
 				for i,v in pairs({{"Name","@Roblox","NameLabel"},{"Display","Roblox","DisplayLabel"},{"ID","1","IdLabel"},{"Age","Inf","AgeLabel"},{"In Game","No","InGameLabel"}}) do
-					local newLabel:TextLabel=PlayerLabel:Clone()
+					local variable=v[1]
+					local newLabel=PlayerLabel:Clone()
 					newLabel.Name=v[3]
 					newLabel.LayoutOrder=i
 					newLabel.Visible=true
 					newLabel.Text=v[1]..": "..v[2]
 					table.insert(PlayerTitles,newLabel)
+					if PlayerInfoConfig[variable] then
+						newLabel.Activated:Connect(function()
+							local value=PlayerInfoConfig[variable]
+							if value then
+								if PlayerPickerInfo.InfoCallback then
+									pcall(PlayerPickerInfo.InfoCallback,value,variable)
+								end
+							end
+						end)
+					end
 					newLabel.Parent=PlayerInfo.List
 				end
 				PlayerPicker.Parent=TabPage
@@ -3692,8 +3686,8 @@ function Library:CreateWindow(windowInfo)
 					end
 					local userInfo=GetUserInfo(userId)
 					local newContext={
-						Name=userInfo.Name or 'Roblox',
-						DisplayName=userInfo.DisplayName or 'Roblox',
+						Name=userInfo.Name or "Roblox",
+						DisplayName=userInfo.DisplayName or "Roblox",
 						UserId=userId,
 						Icon=userInfo.Icon,
 						Age=userInfo.Age or 0,
@@ -3703,16 +3697,20 @@ function Library:CreateWindow(windowInfo)
 						PlayerInstance=userInfo.Value 
 						PlayerPickerInfo.Value=PlayerInstance 
 						newContext.IsViewing=ViewInstance~=nil and ViewInstance==PlayerInstance
-						callSafely(PlayerPickerInfo.Callback,PlayerInstance,newContext)
+						CallSafely(PlayerPickerInfo.Callback,PlayerInstance,newContext)
 					end
 					pcall(function()
+						PlayerInfoConfig["Name"]=newContext.Name
+						PlayerInfoConfig["Display"]=newContext.DisplayName
+						PlayerInfoConfig["Age"]=tostring(newContext.Age)
+						PlayerInfoConfig["ID"]=tostring(userId)
 						local playerInfoFrame=PlayerInfo.List
 						playerInfoFrame.Visible=false
-						playerInfoFrame.NameLabel.Text='Name: @'..newContext.Name
-						playerInfoFrame.DisplayLabel.Text='Display: '..newContext.DisplayName
-						playerInfoFrame.IdLabel.Text='ID: '..tostring(userId)
-						playerInfoFrame.AgeLabel.Text='Age: '..tostring(newContext.Age)
-						playerInfoFrame.InGameLabel.Text='In Game: '..(userInfo.InServer and 'Yes' or 'No')
+						playerInfoFrame.NameLabel.Text="Name: @"..newContext.Name
+						playerInfoFrame.DisplayLabel.Text="Display: "..newContext.DisplayName
+						playerInfoFrame.IdLabel.Text="ID: "..tostring(userId)
+						playerInfoFrame.AgeLabel.Text="Age: "..tostring(newContext.Age)
+						playerInfoFrame.InGameLabel.Text="In Game: "..(userInfo.InServer and 'Yes' or 'No')
 						PlayerInfo.Icon.Image=newContext.Icon
 						PlayerPickerInfo.Context=newContext
 						playerInfoFrame.Visible=true
@@ -3895,26 +3893,26 @@ function Library:CreateWindow(windowInfo)
 							table.sort(PlayerCache,function(a,b) if a~=nil and b~=nil and a.Age~=nil and b.Age~=nil then return a.Age<b.Age else return false end end)
 							for i,v in ipairs(PlayerCache) do if player and player.Parent then if v and v.Template and v.Template.Parent then v.Template.LayoutOrder=i end else break end end
 						end)
-						local onPlayerRemoving=callSafely(PlayerPickerInfo.Observe,player)
+						local onPlayerRemoving=CallSafely(PlayerPickerInfo.Observe,player)
 						return function()
 							local wasCancelled=nil if coroutine.running()~=sortThread then wasCancelled=pcall(function() task.cancel(sortThread) end) end if not wasCancelled then local toClean=sortThread task.defer(function() task.cancel(toClean) end) end
 							cleanAddPlayer()
-							callSafely(onPlayerRemoving,player)
+							CallSafely(onPlayerRemoving,player)
 						end
 					end
 				end)
 				PlayerPicker.Destroying:Connect(function()
-					cleanObservePlayer() table.clear(PlayerCache) table.clear(PlayerTitles)
+					cleanObservePlayer() table.clear(PlayerCache) table.clear(PlayerTitles) 
 				end)
 			end)
 			if not success then warn("Rayfield | Fatal Error for PlayerPicker,",message) end
 			return PlayerPickerInfo
 		end
-
 		-- ThemeButton
+		local FirstThemeButton=false
 		function Tab:CreateThemeButton(ThemeButtonInfo) 
-			if TabPrivate.FirstThemeButton then warn("Rayfield | You can only have one ThemeButton in a single tab") return end
-			TabPrivate.FirstThemeButton=true
+			if FirstThemeButton then warn("Rayfield | You can only have one ThemeButton in a single tab") return end
+			FirstThemeButton=true
 			ThemeButtonInfo=type(ThemeButtonInfo)=="table" and ThemeButtonInfo or {}
 			ThemeButtonInfo.Type="ThemeButton"
 			local list,index={},1
@@ -3930,7 +3928,7 @@ function Library:CreateWindow(windowInfo)
 					Window:ModifyTheme(list[index])
 					ButtonInfo:Set(`Change Theme: {list[index]}`)
 					ThemeButtonInfo.Value=list[index]
-					if not ThemeButtonInfo.Ext then SaveConfiguration() end
+					if not ThemeButtonInfo.Ext then SaveConfig() end
 					table.clear(list)
 					for k,v in pairs(Library.Theme) do table.insert(list,k) end
 				end,
@@ -3950,7 +3948,7 @@ function Library:CreateWindow(windowInfo)
 					end
 				end
 			end
-			if windowInfo.ConfigurationSaving and windowInfo.ConfigurationSaving.Enabled and ThemeButtonInfo.Flag then
+			if savingInfo and savingInfo.Enabled and ThemeButtonInfo.Flag then
 				Library.Flags[ThemeButtonInfo.Flag]=ThemeButtonInfo
 			end
 			return ThemeButtonInfo
@@ -4050,14 +4048,14 @@ function Library:CreateWindow(windowInfo)
 	end
 	Elements.Visible=true
 	task.wait(1.1)
-	tween(Main,TweenInfo.new(0.7,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,390,0,90)})
+	Tween(Main,TweenInfo.new(0.7,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,390,0,90)})
 	task.wait(0.3)
-	tween(LoadingFrame.Title,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	tween(LoadingFrame.Subtitle,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	tween(LoadingFrame.Version,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(LoadingFrame.Title,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(LoadingFrame.Subtitle,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{TextTransparency=1})
+	Tween(LoadingFrame.Version,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{TextTransparency=1})
 	task.wait(0.1)
-	tween(Main,TweenInfo.new(0.6,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
-	tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
+	Tween(Main,TweenInfo.new(0.6,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
+	Tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
 	Topbar.BackgroundTransparency=1
 	Topbar.Divider.Size=UDim2.new(0,0,0,1)
 	Topbar.Divider.BackgroundColor3=SelectedTheme.ElementStroke
@@ -4069,29 +4067,27 @@ function Library:CreateWindow(windowInfo)
 	end
 	Topbar.ChangeSize.ImageTransparency=1
 	Topbar.Hide.ImageTransparency=1
-
-
 	task.wait(0.5)
 	Topbar.Visible=true
-	tween(Topbar,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	tween(Topbar.CornerRepair,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(Topbar,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(Topbar.CornerRepair,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 	task.wait(0.1)
-	tween(Topbar.Divider,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,0,0,1)})
-	tween(Topbar.Title,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0})
+	Tween(Topbar.Divider,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,0,0,1)})
+	Tween(Topbar.Title,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0})
 	task.wait(0.05)
-	tween(Topbar.Search,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
+	Tween(Topbar.Search,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 	task.wait(0.05)
 	if Topbar:FindFirstChild('Settings') then
-		tween(Topbar.Settings,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
+		Tween(Topbar.Settings,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 		task.wait(0.05)
 	end
-	tween(Topbar.ChangeSize,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
+	Tween(Topbar.ChangeSize,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 	task.wait(0.05)
-	tween(Topbar.Hide,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
+	Tween(Topbar.Hide,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 	task.wait(0.3)
 
 	if dragBar then
-		tween(dragBarCosmetic,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
+		Tween(dragBarCosmetic,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
 	end
 
 	function Window:ModifyTheme(NewTheme)
@@ -4102,17 +4098,15 @@ function Library:CreateWindow(windowInfo)
 			Library:Notify({Title='Theme Changed',Content='Successfully changed theme to '..(typeof(NewTheme)=='string' and NewTheme or 'Custom Theme')..'.',Image=4483362748})
 		end
 	end
-
-	local success,result=pcall(function()
-		createSettings(Window)
-	end)
-
+	
+	local settingsTab=Window:CreateTab("Rayfield Settings",0,true)
+	local success,result=pcall(CreateSettings,settingsTab)
+	Window.SettingsTab=settingsTab
 	if not success then warn('Rayfield had an issue creating settings.') end
-
 	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
-	if reporter and getSetting("System","usageAnalytics") then
+	if Reporter and GetSetting("System","usageAnalytics") then
 		local themeName="Default"
-		local newTheme=windowInfo.Theme
+		local newTheme=WindowInfo.Theme
 		if newTheme then
 			if type(newTheme)=="string" then
 				themeName=newTheme
@@ -4131,30 +4125,29 @@ function Library:CreateWindow(windowInfo)
 		local sampleSend=false
 
 		-- Random Sampling Test
-		if not windowInfo.ScriptID and math.random()>0.4 then
+		if not WindowInfo.ScriptID and math.random()>0.4 then
 			sampleSend=true
 		end
 
-		----if Settings.ScriptID then
-		--reporter:windowCreated({
-		--	script_name       =Settings.Name or "Unknown",
-		--	script_version    =Release,
-		--	interface_version =InterfaceBuild,
-		--	theme             =themeName,
-		--	is_mobile         =useMobileSizing and true or false,
-		--	has_key_system    =Settings.KeySystem and true or false,
-		--	discord_invite    =discordInvite,
-		--	config_saving     =(Settings.ConfigurationSaving and Settings.ConfigurationSaving.Enabled) and true or false,
-		--	script_id         =Settings.ScriptID or sampleSend and 'sid_tzfyxawonjx9' or nil,
-		--	verification_token=Settings.VerificationToken,
-		--})
-		--end
+		if WindowInfo.ScriptID then
+			Reporter:windowCreated({
+				script_name=WindowInfo.Name or "Unknown",
+				script_version=Release,
+				interface_version=InterfaceBuild,
+				theme=themeName,
+				is_mobile=useMobileSizing and true or false,
+				has_key_system=(keyInfo and keyInfo.Enabled) and true or false,
+				discord_invite=discordInvite,
+				config_saving=(savingInfo and savingInfo.Enabled) and true or false,
+				script_id=WindowInfo.ScriptID or sampleSend and 'sid_tzfyxawonjx9' or nil,
+				verification_token=WindowInfo.VerificationToken,
+			})
+		end
 	end
-
 	return Window
 end
 
-local function setVisibility(visibility: boolean,notify: boolean?)
+local function setVisibility(visibility,notify)
 	if Debounce then return end
 	if visibility then
 		Hidden=false
@@ -4234,32 +4227,32 @@ end)
 Main.Search.Input.FocusLost:Connect(function(enterPressed)
 	if #Main.Search.Input.Text==0 and searchOpen then
 		task.wait(0.12)
-		closeSearch()
+		CloseSearch()
 	end
 end)
 
 Topbar.Search.MouseButton1Click:Connect(function()
 	task.spawn(function()
 		if searchOpen then
-			closeSearch()
+			CloseSearch()
 		else
-			openSearch()
+			OpenSearch()
 		end
 	end)
 end)
 
-if Topbar:FindFirstChild('Settings') then
+if Topbar:FindFirstChild("Settings") then
 	Topbar.Settings.MouseButton1Click:Connect(function()
 		task.spawn(function()
 			for _,OtherTabButton in ipairs(TabList:GetChildren()) do
 				if OtherTabButton.Name~="Template" and OtherTabButton.ClassName=="Frame" and OtherTabButton.Name~="Placeholder" then
-					tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.TabBackground})
-					tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextColor3=SelectedTheme.TabTextColor})
-					tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageColor3=SelectedTheme.TabTextColor})
-					tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
-					tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
-					tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
-					tween(OtherTabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0.5})
+					Tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.TabBackground})
+					Tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextColor3=SelectedTheme.TabTextColor})
+					Tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageColor3=SelectedTheme.TabTextColor})
+					Tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
+					Tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
+					Tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
+					Tween(OtherTabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0.5})
 				end
 			end
 
@@ -4274,7 +4267,7 @@ Topbar.Hide.MouseButton1Click:Connect(function()
 end)
 
 hideHotkeyConnection=UserInputService.InputBegan:Connect(function(input,processed)
-	if (input.KeyCode==Enum.KeyCode[getSetting("General","rayfieldOpen")]) and not processed then
+	if (input.KeyCode==Enum.KeyCode[GetSetting("General","rayfieldOpen")]) and not processed then
 		if Debounce then return end
 		if Hidden then
 			Hidden=false
@@ -4299,261 +4292,43 @@ end
 for _,TopbarButton in ipairs(Topbar:GetChildren()) do
 	if TopbarButton.ClassName=="ImageButton" and TopbarButton.Name~='Icon' then
 		TopbarButton.MouseEnter:Connect(function()
-			tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+			Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
 		end)
 
 		TopbarButton.MouseLeave:Connect(function()
-			tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
+			Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 		end)
 	end
 end
 
-function Library:LoadConfiguration()
+function Library:LoadConfig()
 	local config
-
-	if debugX then
-		warn("Loading Configuration")
-	end
-
-	if useStudio then
-		config=[[{"Toggle1adwawd":true,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}]]
-	end
-
+	if debugX then warn("Loading Configuration") end
+	if UseStudio then config=[[{"Toggle1adwawd":true,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}]] end
 	if CEnabled then
 		local notified,data=false,nil
-
 		local success,result=pcall(function()
-			if useStudio and config then
-				data=LoadConfiguration(config)
+			if UseStudio and config then
+				data=LoadConfig(config)
 				return
 			end
 			if isfile then 
-				if callSafely(isfile,ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension) then
-					data=LoadConfiguration(callSafely(readfile,ConfigurationFolder .. "/" .. CFileName .. ConfigurationExtension))
+				if CallSafely(isfile,ConfigFolder .. "/" .. CFileName .. ConfigExtension) and readfile then
+					data=LoadConfig(CallSafely(readfile,ConfigFolder .. "/" .. CFileName .. ConfigExtension))
 				end
 			else
 				notified=true
 				Library:Notify({Title="Rayfield Configurations",Content="We couldn't enable Configuration Saving as you are not using software with filesystem support.",Image=4384402990})
 			end
 		end)
-
 		if success and data and not notified then
 			Library:Notify({Title="Rayfield Configurations",Content="The configuration file for this script has been loaded from a previous session.",Image=4384403532})
 		elseif not success and not notified then
-			warn('Rayfield Configurations Error | '..tostring(result))
+			warn("Rayfield Configurations Error | "..tostring(result))
 			Library:Notify({Title="Rayfield Configurations",Content="We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.",Image=4384402990})
 		end
 	end
-
 	globalLoaded=true
-end
-
-if useStudio then
-	-- run w/ studio
-	-- Feel free to place your own script here to see how it'd work in Roblox Studio before running it on your execution software.
-
-	--local Window=Library:CreateWindow({
-	--	Name="Rayfield Example Window",
-	--	LoadingTitle="Rayfield Interface Suite",
-	--	Theme='Default',
-	--	Icon=0,
-	--	LoadingSubtitle="by Sirius",
-	--	ConfigurationSaving={
-	--		Enabled=true,
-	--		FolderName=nil,-- Create a custom folder for your hub/game
-	--		FileName="Big Hub52"
-	--	},
-	--	Discord={
-	--		Enabled=false,
-	--		Invite="noinvitelink",-- The Discord invite code,do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
-	--		RememberJoins=true -- Set this to false to make them join the discord every time they load it up
-	--	},
-	--	KeyInfo={
-	--		Enabled=false -- Set this to true to use our key system
-	--		Title="Untitled",
-	--		Subtitle="Key System",
-	--		Note="No method of obtaining the key is provided",
-	--		FileName="Key",-- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-	--		SaveKey=true,-- The user's key will be saved,but if you change the key,they will be unable to use your script
-	--		GrabKeyFromSite=false,-- If this is true,set Key below to the RAW site you would like Rayfield to get the key from
-	--		Key={"Hello"} -- List of keys that will be accepted by the system,can be RAW file links (pastebin,github etc) or simple strings ("hello","key22")
-	--	}
-	--})
-
-	--local Tab=Window:CreateTab("Tab Example",'key-round') -- Title,Image
-	--local Tab2=Window:CreateTab("Tab Example 2",4483362458) -- Title,Image
-
-	--local Section=Tab2:CreateSection("Section")
-
-	--local ColorPicker=Tab2:CreateColorPicker({
-	--	Name="Color Picker",
-	--	Color=Color3.fromRGB(255,255,255),
-	--	Flag="ColorPicfsefker1",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	--	Callback=function(Value)
-	--		-- The function that takes place every time the color picker is moved/changed
-	--		-- The variable (Value) is a Color3fromRGB value based on which color is selected
-	--	end
-	--})
-
-	--local Slider=Tab2:CreateSlider({
-	--	Name="Slider Example",
-	--	Range={0,100},
-	--	Increment=10,
-	--	Suffix="Bananas",
-	--	CurrentValue=40,
-	--	Flag="Slidefefsr1",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	--	Callback=function(Value)
-	--		-- The function that takes place when the slider changes
-	--		-- The variable (Value) is a number which correlates to the value the slider is currently at
-	--	end,
-	--})
-
-	--local Input=Tab2:CreateInput({
-	--	Name="Input Example",
-	--	CurrentValue='',
-	--	PlaceholderText="Input Placeholder",
-	--	Flag='dawdawd',
-	--	RemoveTextAfterFocusLost=false,
-	--	Callback=function(Text)
-	--		-- The function that takes place when the input is changed
-	--		-- The variable (Text) is a string for the value in the text box
-	--	end,
-	--})
-
-
-	--Library:Notify({Title="Rayfield Interface",Content="Welcome to Rayfield. These-are the brand new notification design for Rayfield,with custom sizing and Rayfield calculated wait times.",Image=4483362458})
-
-	--local Section=Tab:CreateSection("Section Example")
-
-	--local Button=Tab:CreateButton({
-	--	Name="Change Theme",
-	--	Callback=function()
-	--		-- The function that takes place when the button is pressed
-	--		Window.ModifyTheme('DarkBlue')
-	--	end,
-	--})
-
-	--local Toggle=Tab:CreateToggle({
-	--	Name="Toggle Example",
-	--	CurrentValue=false,
-	--	Flag="Toggle1adwawd",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	--	Callback=function(Value)
-	--		-- The function that takes place when the toggle is pressed
-	--		-- The variable (Value) is a boolean on whether the toggle is true or false
-	--	end,
-	--})
-
-	--local ColorPicker=Tab:CreateColorPicker({
-	--	Name="Color Picker",
-	--	Color=Color3.fromRGB(255,255,255),
-	--	Flag="ColorPicker1awd",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	--	Callback=function(Value)
-	--		-- The function that takes place every time the color picker is moved/changed
-	--		-- The variable (Value) is a Color3fromRGB value based on which color is selected
-	--	end
-	--})
-
-	--local Slider=Tab:CreateSlider({
-	--	Name="Slider Example",
-	--	Range={0,100},
-	--	Increment=10,
-	--	Suffix="Bananas",
-	--	CurrentValue=40,
-	--	Flag="Slider1dawd",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	--	Callback=function(Value)
-	--		-- The function that takes place when the slider changes
-	--		-- The variable (Value) is a number which correlates to the value the slider is currently at
-	--	end,
-	--})
-
-	--local Input=Tab:CreateInput({
-	--	Name="Input Example",
-	--	CurrentValue="Helo",
-	--	PlaceholderText="Adaptive Input",
-	--	RemoveTextAfterFocusLost=false,
-	--	Flag='Input1',
-	--	Callback=function(Text)
-	--		-- The function that takes place when the input is changed
-	--		-- The variable (Text) is a string for the value in the text box
-	--	end,
-	--})
-
-	--local thoptions={}
-	--for themename,theme in pairs(Library.Theme) do
-	--	table.insert(thoptions,themename)
-	--end
-
-	--local Dropdown=Tab:CreateDropdown({
-	--	Name="Theme",
-	--	Options=thoptions,
-	--	CurrentOption={"Default"},
-	--	MultipleOptions=false,
-	--	Flag="Dropdown1",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	--	Callback=function(Options)
-	--		--Window.ModifyTheme(Options[1])
-	--		-- The function that takes place when the selected option is changed
-	--		-- The variable (Options) is a table of strings for the current selected options
-	--	end,
-	--})
-
-
-	--Window.ModifyTheme({
-	--	TextColor=Color3.fromRGB(50,55,60),
-	--	Background=Color3.fromRGB(240,245,250),
-	--	Topbar=Color3.fromRGB(215,225,235),
-	--	Shadow=Color3.fromRGB(200,210,220),
-
-	--	NotificationBackground=Color3.fromRGB(210,220,230),
-	--	NotificationActionsBackground=Color3.fromRGB(225,230,240),
-
-	--	TabBackground=Color3.fromRGB(200,210,220),
-	--	TabStroke=Color3.fromRGB(180,190,200),
-	--	TabBackgroundSelected=Color3.fromRGB(175,185,200),
-	--	TabTextColor=Color3.fromRGB(50,55,60),
-	--	SelectedTabTextColor=Color3.fromRGB(30,35,40),
-
-	--	ElementBackground=Color3.fromRGB(210,220,230),
-	--	ElementBackgroundHover=Color3.fromRGB(220,230,240),
-	--	SecondaryElementBackground=Color3.fromRGB(200,210,220),
-	--	ElementStroke=Color3.fromRGB(190,200,210),
-	--	SecondaryElementStroke=Color3.fromRGB(180,190,200),
-
-	--	SliderBackground=Color3.fromRGB(200,220,235), -- Lighter shade
-	--	SliderProgress=Color3.fromRGB(70,130,180),
-	--	SliderStroke=Color3.fromRGB(150,180,220),
-
-	--	ToggleBackground=Color3.fromRGB(210,220,230),
-	--	ToggleEnabled=Color3.fromRGB(70,160,210),
-	--	ToggleDisabled=Color3.fromRGB(180,180,180),
-	--	ToggleEnabledStroke=Color3.fromRGB(60,150,200),
-	--	ToggleDisabledStroke=Color3.fromRGB(140,140,140),
-	--	ToggleEnabledOuterStroke=Color3.fromRGB(100,120,140),
-	--	ToggleDisabledOuterStroke=Color3.fromRGB(120,120,130),
-
-	--	DropdownSelected=Color3.fromRGB(220,230,240),
-	--	DropdownUnselected=Color3.fromRGB(200,210,220),
-
-	--	InputBackground=Color3.fromRGB(220,230,240),
-	--	InputStroke=Color3.fromRGB(180,190,200),
-	--	PlaceholderColor=Color3.fromRGB(150,150,150)
-	--})
-
-	--local Keybind=Tab:CreateKeybind({
-	--	Name="Keybind Example",
-	--	Keybind="Q",
-	--	HoldToInteract=false,
-	--	Flag="Keybind1",-- A flag is the identifier for the configuration file,make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-	--	Callback=function(Keybind)
-	--		-- The function that takes place when the keybind is pressed
-	--		-- The variable (Keybind) is a boolean for whether the keybind is being held or not (HoldToInteract needs to be true)
-	--	end,
-	--})
-
-	--local Label=Tab:CreateLabel("Label Example")
-
-	--local Label2=Tab:CreateLabel("Warning",4483362458,Color3.fromRGB(255,159,49), true)
-
-	--local Paragraph=Tab:CreateParagraph({Title="Paragraph Example",Content="Paragraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph ExampleParagraph Example"})
 end
 
 if CEnabled and Main:FindFirstChild("Notice") then
@@ -4562,19 +4337,15 @@ if CEnabled and Main:FindFirstChild("Notice") then
 	Main.Notice.Size=UDim2.new(0,0,0,0)
 	Main.Notice.Position=UDim2.new(0.5,0,0,-100)
 	Main.Notice.Visible=true
-	tween(Main.Notice,TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,280,0,35),Position=UDim2.new(0.5,0,0,-50),BackgroundTransparency=0.5})
-	tween(Main.Notice.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0.1})
+	Tween(Main.Notice,TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,280,0,35),Position=UDim2.new(0.5,0,0,-50),BackgroundTransparency=0.5})
+	Tween(Main.Notice.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0.1})
 end
--- AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA why :(
---if not useStudio then
---	task.spawn(loadWithTimeout,"https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/boost.lua")
---end
 
 task.delay(5,function()
-	Library:LoadConfiguration()
+	Library:LoadConfig()
 	if Main:FindFirstChild("Notice") and Main.Notice.Visible then
-		tween(Main.Notice,TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,100,0,25),Position=UDim2.new(0.5,0,0,-100),BackgroundTransparency=1})
-		tween(Main.Notice.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+		Tween(Main.Notice,TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,100,0,25),Position=UDim2.new(0.5,0,0,-100),BackgroundTransparency=1})
+		Tween(Main.Notice.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
 		task.wait(0.5)
 		Main.Notice.Visible=false
 	end
