@@ -874,7 +874,7 @@ Rayfield.DisplayOrder=100
 LoadingFrame.Version.Text=Release
 
 -- Thanks to Latte Softworks for the Lucide integration for Roblox
-local Icons=UseStudio and require(script.Parent.icons) or loadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
+local Icons=UseStudio and require(script.Parent.icons) or LoadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
 local Strs=UseStudio and require(game.ReplicatedStorage.Packages.Strs) or loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau"))()
 
 -- Variables
