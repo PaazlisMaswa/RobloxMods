@@ -284,8 +284,10 @@ for _,info in ipairs(Commands) do
 	end
 end
 
---! This function should be placed below after CreateWindow is called.
+--! :Notify, :Destroy and :LoadConfiguration function should be placed below after CreateWindow is called.
+
+Rayfield:LoadConfiguration()
+
 Rayfield:Notify({Title="Rayfield Interface",Content="Welcome to Rayfield. These-are the brand new notification design for Rayfield,with custom sizing and Rayfield calculated wait times.",Duration=5,Image=4483362458})
 
---! This function should be placed below after CreateWindow is called.
 -- Rayfield:Destroy() 
