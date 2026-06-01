@@ -18,13 +18,13 @@ Tab:Button({
             Text = "nice to meet you",
             Buttons = {
                 Ok = function()
-                    Tab:Prompt{
+                    Window:Prompt{
                         Followup = true,
                         Title = "really?",
                         Text = "you sure?=",
                         Buttons = {
                             Yes = function()
-                                Tab:Prompt{
+                                Window:Prompt{
                                     Followup = true,
                                     Title = "lol",
                                     Text = "Welcome",
