@@ -1,19 +1,19 @@
 -- loadstring(game:HttpGet('https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Mercury/ExampleMercury.lua'))()
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Mercury/init.luau"))()
 
-local Window = Library:Create({
+local gui = Library:create({
     Theme = Library.Themes.Serika
 })
 
-local Tab = Window:Tab({
+local Tab = Window:tab({
     Icon = "rbxassetid://6034996695",
     Name = "Aimbot"
 }
 
-Tab:Button({
+Tab:button({
     Name = "show prompt",
     Callback = function()
-        tab:Prompt{
+        tab:prompt{
             Title = "baby",
             Text = "nice to meet you",
             Buttons = {
@@ -46,7 +46,7 @@ Tab:Button({
     end
 })
 
-Tab:Keybind({Callback = function()
+Tab:keybind({Callback = function()
     gui:prompt()
 end})
 
