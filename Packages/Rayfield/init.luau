@@ -7,33 +7,28 @@
 	iRay   | Programming
 	Max    | Programming
 	Damian | Programming
-
 ]]
 
 local debugX=false
 
-if debugX then
-	warn('Initialising Rayfield')
-end
+if debugX then warn("Initialising Rayfield") end
 
 local function GetService(name)
 	local service=game:GetService(name)
-	return if cloneref then cloneref(service) else service
+	return cloneref and cloneref(service) or service
 end
 
 -- Services
 local Services={}
-for i,v in ipairs({"Players","UserInputService","TweenService","HttpService","RunService","UserService","ContextActionService"}) do if Services[v]==nil then Services[v]=GetService(v) end end
-local Players,UserInputService,TweenService,HttpService,RunService,UserService,ContextActionService=Services["Players"],Services["UserInputService"],Services["TweenService"],Services["HttpService"],Services["RunService"],Services["UserService"],Services["ContextActionService"]
+for _,name in ipairs({"Players","GuiService","UserInputService","TweenService","HttpService","RunService","UserService","ContextActionService"}) do if Services[name]==nil then Services[name]=GetService(name) end end
+local Players,GuiService,UserInputService,TweenService,HttpService,RunService,UserService,ContextActionService=Services["Players"],Services["GuiService"],Services["UserInputService"],Services["TweenService"],Services["HttpService"],Services["RunService"],Services["UserService"],Services["ContextActionService"]
 
 -- Loads and executes a function hosted on a remote URL. Cancels the request if the requested URL takes too long to respond.
 -- Errors with the function are caught and logged to the output
 local function LoadWithTimeout(url,timeout)
 	assert(type(url)=="string","Expected string,got " .. type(url))
 	timeout=timeout or 5
-	local requestCompleted=false
-	local success,result=false,nil
-
+	local done,success,result=false,false,nil
 	local requestThread=task.spawn(function()
 		local fetchSuccess,fetchResult=pcall(game.HttpGet,game,url) -- game:HttpGet(url)
 		-- If the request fails the content can be empty,even if fetchSuccess is true
@@ -41,30 +36,27 @@ local function LoadWithTimeout(url,timeout)
 			if #fetchResult==0 then
 				fetchResult="Empty response" -- Set the error message
 			end
-			success,result=false,fetchResult
-			requestCompleted=true
+			done,success,result=true,false,fetchResult
 			return
 		end
 		local content=fetchResult -- Fetched content
-		local execSuccess,execResult=pcall(function()
+		local executeSuccess,executResult=pcall(function()
 			return loadstring(content)()
 		end)
-		success,result=execSuccess,execResult
-		requestCompleted=true
+		done,success,result=true,executeSuccess,executResult
+		done=true
 	end)
-
 	local timeoutThread=task.delay(timeout,function()
-		if not requestCompleted then
+		if not done then
+			done=true
 			warn("Request for " .. url .. " timed out after " .. tostring(timeout) .. " seconds")
 			task.cancel(requestThread)
 			result="Request timed out"
-			requestCompleted=true
 		end
 	end)
-
 	-- Wait for completion or timeout
-	while not requestCompleted do
-		task.wait()
+	while not done do
+		FastWait()
 	end
 	-- Cancel timeout thread if still running when request completes
 	if coroutine.status(timeoutThread)~="dead" then
@@ -73,7 +65,7 @@ local function LoadWithTimeout(url,timeout)
 	if not success then
 		warn("Failed to process " .. tostring(url) .. ": " .. tostring(result))
 	end
-	return if success then result else nil
+	return success and result or nil
 end
 
 local _getgenv,RequestsDisabled,SecureMode,CustomAssetId=rawget(_G,"getgenv"),false,false,nil
@@ -95,6 +87,7 @@ if SecureMode then
 	error=function(_,level) _error("",level) end
 	assert=function(v,...) return _assert(v) end
 end
+
 
 local Library={
 	Flags={},
@@ -188,7 +181,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(50,70,70),
 			PlayerPickerSelected=Color3.fromRGB(0,140,140)
 		},
-
+		
 		AmberGlow={
 			TextColor=Color3.fromRGB(255,245,230),
 
@@ -233,7 +226,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(90,65,50),
 			PlayerPickerSelected=Color3.fromRGB(250,150,75)
 		},
-
+		
 		Light={
 			TextColor=Color3.fromRGB(40,40,40),
 
@@ -278,7 +271,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(180,180,180),
 			PlayerPickerSelected=Color3.fromRGB(100,150,200)
 		},
-
+		
 		Amethyst={
 			TextColor=Color3.fromRGB(240,240,240),
 
@@ -323,7 +316,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(80,50,110),
 			PlayerPickerSelected=Color3.fromRGB(130,80,180)
 		},
-
+		
 		Green={
 			TextColor=Color3.fromRGB(30,60,30),
 
@@ -368,7 +361,7 @@ local Library={
 			PlayerPickerInStroke=Color3.fromRGB(80,50,110),
 			PlayerPickerSelected=Color3.fromRGB(70,130,70)
 		},
-
+		
 		Bloom={
 			TextColor=Color3.fromRGB(60,40,50),
 
@@ -412,7 +405,7 @@ local Library={
 
 			PlayerPickerSelected=Color3.fromRGB(250,160,180)
 		},
-
+		
 		DarkBlue={
 			TextColor=Color3.fromRGB(230,230,230),
 
@@ -456,7 +449,7 @@ local Library={
 
 			PlayerPickerSelected=Color3.fromRGB(0,120,210)
 		},
-
+		
 		Serenity={
 			TextColor=Color3.fromRGB(50,55,60),
 			Background=Color3.fromRGB(240,245,250),
@@ -500,6 +493,7 @@ local Library={
 			PlayerPickerSelected=Color3.fromRGB(70,130,180)
 		},
 	},
+	ThemeList={"Default","Ocean","AmberGlow","Light","Amethyst","Green","Bloom","DarkBlue","Serenity"}
 }
 
 local SecureWarnings,CustomAssets={},{}
@@ -508,16 +502,19 @@ local function SecureNotify(key,title,content)
 	if SecureWarnings[key] then return end
 	SecureWarnings[key]=true
 	task.spawn(function()
-		while not Library or not Library.Notify do task.wait(1) end
+		while not Library or not Library.Notify do FastWait(1) end
 		Library:Notify({Title=title,Content=content,Duration=8})
 	end)
 end
 
 local InterfaceBuild,Release,RayfieldFolder,ConfigExtension="UU2NX","Build 1.746","Rayfield",".rfld"
 local ConfigFolder=RayfieldFolder.."/Configurations"
+local ThemeList={"Default","Serenity"}
+
 local SettingsData={
 	General={
 		rayfieldOpen={Type="bind",Value="K",Name="Rayfield Keybind"},
+		themes={Type="Selector",Name="Theme",Option=ThemeList[1],Options=ThemeList}
 	},
 	System={
 		usageAnalytics={Type="toggle",Value=true,Name="Anonymised Analytics"},
@@ -546,16 +543,18 @@ if RequestsDisabled then
 end
 
 -- Environment Check
-local UseStudio=RunService:IsStudio() or false
+local IsStudio=RunService:IsStudio() or false
 local SettingsCreated=false
 local SettingsInitialized=false -- Whether the UI elements in the settings page have been set to the proper values
-local Prompt=UseStudio and require(script.Parent.prompt) or LoadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua")
+--local Prompt=UseStudio and require(script.Parent.prompt) or LoadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Sirius/refs/heads/request/prompt.lua")
 
 -- Validate prompt loaded correctly
-if not Prompt and not UseStudio then
-	warn("Failed to load prompt library, using fallback")
-	prompt={create=function() end}
-end
+--if not Prompt and not IsStudio then
+--	if debugX then
+--		warn("Failed to load prompt library, using fallback")
+--	end
+--	prompt={create=function() end}
+--end
 
 local function RequestSafely(options)
 	local func=(syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
@@ -572,22 +571,26 @@ local function CallSafely(func,...)
 	if func then local success,result=pcall(func,...) if not success then warn("Rayfield | Function failed with error: ",result) return false else return result end end
 end
 
---local function DeepMerge(defaults,options)
---	defaults=defaults or {}
---	options=options or {}
---	for key,value in pairs(options) do
---		if value and type(value)=="table" and type(defaults[key])=="table" then
---			defaults[key]=DeepMerge(defaults[key],value)
---		else
---			defaults[key]=value
---		end
---	end
---	return defaults
---end
+local function ToDefaults(options,defaults)
+	defaults=defaults or {}
+	options=options or {}
+	for key,value in pairs(options) do
+		if value~=nil then
+			if type(value)=="table" and type(defaults[key])=="table" then
+				defaults[key]=ToDefaults(value,defaults[key])
+			else
+				defaults[key]=value
+			end
+		end
+	end
+	return defaults
+end
 
 -- Ensures a folder exists by creating it if needed
 local function EnsureFolder(folderPath)
-	if isfolder and not CallSafely(isfolder,folderPath) then CallSafely(makefolder,folderPath) end
+	if isfolder and not CallSafely(isfolder,folderPath) then 
+		CallSafely(makefolder,folderPath) 
+	end
 end
 
 local function LoadSettings()
@@ -595,33 +598,38 @@ local function LoadSettings()
 	local success,result=pcall(function()
 		if isfolder and CallSafely(isfolder,RayfieldFolder) then 
 			if isfile and readfile and 
-				CallSafely(isfile,RayfieldFolder..'/settings'..ConfigExtension) then 
-				file=CallSafely(readfile,RayfieldFolder..'/settings'..ConfigExtension) 
+				CallSafely(isfile,RayfieldFolder.."/settings"..ConfigExtension) then 
+				file=CallSafely(readfile,RayfieldFolder.."/settings"..ConfigExtension) 
 			end 
 		end
-		-- for debug in studio
-		if UseStudio then file=[[{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"Keybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}]] end
-		if file then local decodeSuccess,decodedFile=pcall(function() return HttpService:JSONDecode(file) end) if decodeSuccess then file=decodedFile else file={} end else file={} end
+		if IsStudio then file=[[{"General":{"rayfieldOpen":{"Value":"K","Type":"bind","Name":"Rayfield Keybind","Element":{"HoldToInteract":false,"Ext":true,"Name":"Rayfield Keybind","Set":null,"CallOnChange":true,"Callback":null,"Keybind":"K"}}},"System":{"usageAnalytics":{"Value":false,"Type":"toggle","Name":"Anonymised Analytics","Element":{"Ext":true,"Name":"Anonymised Analytics","Set":null,"CurrentValue":false,"Callback":null}}}}]] end
+		if file then 
+			local decodeSuccess,decodedFile=pcall(function() 
+				return HttpService:JSONDecode(file) 
+			end) 
+			file=decodeSuccess and decodedFile or {}
+		else 
+			file={} 
+		end
 		if not SettingsCreated then return end
 		if next(file)~=nil then
 			for categoryName,settingCategory in pairs(SettingsData) do
 				if file[categoryName] then
-					for settingName,setting in pairs(settingCategory) do
+					for settingName,settingValue in pairs(settingCategory) do
 						if file[categoryName][settingName] then
-							setting.Value=file[categoryName][settingName].Value
-							setting.Element:Set(GetSetting(categoryName,settingName))
+							settingValue.Value=file[categoryName][settingName].Value
+							settingValue.Element:Set(GetSetting(categoryName,settingName))
 						end
 					end
 				end
 			end
-		else -- If no settings saved, apply overridden settings only
-			for settingName,settingValue in OverriddenSettings do
-				local split=string.split(settingName,".")
-				assert(#split==2,"Rayfield | Invalid overridden setting name: " .. settingName)
-				local categoryName=split[1]
-				local settingNameOnly=split[2]
-				if SettingsData[categoryName] and SettingsData[categoryName][settingNameOnly] then
-					SettingsData[categoryName][settingNameOnly].Element:Set(settingValue)
+		else
+			for settingKey,settingValue in OverriddenSettings do
+				local split=string.split(settingKey,".")
+				assert(#split==2,"Rayfield | Invalid overridden setting name: " .. SettingName)
+				local categoryName,settingName=split[1],split[2]
+				if SettingsData[categoryName] and SettingsData[categoryName][settingName] then
+					SettingsData[categoryName][settingName].Element:Set(settingValue)
 				end
 			end
 		end
@@ -634,103 +642,50 @@ local function LoadSettings()
 	end
 end
 
-if debugX then warn("Now Loading Settings Configuration") end
+if debugX then warn("Loading Settings Configuration") end
 
 LoadSettings()
 
-local ANALYTICS_TOKEN="05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
+do
+	--local ANALYTICS_TOKEN="05de7f9fd320d3b8428cd1c77014a337b85b6c8efee2c5914f5ab5700c354b9a"
 
-local Reporter=nil
---if not requestsDisabled and not UseStudio then
---	local fetchSuccess,fetchResult=pcall(game.HttpGet,game,"https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/reporter.lua")
---	if fetchSuccess and #fetchResult>0 then
---		local execSuccess,Analytics=pcall(function() return (loadstring(fetchResult))() end)
---		if execSuccess and Analytics then
---			pcall(function() reporter=Analytics.new({url="https://rayfield-collect.sirius-software-ltd.workers.dev",token=ANALYTICS_TOKEN,product_name="Rayfield",category="UILibrary"}) end)
---		end
---	end
---end
+	--local Reporter=nil
+	--if not requestsDisabled and not UseStudio then
+	--	local fetchSuccess,fetchResult=pcall(game.HttpGet,game,"https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/reporter.lua")
+	--	if fetchSuccess and #fetchResult>0 then
+	--		local execSuccess,Analytics=pcall(function() return (loadstring(fetchResult))() end)
+	--		if execSuccess and Analytics then
+	--			pcall(function() reporter=Analytics.new({url="https://rayfield-collect.sirius-software-ltd.workers.dev",token=ANALYTICS_TOKEN,product_name="Rayfield",category="UILibrary"}) end)
+	--		end
+	--	end
+	--end
 
---local promptUser=2
+	--local promptUser=2
 
---if promptUser==1 and prompt and prompt.create then
---	prompt.create("Be cautious when running scripts", [[Please be careful when running scripts from unknown developers. This script has already been ran. <font transparency='0.3'>Some scripts may steal your items or in-game goods.</font>]],"Okay","",function() end)
---end
+	--if promptUser==1 and prompt and prompt.create then
+	--	prompt.create("Be cautious when running scripts", [[Please be careful when running scripts from unknown developers. This script has already been ran. <font transparency='0.3'>Some scripts may steal your items or in-game goods.</font>]],"Okay","",function() end)
+	--end
+end
 
 if debugX then warn("Moving on to continue initialisation") end
 
--- Interface Management
-local RayfieldAssetId=CustomAssetId or 134923138597588
-local Rayfield=UseStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
-local buildAttempts=0
-local correctBuild=false
-local warned
-local globalLoaded
-local rayfieldDestroyed=false -- True when Library:Destroy() is called
-Rayfield.Main.Visible=false
-repeat
-	if Rayfield:FindFirstChild("Build") and Rayfield.Build.Value==InterfaceBuild then
-		correctBuild=true
-		break
-	end
+local BaseSize=Vector2.new(1024,768)
+local Connections={} -- For storing connections to disconnect when Rayfield is destroyed
 
-	correctBuild=false
-
-	if not warned then
-		warn('Rayfield | Build Mismatch')
-		print('Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild("Build") and Rayfield.Build.Value) or "No Build") ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.')
-		warned=true
-	end
-
-	local toDestroy
-	toDestroy,Rayfield=Rayfield,UseStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
-	if toDestroy and not UseStudio then toDestroy:Destroy() end
-
-	buildAttempts=buildAttempts+1
-until buildAttempts >= 2
-
-Rayfield.Enabled=false
-
-local baseSize=Vector2.new(1024,768)
-
-local Main=Rayfield.Main
-local Elements=Main.Elements
-
-local CoreGui=not UseStudio and GetService("CoreGui")
-if gethui then
-	Rayfield.Parent=gethui()
-elseif syn and syn.protect_gui then 
-	syn.protect_gui(Rayfield)
-	Rayfield.Parent=CoreGui
-elseif not UseStudio then
-	Rayfield.Parent=CoreGui
-else
-	Rayfield.Parent=Players.LocalPlayer:WaitForChild("PlayerGui")
+local IsMobile=false
+if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+	IsMobile=true
 end
 
-if gethui then
-	for _,interface in ipairs(gethui():GetChildren()) do
-		if interface.Name==Rayfield.Name and interface~=Rayfield then
-			interface.Enabled=false
-			interface.Name="Rayfield-Old"
-		end
-	end
-elseif not UseStudio then
-	for _,interface in ipairs(CoreGui:GetChildren()) do
-		if interface.Name==Rayfield.Name and interface~=Rayfield then
-			interface.Enabled=false
-			interface.Name="Rayfield-Old"
-		end
-	end
-end
+local BuildAttempts,CorrectBuild,Warned,GlobalLoaded,RayfieldDestroyed=0,false,false,false,false
 
 local function ResizeUIScale(ui,screenSize)
-	local scaleX=screenSize.X/baseSize.X
-	local scaleY=screenSize.Y/baseSize.Y
+	local scaleX=screenSize.X/BaseSize.X
+	local scaleY=screenSize.Y/BaseSize.Y
 	local scale=math.min(scaleX,scaleY)
 	local minAxis=math.min(screenSize.X,screenSize.Y)
 	local isSmallScreen=minAxis<=500
-	local uiScale:UIScale=ui:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+	local uiScale=ui:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
 	uiScale.Parent=ui
 	local result=1
 	if scale<1 then
@@ -743,158 +698,268 @@ local function ResizeUIScale(ui,screenSize)
 	uiScale.Scale=result
 end
 
-ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
-workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-	ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
-end)
-
 if SecureMode and not CustomAssetId then
 	SecureNotify("default_asset","Secure Mode","You are using the default Rayfield asset ID. Set RAYFIELD_ASSET_ID to a custom upload to avoid detection.")
 end
 
-do
-	local AssetPath=RayfieldFolder.."/Assets"
-	local AssetBaseURL="https://github.com/SiriusSoftwareLtd/Rayfield/blob/main/assets/"
-	local assetFiles={
-		["111263549366178"]=AssetBaseURL.."111263549366178.png?raw=true",
-		["77891951053543"]=AssetBaseURL.."77891951053543.png?raw=true",
-		["78137979054938"]=AssetBaseURL.."78137979054938.png?raw=true",
-		["80503127983237"]=AssetBaseURL.."80503127983237.png?raw=true",
-		["10137832201"]=AssetBaseURL.."10137832201.png?raw=true",
-		["10137941941"]=AssetBaseURL.."10137941941.png?raw=true",
-		["11036884234"]=AssetBaseURL.."11036884234.png?raw=true",
-		["11413591840"]=AssetBaseURL.."11413591840.png?raw=true",
-		["11745872910"]=AssetBaseURL.."11745872910.png?raw=true",
-		["12577727209"]=AssetBaseURL.."12577727209.png?raw=true",
-		["18458939117"]=AssetBaseURL.."18458939117.png?raw=true",
-		["3259050989"]=AssetBaseURL.."3259050989.png?raw=true",
-		["3523728077"]=AssetBaseURL.."3523728077.png?raw=true",
-		["3602733521"]=AssetBaseURL.."3602733521.png?raw=true",
-		["IconChevronTopMedium"]=AssetBaseURL.."IconChevronTopMedium.png?raw=true",
-		["4483362458"]=AssetBaseURL.."4483362458.png?raw=true",
-		["5587865193"]=AssetBaseURL.."5587865193.png?raw=true",
-		["IconMagnifyingGlass2"]=AssetBaseURL.."IconMagnifyingGlass2.png?raw=true",
-	}
-	for id,_ in assetFiles do
-		CustomAssets[id]=""
-	end
-	local hasCustomAsset=type(getcustomasset)=="function"
-	local hasFilesystem=type(writefile)=="function" and type(makefolder)=="function" and type(isfile)=="function" and type(isfolder)=="function"
-	if hasCustomAsset and hasFilesystem then
-		local ok,err=pcall(function()
-			EnsureFolder(RayfieldFolder)
-			EnsureFolder(AssetPath)
-
-			local function nextMissing()
-				for id,_ in assetFiles do
-					if isfile and not isfile(AssetPath.."/"..tostring(id)..".png") then
-						return id
-					end
-				end
-				return nil
-			end
-
-			if nextMissing() then
-				task.spawn(function()
-					while true do
-						local id=nextMissing()
-						if not id then break end
-						if writefile then writefile(AssetPath.."/"..tostring(id)..".png",RequestSafely({Url=assetFiles[id],Method="GET"}).Body) end
-						task.wait()
-					end
-				end)
-
-				while nextMissing() do
-					task.wait(0.1)
-				end
-			end
-
-			for id,_ in assetFiles do
-				local success,asset=pcall(getcustomasset,AssetPath.."/"..tostring(id)..".png")
-				if success then
-					CustomAssets[tostring(id)]=asset
-				else
-					warn("Rayfield | Failed to load custom asset: "..tostring(id).."-"..tostring(asset))
-				end
-			end
-		end)
-		if not ok then
-			warn("Rayfield | Failed to load custom assets: "..tostring(err))
-			SecureNotify("asset_load_fail","Rayfield","Failed to load custom assets. UI images may not display correctly.")
-		end
-	else
-		SecureNotify("no_getcustomasset","Rayfield","Your executor does not support getcustomasset. Some UI images may not render correctly.")
-	end
-	Rayfield.Main.Shadow.Image.Image=CustomAssets["5587865193"]
-	Rayfield.Main.Topbar.Hide.Image=CustomAssets["10137832201"]
-	Rayfield.Main.Topbar.ChangeSize.Image=CustomAssets["10137941941"]
-	Rayfield.Main.Topbar.Settings.Image=CustomAssets["80503127983237"]
-	Rayfield.Main.Topbar.Icon.Image=CustomAssets["78137979054938"]
-	Rayfield.Main.Topbar.Search.Image=CustomAssets["IconMagnifyingGlass2"]
-	Rayfield.Main.Topbar.Search.ImageRectOffset=Vector2.new(0,0)
-	Rayfield.Main.Topbar.Search.ImageRectSize=Vector2.new(0,0)
-	Rayfield.Main.Elements.Template.Toggle.Switch.Shadow.Image=CustomAssets["3602733521"]
-	Rayfield.Main.Elements.Template.Slider.Main.Shadow.Image=CustomAssets["3602733521"]
-	Rayfield.Main.Elements.Template.Dropdown.Toggle.Image=CustomAssets["IconChevronTopMedium"]
-	Rayfield.Main.Elements.Template.Dropdown.Toggle.ImageRectOffset=Vector2.new(0,0)
-	Rayfield.Main.Elements.Template.Dropdown.Toggle.ImageRectSize=Vector2.new(0,0)
-	Rayfield.Main.Elements.Template.Label.Icon.Image=CustomAssets["11745872910"]
-	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.Image=CustomAssets["11413591840"]
-	Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.MainPoint.Image=CustomAssets["3259050989"]
-	Rayfield.Main.Elements.Template.ColorPicker.ColorSlider.SliderPoint.Image=CustomAssets["3259050989"]
-	Rayfield.Main.TabList.Template.Image.Image=CustomAssets["4483362458"]
-	Rayfield.Main.Search.Search.Image=CustomAssets["18458939117"]
-	Rayfield.Main.Search.Shadow.Image=CustomAssets["5587865193"]
-	Rayfield.Notifications.Template.Icon.Image=CustomAssets["77891951053543"]
-	Rayfield.Notifications.Template.Shadow.Image=CustomAssets["3523728077"]
-	Rayfield.Loading.Banner.Image=CustomAssets["111263549366178"]
+local AssetPath=RayfieldFolder.."/Assets"
+local AssetBaseURL="https://github.com/SiriusSoftwareLtd/Rayfield/blob/main/assets/"
+local AssetFiles={
+	["111263549366178"]=AssetBaseURL.."111263549366178.png?raw=true",
+	["77891951053543"]=AssetBaseURL.."77891951053543.png?raw=true",
+	["78137979054938"]=AssetBaseURL.."78137979054938.png?raw=true",
+	["80503127983237"]=AssetBaseURL.."80503127983237.png?raw=true",
+	["10137832201"]=AssetBaseURL.."10137832201.png?raw=true",
+	["10137941941"]=AssetBaseURL.."10137941941.png?raw=true",
+	["11036884234"]=AssetBaseURL.."11036884234.png?raw=true",
+	["11413591840"]=AssetBaseURL.."11413591840.png?raw=true",
+	["11745872910"]=AssetBaseURL.."11745872910.png?raw=true",
+	["12577727209"]=AssetBaseURL.."12577727209.png?raw=true",
+	["18458939117"]=AssetBaseURL.."18458939117.png?raw=true",
+	["3259050989"]=AssetBaseURL.."3259050989.png?raw=true",
+	["3523728077"]=AssetBaseURL.."3523728077.png?raw=true",
+	["3602733521"]=AssetBaseURL.."3602733521.png?raw=true",
+	["IconChevronTopMedium"]=AssetBaseURL.."IconChevronTopMedium.png?raw=true",
+	["4483362458"]=AssetBaseURL.."4483362458.png?raw=true",
+	["5587865193"]=AssetBaseURL.."5587865193.png?raw=true",
+	["IconMagnifyingGlass2"]=AssetBaseURL.."IconMagnifyingGlass2.png?raw=true",
+}
+for id,_ in AssetFiles do
+	CustomAssets[id]=""
 end
 
-local useMobileSizing
-if Rayfield.AbsoluteSize.X<baseSize.X and Rayfield.AbsoluteSize.Y<baseSize.Y then
-	useMobileSizing=true
-end
-local useMobilePrompt=false
-if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
-	useMobilePrompt=true
-end
+local DragOffset=255
+local DragOffsetMobile=150
 
--- Object Variables
-local MPrompt=Rayfield:FindFirstChild("Prompt")
-local Topbar=Main.Topbar
-local LoadingFrame=Main.LoadingFrame
-local TabList=Main.TabList
-local dragBar=Rayfield:FindFirstChild("Drag")
-local dragInteract=dragBar and dragBar.Interact or nil
-local dragBarCosmetic=dragBar and dragBar.Drag or nil
-local dragOffset=255
-local dragOffsetMobile=150
 
-Rayfield.DisplayOrder=100
-LoadingFrame.Version.Text=Release
 
--- Thanks to Latte Softworks for the Lucide integration for Roblox
-local Icons=UseStudio and require(script.Parent.icons) or LoadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
-local Strs=UseStudio and require(game.ReplicatedStorage.Packages.Strs) or loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau"))()
+---- Thanks to Latte Softworks for the Lucide integration for Roblox
+local Icons=IsStudio and require(script.Parent.Icons) or LoadWithTimeout("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua")
+local Strs=IsStudio and require(game.ReplicatedStorage.Packages.Strs) or loadstring(game:HttpGet("https://raw.githubusercontent.com/PaazlisMaswa/RobloxProject/refs/heads/main/Packages/Strs/init.luau"))()
 
--- Variables
+---- Variables
 local CFileName=nil
 local CEnabled=false
 local Minimised=false
 local Hidden=false
 local Debounce=false
-local searchOpen=false
-local Notifications=Rayfield.Notifications
-local keybindConnections={} -- For storing keybind connections to disconnect when Rayfield is destroyed
+local SearchOpen=false
+local UseMobileSizing=false
+local HideHotkeyConnection=nil -- Has to be initialized here since the connection is made later in the script
+
+-- UI Variables
+local Rayfield,Notifications,MPrompt,Main,Elements,LoadingFrame,TabList,Topbar,DragBar,DragBarInteract,DragBarCosmetic=nil,nil,nil,nil,nil,nil,nil,nil,nil,nil
 
 local SelectedTheme=Library.Theme.Default
 Library.SelectedTheme=SelectedTheme
+
+local function CreateObject(className,properties)
+	local newObject=Instance.new(className)
+	local info={}
+
+	function info:CreateObject(className,properties)
+		local finalProperties=properties or {}
+		finalProperties.Parent=newObject
+		return CreateObject(className,finalProperties)
+	end
+
+	function info:Tween(options,callback)
+		options=ToDefaults(options,{Length=0.2,Style=Enum.EasingStyle.Linear,Direction=Enum.EasingDirection.InOut})
+		if type(callback)~="function" then callback=function() return end end
+		local tweenInfo=TweenInfo.new(options.Length,options.Style,options.Direction)
+		options.Length=nil options.Style=nil options.Direction=nil
+		local tween=TweenService:Create(newObject,tweenInfo,options)
+		tween:Play()
+		tween.Completed:Connect(callback)
+		return tween
+	end
+
+	function info:Round(radius)
+		radius=radius or 6
+		CreateObject("UICorner",{CornerRadius=UDim.new(0,radius),Parent=newObject})
+		return info
+	end
+
+	function info:CrossFade(instance,length)
+		length=length or .2
+		self:Tween({ImageTransparency=1})
+		instance:Tween({ImageTransparency=0})
+		return info
+	end
+
+	function info:Fade(active,colorOverride,length,instant)
+		active=active and true or false
+		length=length or 0.2
+		if not rawget(self, "FadeFrame") then
+			local absoluteCorner=self.Template:FindFirstChildOfClass("UICorner")
+			local fadeFrame=self:CreateObject("Frame",{
+				BackgroundColor3=colorOverride or self.BackgroundColor3,
+				BackgroundTransparency=(active and 1) or 0,
+				Size=UDim2.fromScale(1, 1),
+				Centered=true,
+				ZIndex=999
+			}):Round(absoluteCorner and absoluteCorner.CornerRadius.Offset or 0)
+			rawset(self,"FadeFrame",fadeFrame)
+		else
+			self.FadeFrame.BackgroundColor3=colorOverride or self.BackgroundColor3
+		end
+		if instant then
+			if active then
+				self.FadeFrame.BackgroundTransparency=0
+				self.FadeFrame.Visible=true
+			else
+				self.FadeFrame.BackgroundTransparency=1
+				self.FadeFrame.Visible=false
+			end
+		else
+			if active then
+				self.FadeFrame.BackgroundTransparency=1
+				self.FadeFrame.Visible=true
+				self.FadeFrame:Tween{BackgroundTransparency=0, Length=length}
+			else
+				self.FadeFrame.BackgroundTransparency=0
+				self.FadeFrame:Tween({BackgroundTransparency=1, Length=length}, function()
+					self.FadeFrame.Visible=false
+				end)
+			end
+		end	
+		return info
+	end
+
+	function info:Stroke(color,thickness,strokeMode)
+		thickness=thickness or 1
+		strokeMode=strokeMode or Enum.ApplyStrokeMode.Border
+		local stroke=self:CreateObject("UIStroke",{
+			ApplyStrokeMode=strokeMode,
+			Thickness=thickness
+		})
+		--if type(color)=="table" then
+		--	local theme, colorAlter=color[1], color[2] or 0
+		--	local themeColor=Library.CurrentTheme[theme]
+		--	local modifiedColor=themeColor
+		--	--if colorAlter < 0 then
+		--	--	modifiedColor=Library:Darken(themeColor, -1 * colorAlter)
+		--	--elseif colorAlter > 0 then
+		--	--	modifiedColor=Library:Lighten(themeColor, colorAlter)
+		--	--end
+		--	stroke.Color=modifiedColor
+		--	--table.insert(Library.ThemeObjects[theme],{stroke, "Color", theme, colorAlter})
+		--elseif type(color)=="string" then
+		--	--local themeColor=Library.CurrentTheme[color]
+		--	--stroke.Color=themeColor
+		--	--table.insert(Library.ThemeObjects[color],{stroke, "Color", color, 0})
+		--else
+		--	stroke.Color=color
+		--end
+		return info
+	end
+
+	function info:Tooltip(text)
+		local tooltipLabel=self:CreateObject("TextLabel",{
+			Name="Tooltip",
+			Theme={
+				BackgroundColor3={"Main", 10},
+				TextColor3={"WeakText"}
+			},
+			TextSize=16,
+			Text=text,
+			Position=UDim2.new(0.5,0,0,-8),
+			TextXAlignment=Enum.TextXAlignment.Center,
+			TextYAlignment=Enum.TextYAlignment.Center,
+			AnchorPoint=Vector2.new(0.5, 1),
+			BackgroundTransparency=1,
+			TextTransparency=1
+		}):Round(5)
+		tooltipLabel.Size=UDim2.fromOffset(tooltipLabel.TextBounds.X+16,tooltipLabel.TextBounds.Y+8)
+		local tooltipArrow=tooltipLabel:CreateObject("ImageLabel",{
+			Name="Arrow",
+			Image="http://www.roblox.com/asset/?id=4292970642",
+			Theme={ImageColor3={"Main", 10}},
+			AnchorPoint=Vector2.new(0.5, 0),
+			Rotation=180,
+			Position=UDim2.fromScale(0.5, 1),
+			Size=UDim2.fromOffset(10, 6),
+			BackgroundTransparency=1,
+			ImageTransparency=1
+		})
+		local hovered=false
+		self.MouseEnter:Connect(function()
+			hovered=true
+			task.wait(0.2)
+			if hovered then
+				tooltipLabel:Tween{BackgroundTransparency=0.2,TextTransparency=0.2}
+				tooltipArrow:Tween{ImageTransparency=0.2}
+			end
+		end)
+		self.MouseLeave:Connect(function()
+			hovered=false
+			tooltipLabel:Tween{BackgroundTransparency=1, TextTransparency=1}
+			tooltipArrow:Tween{ImageTransparency=1}
+		end)
+		return info
+	end
+
+	local customHandlers={
+		Centered=function(value)
+			if value then
+				newObject.AnchorPoint=Vector2.new(0.5,0.5)
+				newObject.Position=UDim2.fromScale(0.5,0.5)
+			end	
+		end,
+		Theme=function(value)
+			for property,obj in next,value do
+				--if type(obj)=="table" then
+				--	local theme,colorAlter=obj[1],obj[2] or 0
+				--	local themeColor=SelectedTheme[theme]
+				--	local modifiedColor=themeColor
+				--	--if colorAlter<0 then
+				--	--	modifiedColor=Library:Darken(themeColor,-1*colorAlter)
+				--	--elseif colorAlter>0 then
+				--	--	modifiedColor=Library:Lighten(themeColor,colorAlter)
+				--	--end
+				--	newObject[property]=modifiedColor
+				--	--table.insert(Library.ThemeObjects[theme],{info,property,theme,colorAlter})
+				--else
+				--	local themeColor=SelectedTheme[obj]
+				--	newObject[property]=themeColor
+				--	--table.insert(Library.ThemeObjects[obj],{info,property,obj,0})
+				--end
+			end
+		end
+	}
+
+	for property,value in next,properties do
+		if customHandlers[property] then
+			customHandlers[property](value)
+		else
+			newObject[property]=value
+		end
+	end
+
+	return setmetatable(info,{
+		__index=function(_,property)
+			return newObject[property]
+		end,
+		__newindex=function(_,property,value)
+			newObject[property]=value
+		end,
+	})
+end
+
 
 local function Tween(instance,tweenInfo,properties)
 	TweenService:Create(instance,tweenInfo,properties):Play()
 end
 
+local function ConnectDestroying(instance,func)
+	task.defer(function()
+		if not (instance and instance.Parent) then func() return end
+		instance.Destroying:Connect(func)
+	end)
+end
+
 local function ChangeTheme(theme)
+	if not Main or not Topbar then return end
 	local themeType=type(theme)
 	if themeType=="string" then
 		SelectedTheme=Library.Theme[theme]
@@ -902,43 +967,48 @@ local function ChangeTheme(theme)
 		SelectedTheme=theme
 	end
 	Library.SelectedTheme=SelectedTheme
-	Rayfield.Main.BackgroundColor3=SelectedTheme.Background
-	Rayfield.Main.Topbar.BackgroundColor3=SelectedTheme.Topbar
-	Rayfield.Main.Topbar.CornerRepair.BackgroundColor3=SelectedTheme.Topbar
-	Rayfield.Main.Shadow.Image.ImageColor3=SelectedTheme.Shadow
-	Rayfield.Main.Topbar.ChangeSize.ImageColor3=SelectedTheme.TextColor
-	Rayfield.Main.Topbar.Hide.ImageColor3=SelectedTheme.TextColor
-	Rayfield.Main.Topbar.Search.ImageColor3=SelectedTheme.TextColor
-	if Topbar:FindFirstChild('Settings') then
-		Rayfield.Main.Topbar.Settings.ImageColor3=SelectedTheme.TextColor
-		Rayfield.Main.Topbar.Divider.BackgroundColor3=SelectedTheme.ElementStroke
+	Main.BackgroundColor3=SelectedTheme.Background
+	Topbar.BackgroundColor3=SelectedTheme.Topbar
+	Topbar.CornerRepair.BackgroundColor3=SelectedTheme.Topbar
+	Main.Shadow.Image.ImageColor3=SelectedTheme.Shadow
+	Topbar.ChangeSize.ImageColor3=SelectedTheme.TextColor
+	Topbar.Hide.ImageColor3=SelectedTheme.TextColor
+	Topbar.Search.ImageColor3=SelectedTheme.TextColor
+	if Topbar:FindFirstChild("Settings") then
+		Topbar.Settings.ImageColor3=SelectedTheme.TextColor
+		Topbar.Divider.BackgroundColor3=SelectedTheme.ElementStroke
 	end
 	Main.Search.BackgroundColor3=SelectedTheme.TextColor
 	Main.Search.Shadow.ImageColor3=SelectedTheme.TextColor
 	Main.Search.Search.ImageColor3=SelectedTheme.TextColor
 	Main.Search.Input.PlaceholderColor3=SelectedTheme.TextColor
 	Main.Search.UIStroke.Color=SelectedTheme.SecondaryElementStroke
-
 	if Main:FindFirstChild("Notice") then
 		Main.Notice.BackgroundColor3=SelectedTheme.Background
 	end
-
-	for _,text in ipairs(Rayfield:GetDescendants()) do
-		if text.Parent.Parent~=Notifications then
-			if text:IsA('TextLabel') or text:IsA('TextBox') then text.TextColor3=SelectedTheme.TextColor end
-		end
-	end
-
-	for _,TabPage in ipairs(Elements:GetChildren()) do
-		for _,Element in ipairs(TabPage:GetChildren()) do
-			if Element.ClassName=="Frame" and Element.Name~="Placeholder" and Element.Name~="SectionSpacing" and Element.Name~="Divider" and Element.Name~="SectionTitle" and Element.Name~="SearchTitle-fsefsefesfsefesfesfThanks" then
-				Element.BackgroundColor3=SelectedTheme.ElementBackground
-				Element.UIStroke.Color=SelectedTheme.ElementStroke
+	if Notifications and Rayfield then
+		for _,text in ipairs(Rayfield:GetDescendants()) do
+			if text and text.Parent and text.Parent.Parent~=Notifications then
+				if text:IsA("TextLabel") or text:IsA("TextBox") or text:IsA("TextButton") then 
+					text.TextColor3=SelectedTheme.TextColor 
+				end
 			end
 		end
 	end
+	if Elements then
+		for _,page in ipairs(Elements:GetChildren()) do
+			for _,element in ipairs(page:GetChildren()) do
+				if element.ClassName=="Frame" and element.Name~="Placeholder" and element.Name~="SectionSpacing" and element.Name~="Divider" and element.Name~="SectionTitle" and element.Name~="SearchTitle-fsefsefesfsefesfesfThanks" then
+					element.BackgroundColor3=SelectedTheme.ElementBackground
+					element.UIStroke.Color=SelectedTheme.ElementStroke
+				end
+			end
+		end
+	end
+	
 end
 
+-- Icon Library
 local function GetIcon(name)
 	if not Icons then
 		warn("Lucide Icons: Cannot use icons as icons library is not loaded")
@@ -950,24 +1020,19 @@ local function GetIcon(name)
 	if not r then
 		error("Lucide Icons: Failed to find icon by the name of \"" .. name .. "\"",2)
 	end
-
 	local rirs=r[2]
 	local riro=r[3]
-
 	if type(r[1])~="number" or type(rirs)~="table" or type(riro)~="table" then
 		error("Lucide Icons: Internal error: Invalid auto-generated asset entry")
 	end
-
 	local irs=Vector2.new(rirs[1],rirs[2])
 	local iro=Vector2.new(riro[1],riro[2])
-
-	local asset={
+	local assetInfo={
 		id=r[1],
 		imageRectSize=irs,
 		imageRectOffset=iro,
 	}
-
-	return asset
+	return assetInfo
 end
 
 local function GetAssetUrl(id)
@@ -1001,70 +1066,123 @@ local function ResolveIcon(icon)
 	end
 end
 
-local GuiService=GetService("GuiService")
+local DragFuncs={
+	[1]=function(options)
+		local frame=options.Main or options.Frame
+		local dragging,dragInput,dragStart,startPos
+		local inputBeganConnection,inputChangedConnection1,inputChangedConnection2
+		inputBeganConnection=frame.InputBegan:Connect(function(input)
+			if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+				dragging=true 
+				dragStart=input.Position 
+				startPos=frame.Position
+				input.Changed:Connect(function() 
+					if input.UserInputState==Enum.UserInputState.End then 
+						dragging=false 
+					end 
+				end)
+			end
+		end)
+		inputChangedConnection1=frame.InputChanged:Connect(function(input)
+			if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then 
+				dragInput=input 
+			end
+		end)
+		inputChangedConnection2=UserInputService.InputChanged:Connect(function(input)
+			if input==dragInput and dragging then
+				local delta=input.Position-dragStart
+				frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+			end
+		end)
+		ConnectDestroying(frame,function()
+			inputChangedConnection2:Disconnect()
+		end)
+		return function()
+			destroyingConnection:Disconnect()
+			inputBeganConnection:Disconnect()
+			inputChangedConnection1:Disconnect()
+			inputChangedConnection2:Disconnect()
+		end
+	end,
+	[2]=function(options)
+		options=ToDefaults(options,{
+			IsHidden=function() return Hidden end
+		})
+		warn("Drag Version 2")
+		local dragging
+		local inputBegan,inputEnded,renderStepped
+		local isHidden,frame,dragInteract,dragCosmetic,tapticEnabled,tapticOffset,dragObject=options.IsHidden,options.Main or options.Frame,options.DragInteract,options.DragCosmetic,options.TapticEnabled,options.TapticOffset,options.Drag or options.DragObject
+		local relative=Vector2.zero
+		local offset=Vector2.zero
+		local screenGui=frame:FindFirstAncestorWhichIsA("ScreenGui")
+		if screenGui and screenGui.IgnoreGuiInset then
+			offset+=GuiService:GetGuiInset()
+		end
+		local function ConnectHover()
+			if DragBar and tapticEnabled then
+				DragBar.MouseEnter:Connect(function()
+					if not dragging and not isHidden() and dragCosmetic then
+						Tween(dragCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.5,Size=UDim2.new(0,120,0,4)})
+					end
+				end)
+				DragBar.MouseLeave:Connect(function()
+					if not dragging and not isHidden() and dragCosmetic then
+						Tween(DragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.7,Size=UDim2.new(0,100,0,4)})
+					end
+				end)
+			end
+		end
+		ConnectHover()
+		local inputBegan=frame.InputBegan:Connect(function(input)
+			local inputType=input.UserInputType.Name
+			if inputType=="MouseButton1" or inputType=="Touch" then
+				dragging=true
+				relative=frame.AbsolutePosition+frame.AbsoluteSize*frame.AnchorPoint-UserInputService:GetMouseLocation()
+				if tapticEnabled and not Hidden and DragBarCosmetic then
+					Tween(DragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,110,0,4),BackgroundTransparency=0})
+				end
+			end
+		end)
+		local inputEnded=UserInputService.InputEnded:Connect(function(input)
+			if not dragging then return end
+			local inputType=input.UserInputType.Name
+			if inputType=="MouseButton1" or inputType=="Touch" then
+				dragging=false
+				if tapticEnabled and not Hidden and DragBarCosmetic then
+					Tween(DragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,100,0,4),BackgroundTransparency=0.7})
+				end
+			end
+		end)
+		local renderStepped=RunService.RenderStepped:Connect(function()
+			if dragging and not Hidden then
+				local position=UserInputService:GetMouseLocation()+relative+offset
+				if tapticEnabled and tapticOffset then
+					Tween(frame,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(position.X,position.Y)})
+					Tween(dragObject.Parent,TweenInfo.new(0.05,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(position.X,position.Y+((UseMobileSizing and tapticOffset[2]) or tapticOffset[1]))})
+				else
+					if DragBar and tapticOffset then
+						DragBar.Position=UDim2.fromOffset(position.X,position.Y+((UseMobileSizing and tapticOffset[2]) or tapticOffset[1]))
+					end
+					frame.Position=UDim2.fromOffset(position.X,position.Y)
+				end
+			end
+		end)
+		local destroying=ConnectDestroying(frame,function()
+			inputEnded:Disconnect()
+			renderStepped:Disconnect()
+		end)
+		return function()
+			inputBegan:Disconnect()
+			renderStepped:Disconnect()
+			inputEnded:Disconnect()
+			destroying:Disconnect()
+		end
+	end
+}
 
-local function MakeDraggable(object,dragObject,enableTaptic,tapticOffset)
-	local dragging,relative,inputConnection=false,nil,nil
-	local offset=Vector2.zero
-	local screenGui=object:FindFirstAncestorWhichIsA("ScreenGui")
-	if screenGui and screenGui.IgnoreGuiInset then
-		offset+=GuiService:GetGuiInset()
-	end
-	local function ConnectHover()
-		if dragBar and enableTaptic then
-			dragBar.MouseEnter:Connect(function()
-				if not dragging and not Hidden then
-					Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.5,Size=UDim2.new(0,120,0,4)})
-				end
-			end)
-			dragBar.MouseLeave:Connect(function()
-				if not dragging and not Hidden then
-					Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.7,Size=UDim2.new(0,100,0,4)})
-				end
-			end)
-		end
-	end
-	ConnectHover()
-	dragObject.InputBegan:Connect(function(input,processed)
-		if processed then return end
-		local inputType=input.UserInputType.Name
-		if inputType=="MouseButton1" or inputType=="Touch" then
-			dragging=true
-			relative=object.AbsolutePosition+object.AbsoluteSize*object.AnchorPoint-UserInputService:GetMouseLocation()
-			if enableTaptic and not Hidden then
-				Tween(dragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,110,0,4),BackgroundTransparency=0})
-			end
-		end
-	end)
-	local inputEnded=UserInputService.InputEnded:Connect(function(input)
-		if not dragging then return end
-		local inputType=input.UserInputType.Name
-		if inputType=="MouseButton1" or inputType=="Touch" then
-			dragging=false
-			if enableTaptic and not Hidden then
-				Tween(dragBarCosmetic,TweenInfo.new(0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Size=UDim2.new(0,100,0,4),BackgroundTransparency=0.7})
-			end
-		end
-	end)
-	local renderStepped=RunService.RenderStepped:Connect(function()
-		if dragging and not Hidden then
-			local position=UserInputService:GetMouseLocation()+relative+offset
-			if enableTaptic and tapticOffset then
-				Tween(object,TweenInfo.new(0.4,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(position.X,position.Y)})
-				Tween(dragObject.Parent,TweenInfo.new(0.05,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Position=UDim2.fromOffset(position.X,position.Y+((useMobileSizing and tapticOffset[2]) or tapticOffset[1]))})
-			else
-				if dragBar and tapticOffset then
-					dragBar.Position=UDim2.fromOffset(position.X,position.Y+((useMobileSizing and tapticOffset[2]) or tapticOffset[1]))
-				end
-				object.Position=UDim2.fromOffset(position.X,position.Y)
-			end
-		end
-	end)
-	object.Destroying:Connect(function()
-		if inputConnection then inputConnection:Disconnect() inputConnection=nil end
-		if inputEnded then inputEnded:Disconnect() end
-		if renderStepped then renderStepped:Disconnect() end
-	end)
+function Library:CreateDraggable(DragInfo)
+	local success,callback=pcall(function() return DragFuncs[DragInfo.Version](DragInfo) end)
+	return success and callback or function() end
 end
 
 local function PackColor(Color)
@@ -1075,8 +1193,8 @@ local function UnpackColor(Color)
 	return Color3.fromRGB(Color.R,Color.G,Color.B)
 end
 
-local function LoadConfig(config)
-	local success,data=pcall(function() return HttpService:JSONDecode(config) end)
+local function LoadConfiguration(data)
+	local success,data=pcall(function() return HttpService:JSONDecode(data) end)
 	local changed=false
 	if not success then warn("Rayfield had an issue decoding the configuration file,please try delete the file and reopen Rayfield.") return end
 	for name,flag in pairs(Library.Flags) do
@@ -1101,111 +1219,55 @@ local function LoadConfig(config)
 	return changed
 end
 
-local function SaveConfig()
-	if not CEnabled or not globalLoaded then return end
+local function SaveConfiguration()
+	if not CEnabled or not GlobalLoaded then return end
 	if debugX then print("Saving") end
 	local data={}
-	for i,v in pairs(Library.Flags) do
-		if v.Type=="ColorPicker" then
-			data[i]=PackColor(v.Color)
+	for name,flag in pairs(Library.Flags) do
+		if flag.Type=="ColorPicker" then
+			data[name]=PackColor(flag.Color)
 		else
-			if type(v.Value)=="boolean" then
-				if v.Value==false then 
-					data[i]=false 
+			if type(flag.Value)=="boolean" then
+				if flag.Value==false then 
+					data[name]=false 
 				else 
-					data[i]=v.Keybind or v.Option or v.Color or v.Value 
+					data[name]=flag.Keybind or flag.Option or flag.Color or flag.Value 
 				end
 			else
-				data[i]=v.Keybind or v.Option or v.Color or v.Value
+				data[name]=flag.Keybind or flag.Option or flag.Color or flag.Value
 			end
 		end
 	end
 	local dataStr=HttpService:JSONEncode(data)
-	if UseStudio then
+	if IsStudio then
 		if script.Parent:FindFirstChild("Config") then script.Parent.Config:Destroy() end
-		local ScreenGui=Instance.new("ScreenGui")
-		ScreenGui.Parent=script.Parent
-		ScreenGui.Name="Configuration"
-		local TextBox=Instance.new("TextBox")
-		TextBox.Parent=ScreenGui
-		TextBox.Size=UDim2.new(0,800,0,50)
-		TextBox.AnchorPoint=Vector2.new(0.5,0)
-		TextBox.Position=UDim2.new(0.5,0,0,30)
-		TextBox.Text=dataStr
-		TextBox.ClearTextOnFocus=false
+		local ScreenGui=CreateObject("ScreenGui",{
+			Name="Config",
+			Parent=script.Parent
+		})
+		local TextBox=ScreenGui:CreateObject("TextBox",{
+			Size=UDim2.new(0,800,0,50),
+			AnchorPoint=Vector2.new(0.5,0),
+			Position=UDim2.new(0.5,0,0,30),
+			Text=dataStr,
+			ClearTextOnFocus=false,
+			Parent=ScreenGui
+		})
 	end
 	if debugX then warn(dataStr) end
-	if writefile then CallSafely(writefile,ConfigurationFolder .. "/" .. CFileName .. ConfigExtension,dataStr) end
+	if writefile then CallSafely(writefile,ConfigFolder .. "/" .. CFileName .. ConfigExtension,dataStr) end
 end
 
-function Library:Notify(data)
-	task.spawn(function()
-		local newNotification=Notifications.Template:Clone()
-		newNotification.Name=data.Title or 'No Title Provided'
-		newNotification.Parent=Notifications
-		newNotification.LayoutOrder=#Notifications:GetChildren()
-		newNotification.Visible=false
-		newNotification.Title.Text=data.Title or "Unknown Title"
-		newNotification.Description.Text=data.Content or "Unknown Content"
-		local icon=data.Image or data.Icon
-		if icon then
-			local image,rectOffset,rectSize=ResolveIcon(icon)
-			newNotification.Icon.Image=image
-			if rectOffset then newNotification.Icon.ImageRectOffset=rectOffset end
-			if rectSize then newNotification.Icon.ImageRectSize=rectSize end
-		else
-			newNotification.Icon.Image=""
-		end
-		newNotification.Title.TextColor3=SelectedTheme.TextColor
-		newNotification.Description.TextColor3=SelectedTheme.TextColor
-		newNotification.BackgroundColor3=SelectedTheme.Background
-		newNotification.UIStroke.Color=SelectedTheme.TextColor
-		newNotification.Icon.ImageColor3=SelectedTheme.TextColor
-		newNotification.BackgroundTransparency=1
-		newNotification.Title.TextTransparency=1
-		newNotification.Description.TextTransparency=1
-		newNotification.UIStroke.Transparency=1
-		newNotification.Shadow.ImageTransparency=1
-		newNotification.Size=UDim2.new(1,0,0,800)
-		newNotification.Icon.ImageTransparency=1
-		newNotification.Icon.BackgroundTransparency=1
-		newNotification.Visible=true
-		if data.Actions then
-			warn("Rayfield | Not seeing your actions in notifications?")
-			print("Notification Actions are being sunset for now, keep up to date on when they're back in the discord. (sirius.menu/discord)")
-		end
-		local bounds={newNotification.Title.TextBounds.Y,newNotification.Description.TextBounds.Y}
-		newNotification.Size=UDim2.new(1,-60,0,-Notifications:FindFirstChild("UIListLayout").Padding.Offset)
-		newNotification.Icon.Size=UDim2.new(0,32,0,32)
-		newNotification.Icon.Position=UDim2.new(0,20,0.5,0)
-		Tween(newNotification,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,0,0,math.max(bounds[1]+bounds[2]+31,60))})
-		task.wait(0.15)
-		Tween(newNotification,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.45})
-		Tween(newNotification.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
-		task.wait(0.05)
-		Tween(newNotification.Icon,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0})
-		task.wait(0.05)
-		Tween(newNotification.Description,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.35})
-		Tween(newNotification.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=0.95})
-		Tween(newNotification.Shadow,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.82})
-		local cooldown=math.min(math.max((#newNotification.Description.Text * 0.1)+2.5,3),10)
-		task.wait(data.Duration or cooldown)
-		newNotification.Icon.Visible=false
-		Tween(newNotification,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-		Tween(newNotification.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1})
-		Tween(newNotification.Shadow,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-		Tween(newNotification.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
-		Tween(newNotification.Description,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
-		Tween(newNotification,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-90,0,0)})
-		task.wait(1)
-		Tween(newNotification,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-90,0,-Notifications:FindFirstChild("UIListLayout").Padding.Offset)})
-		newNotification.Visible=false
-		newNotification:Destroy()
-	end)
+local function FastWait(duration)
+	if not duration then return RunService.RenderStepped:Wait() end
+	local start=tick()
+	while tick()-start<duration do RunService.RenderStepped:Wait() end
+	return start-duration
 end
 
 local function OpenSearch()
-	searchOpen=true
+	if not Main or not TabList then return end
+	SearchOpen=true
 	Main.Search.BackgroundTransparency=1
 	Main.Search.Shadow.ImageTransparency=1
 	Main.Search.Input.TextTransparency=1
@@ -1234,7 +1296,8 @@ local function OpenSearch()
 end
 
 local function CloseSearch()
-	searchOpen=false
+	if not Main or not TabList then return end
+	SearchOpen=false
 	Tween(Main.Search,TweenInfo.new(0.35,Enum.EasingStyle.Quint),{BackgroundTransparency=1,Size=UDim2.new(1,-55,0,30)})
 	Tween(Main.Search.Search,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{ImageTransparency=1})
 	Tween(Main.Search.Shadow,TweenInfo.new(0.15,Enum.EasingStyle.Quint),{ImageTransparency=1})
@@ -1243,7 +1306,7 @@ local function CloseSearch()
 	for _,TabButton in ipairs(TabList:GetChildren()) do
 		if TabButton.ClassName=="Frame" and TabButton.Name~="Placeholder" then
 			TabButton.Interact.Visible=true
-			if tostring(Elements.UIPageLayout.CurrentPage)==TabButton.Title.Text then
+			if tostring(Main.Elements.UIPageLayout.CurrentPage)==TabButton.Title.Text then
 				Tween(TabButton,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 				Tween(TabButton.Image,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0})
 				Tween(TabButton.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
@@ -1262,6 +1325,7 @@ end
 
 -- Sets element visibility across all tab pages (used by Hide,Unhide,Maximise,Minimise)
 local function SetElementsVisible(show)
+	if not Elements then return end
 	for _,tab in ipairs(Elements:GetChildren()) do
 		if tab.Name~="Template" and tab.ClassName=="ScrollingFrame" and tab.Name~="Placeholder" then
 			for _,element in ipairs(tab:GetChildren()) do
@@ -1292,8 +1356,9 @@ local function SetElementsVisible(show)
 	end
 end
 
--- Sets tab button visibility (used by Hide,Unhide,Maximise,Minimise)
+---- Sets tab button visibility (used by Hide,Unhide,Maximise,Minimise)
 local function SetTabButtonsVisible(show)
+	if not TabList or not Elements then return end
 	for _,tab in ipairs(TabList:GetChildren()) do
 		if tab.ClassName=="Frame" and tab.Name~="Placeholder" then
 			if show then
@@ -1319,6 +1384,7 @@ local function SetTabButtonsVisible(show)
 end
 
 local function Hide(notify)
+	if not Main or not MPrompt then return end
 	if MPrompt then
 		MPrompt.Title.TextColor3=Color3.fromRGB(255,255,255)
 		MPrompt.Position=UDim2.new(0.5,0,0,-50)
@@ -1330,7 +1396,7 @@ local function Hide(notify)
 	task.spawn(CloseSearch)
 	Debounce=true
 	if notify then
-		if useMobilePrompt then 
+		if IsMobile then 
 			Library:Notify({Title="Interface Hidden",Content="The interface has been hidden, you can unhide the interface by tapping 'Show'.",Duration=7,Image=4400697855})
 		else
 			Library:Notify({Title="Interface Hidden",Content="The interface has been hidden, you can unhide the interface by tapping " .. tostring(GetSetting("General","rayfieldOpen")) .. ".",Duration=7,Image=4400697855})
@@ -1343,53 +1409,58 @@ local function Hide(notify)
 	Tween(Main.Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
 	Tween(Main.Topbar.CornerRepair,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
 	Tween(Main.Topbar.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	Tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-	Tween(Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=1})
-	if dragBarCosmetic then
-		Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=1})
+	Tween(Main.Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=1})
+	if DragBarCosmetic then
+		Tween(DragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=1})
 	end
-	if useMobilePrompt and MPrompt then
+	if IsMobile and MPrompt then
 		Tween(MPrompt,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,120,0,30),Position=UDim2.new(0.5,0,0,20),BackgroundTransparency=0.3})
 		Tween(MPrompt.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0.3})
 	end
-	for _,TopbarButton in ipairs(Topbar:GetChildren()) do
+	for _,TopbarButton in ipairs(Main.Topbar:GetChildren()) do
 		if TopbarButton.ClassName=="ImageButton" then
 			Tween(TopbarButton,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
 		end
 	end
 	SetTabButtonsVisible(false)
-	if dragInteract then dragInteract.Visible=false end
+	if DragBarInteract then DragBarInteract.Visible=false end
 	SetElementsVisible(false)
-	task.wait(0.5)
+	FastWait(0.5)
 	Main.Visible=false
 	Debounce=false
 end
 
 local function Maximise()
+	if not Main then return end
 	Debounce=true
-	Topbar.ChangeSize.Image=CustomAssets["10137941941"]
+	Main.Topbar.ChangeSize.Image=CustomAssets["10137941941"]
 	Tween(Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=1})
 	Tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
-	Tween(Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	Tween(Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.7})
-	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
-	Tween(Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,45)})
+	Tween(Main.Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	Tween(Main.Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
+	if DragBarCosmetic then
+		Tween(DragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.7})
+	end
+	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UseMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
+	Tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,45)})
 	TabList.Visible=true
-	task.wait(0.2)
-	Elements.Visible=true
+	FastWait(0.2)
+	if Elements then
+		Elements.Visible=true
+	end
 	SetElementsVisible(true)
-	task.wait(0.1)
+	FastWait(0.1)
 	SetTabButtonsVisible(true)
-	task.wait(0.5)
+	FastWait(0.5)
 	Debounce=false
 end
 
 local function Unhide()
+	if not Main or not MPrompt then return end
 	Debounce=true
 	Main.Position=UDim2.new(0.5,0,0.5,0)
 	Main.Visible=true
-	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
+	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UseMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
 	Tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,45)})
 	Tween(Main.Shadow.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
 	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
@@ -1401,57 +1472,66 @@ local function Unhide()
 		Tween(MPrompt,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,40,0,10),Position=UDim2.new(0.5,0,0,-50),BackgroundTransparency=1})
 		Tween(MPrompt.Title,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=1})
 		task.spawn(function()
-			task.wait(0.5)
+			FastWait(0.5)
 			MPrompt.Visible=false
 		end)
 	end
 	if Minimised then
 		task.spawn(Maximise)
 	end
-	dragBar.Position=useMobileSizing and UDim2.new(0.5,0,0.5,dragOffsetMobile) or UDim2.new(0.5,0,0.5,dragOffset)
-	dragInteract.Visible=true
-	for _,topbarButton in ipairs(Topbar:GetChildren()) do
-		if topbarButton.ClassName=="ImageButton" then
-			if topbarButton.Name=="Icon" then
-				Tween(topbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+	if DragBar then
+		DragBar.Position=UseMobileSizing and UDim2.new(0.5,0,0.5,DragOffsetMobile) or UDim2.new(0.5,0,0.5,DragOffset)
+	end
+	if DragBarInteract then
+		DragBarInteract.Visible=true
+	end
+	for _,TopbarButton in ipairs(Topbar:GetChildren()) do
+		if TopbarButton.ClassName=="ImageButton" then
+			if TopbarButton.Name=="Icon" then
+				Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
 			else
-				Tween(topbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
+				Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
 			end
 		end
 	end
 	SetTabButtonsVisible(true)
 	SetElementsVisible(true)
-	Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.5})
-	task.wait(0.5)
+	if DragBarCosmetic then
+		Tween(DragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=0.5})
+	end
+	FastWait(0.5)
 	Minimised=false
 	Debounce=false
 end
 
 local function Minimise()
+	if not Main then return end
 	Debounce=true
-	Topbar.ChangeSize.Image=CustomAssets["11036884234"]
-	Topbar.UIStroke.Color=SelectedTheme.ElementStroke
+	Main.Topbar.ChangeSize.Image=CustomAssets["11036884234"]
+	Main.Topbar.UIStroke.Color=SelectedTheme.ElementStroke
 	task.spawn(CloseSearch)
 	SetTabButtonsVisible(false)
 	SetElementsVisible(false)
-	Tween(dragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=1})
-	Tween(Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=0})
+	if DragBarCosmetic then
+		Tween(DragBarCosmetic,TweenInfo.new(0.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{BackgroundTransparency=1})
+	end
+	Tween(Main.Topbar.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=0})
 	Tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=1})
-	Tween(Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
-	Tween(Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(Main.Topbar.CornerRepair,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+	Tween(Main.Topbar.Divider,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
 	Tween(Main,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,495,0,45)})
-	Tween(Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,495,0,45)})
-	task.wait(0.3)
-	Elements.Visible=false
-	TabList.Visible=false
-	task.wait(0.2)
+	Tween(Main.Topbar,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,495,0,45)})
+	FastWait(0.3)
+	if Elements then Elements.Visible=false end
+	if TabList then TabList.Visible=false end
+	FastWait(0.2)
 	Debounce=false
 end
 
 local function SaveSettings()
 	local data=nil
 	local success,reponse=pcall(function()
-		data=HttpService:JSONEncode(settingsTable)
+		data=HttpService:JSONEncode(SettingsData)
 	end)
 	if success and data then
 		if writefile then CallSafely(writefile,RayfieldFolder.."/settings"..ConfigExtension,data) end
@@ -1466,7 +1546,7 @@ local function UpdateSettings(category,setting,value)
 end
 
 local function CreateSettings(settingsTab)
-	if not (writefile and isfile and readfile and isfolder and makefolder) and not UseStudio then
+	if not (writefile and isfile and readfile and isfolder and makefolder) and not IsStudio then
 		if Topbar["Settings"] then Topbar.Settings.Visible=false end
 		Topbar["Search"].Position=UDim2.new(1,-75,0.5,0)
 		warn("Can't create settings as no file-saving functionality is available.")
@@ -1530,7 +1610,358 @@ local function FadeOutKeyUI(KeyMain)
 	Tween(KeyMain.Hide,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{ImageTransparency=1})
 end
 
+local function SetVisibility(visibility,notify)
+	if Debounce then return end
+	if visibility then
+		Hidden=false
+		Unhide()
+	else
+		Hidden=true
+		Hide(notify)
+	end
+end
+
+function Library:SetVisibility(visibility: boolean)
+	SetVisibility(visibility,false)
+end
+
+function Library:Notify(data)
+	task.spawn(function()
+		if not Notifications then return end
+		local layout=Notifications:FindFirstChildOfClass("UIListLayout")
+		local notification=Notifications.Template:Clone()
+		notification.Name=data.Title or 'No Title Provided'
+		notification.Parent=Notifications
+		notification.LayoutOrder=#Notifications:GetChildren()
+		notification.Visible=false
+		notification.Title.Text=data.Title or "Unknown Title"
+		notification.Description.Text=data.Content or "Unknown Content"
+		local icon=data.Image or data.Icon
+		if icon then
+			local image,rectOffset,rectSize=ResolveIcon(icon)
+			notification.Icon.Image=image
+			if rectOffset then notification.Icon.ImageRectOffset=rectOffset end
+			if rectSize then notification.Icon.ImageRectSize=rectSize end
+		else
+			notification.Icon.Image=""
+		end
+		notification.Title.TextColor3=SelectedTheme.TextColor
+		notification.Description.TextColor3=SelectedTheme.TextColor
+		notification.BackgroundColor3=SelectedTheme.Background
+		notification.UIStroke.Color=SelectedTheme.TextColor
+		notification.Icon.ImageColor3=SelectedTheme.TextColor
+		notification.BackgroundTransparency=1
+		notification.Title.TextTransparency=1
+		notification.Description.TextTransparency=1
+		notification.UIStroke.Transparency=1
+		notification.Shadow.ImageTransparency=1
+		notification.Size=UDim2.new(1,0,0,800)
+		notification.Icon.ImageTransparency=1
+		notification.Icon.BackgroundTransparency=1
+		notification.Visible=true
+		if data.Actions then
+			warn("Rayfield | Not seeing your actions in notifications?")
+			print("Notification Actions are being sunset for now, keep up to date on when they're back in the discord. (sirius.menu/discord)")
+		end
+		local bounds={notification.Title.TextBounds.Y,notification.Description.TextBounds.Y}
+		notification.Size=UDim2.new(1,-60,0,-layout.Padding.Offset)
+		notification.Icon.Size=UDim2.new(0,32,0,32)
+		notification.Icon.Position=UDim2.new(0,20,0.5,0)
+		Tween(notification,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,0,0,math.max(bounds[1]+bounds[2]+31,60))})
+		FastWait(0.15)
+		Tween(notification,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.45})
+		Tween(notification.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0})
+		FastWait(0.05)
+		Tween(notification.Icon,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+		FastWait(0.05)
+		Tween(notification.Description,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=0.35})
+		Tween(notification.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=0.95})
+		Tween(notification.Shadow,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=0.82})
+		local cooldown=math.min(math.max((#notification.Description.Text * 0.1)+2.5,3),10)
+		FastWait(data.Duration or cooldown)
+		notification.Icon.Visible=false
+		Tween(notification,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
+		Tween(notification.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1})
+		Tween(notification.Shadow,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ImageTransparency=1})
+		Tween(notification.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+		Tween(notification.Description,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
+		Tween(notification,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-90,0,0)})
+		FastWait(1)
+		Tween(notification,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-90,0,-layout.Padding.Offset)})
+		notification.Visible=false
+		notification:Destroy()
+	end)
+end
+
 function Library:CreateWindow(WindowInfo)
+	WindowInfo=ToDefaults(WindowInfo,{
+		Name="Rayfield",
+		IntroInfo={Enabled=true},
+		KeyInfo={Enabled=false}
+	})
+
+	-- Interface Management
+	local RayfieldAssetId=CustomAssetId or 134923138597588
+	Rayfield=IsStudio and script.Parent:FindFirstChild("Rayfield") or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
+
+	repeat
+		if Rayfield:FindFirstChild("Build") and Rayfield.Build.Value==InterfaceBuild then
+			CorrectBuild=true
+			break
+		end
+
+		CorrectBuild=false
+
+		if not Warned then
+			Warned=true
+			warn("Rayfield | Build Mismatch")
+			print("Rayfield may encounter issues as you are running an incompatible interface version ("..((Rayfield:FindFirstChild("Build") and Rayfield.Build.Value) or "No Build") ..").\n\nThis version of Rayfield is intended for interface build "..InterfaceBuild..".")
+		end
+
+		local toDestroy
+		toDestroy,Rayfield=Rayfield,IsStudio and script.Parent:FindFirstChild("Rayfield") or game:GetObjects("rbxassetid://"..RayfieldAssetId)[1]
+		if toDestroy and not IsStudio then toDestroy:Destroy() end
+
+		BuildAttempts=BuildAttempts+1
+	until BuildAttempts>=2
+	Rayfield.Enabled=false
+	do
+		local HasCustomAsset=type(getcustomasset)=="function"
+		local HasFilesystem=type(writefile)=="function" and type(makefolder)=="function" and type(isfile)=="function" and type(isfolder)=="function"
+		if HasCustomAsset and HasFilesystem then
+			local ok,err=pcall(function()
+				EnsureFolder(RayfieldFolder)
+				EnsureFolder(AssetPath)
+
+				local function nextMissing()
+					for id,_ in assetFiles do
+						if isfile and not isfile(AssetPath.."/"..tostring(id)..".png") then
+							return id
+						end
+					end
+					return nil
+				end
+
+				if nextMissing() then
+					task.spawn(function()
+						while true do
+							local id=nextMissing()
+							if not id then break end
+							if writefile then writefile(AssetPath.."/"..tostring(id)..".png",RequestSafely({Url=assetFiles[id],Method="GET"}).Body) end
+							FastWait()
+						end
+					end)
+
+					while nextMissing() do
+						FastWait(0.1)
+					end
+				end
+
+				for id,_ in AssetFiles do
+					local success,asset=pcall(getcustomasset,AssetPath.."/"..tostring(id)..".png")
+					if success then
+						CustomAssets[tostring(id)]=asset
+					else
+						warn("Rayfield | Failed to load custom asset: "..tostring(id).."-"..tostring(asset))
+					end
+				end
+			end)
+			if not ok then
+				warn("Rayfield | Failed to load custom assets: "..tostring(err))
+				SecureNotify("asset_load_fail","Rayfield","Failed to load custom assets. UI images may not display correctly.")
+			end
+		else
+			SecureNotify("no_getcustomasset","Rayfield","Your executor does not support getcustomasset. Some UI images may not render correctly.")
+		end
+		Rayfield.Main.Shadow.Image.Image=CustomAssets["5587865193"]
+		Rayfield.Main.Topbar.Hide.Image=IsStudio and "http://www.roblox.com/asset/?id=8497487650" or CustomAssets["10137832201"]
+		Rayfield.Main.Topbar.ChangeSize.Image=CustomAssets["10137941941"]
+		Rayfield.Main.Topbar.Settings.Image=IsStudio and "http://www.roblox.com/asset/?id=8559790237" or CustomAssets["80503127983237"]
+		Rayfield.Main.Topbar.Icon.Image=CustomAssets["78137979054938"]
+		Rayfield.Main.Topbar.Search.Image=IsStudio and "http://www.roblox.com/asset/?id=8497489946" or CustomAssets["IconMagnifyingGlass2"]
+		Rayfield.Main.Topbar.Search.ImageRectOffset=Vector2.new(0,0)
+		Rayfield.Main.Topbar.Search.ImageRectSize=Vector2.new(0,0)
+		Rayfield.Main.Elements.Template.Toggle.Switch.Shadow.Image=CustomAssets["3602733521"]
+		Rayfield.Main.Elements.Template.Slider.Main.Shadow.Image=CustomAssets["3602733521"]
+		Rayfield.Main.Elements.Template.Dropdown.Toggle.Image=CustomAssets["IconChevronTopMedium"]
+		Rayfield.Main.Elements.Template.Dropdown.Toggle.ImageRectOffset=Vector2.new(0,0)
+		Rayfield.Main.Elements.Template.Dropdown.Toggle.ImageRectSize=Vector2.new(0,0)
+		Rayfield.Main.Elements.Template.Label.Icon.Image=CustomAssets["11745872910"]
+		Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.Image=CustomAssets["11413591840"]
+		Rayfield.Main.Elements.Template.ColorPicker.CPBackground.MainCP.MainPoint.Image=CustomAssets["3259050989"]
+		Rayfield.Main.Elements.Template.ColorPicker.ColorSlider.SliderPoint.Image=CustomAssets["3259050989"]
+		Rayfield.Main.TabList.Template.Image.Image=CustomAssets["4483362458"]
+		Rayfield.Main.Search.Search.Image=IsStudio and "http://www.roblox.com/asset/?id=8497489946" or CustomAssets["18458939117"]
+		Rayfield.Main.Search.Shadow.Image=CustomAssets["5587865193"]
+		Rayfield.Notifications.Template.Icon.Image=CustomAssets["77891951053543"]
+		Rayfield.Notifications.Template.Shadow.Image=CustomAssets["3523728077"]
+		Rayfield.Loading.Banner.Image=CustomAssets["111263549366178"]
+	end
+	ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
+	local viewportSizeChanged=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+		ResizeUIScale(Rayfield,workspace.CurrentCamera.ViewportSize)
+	end)
+	ConnectDestroying(Rayfield,function()
+		viewportSizeChanged:Disconnect()
+	end)
+
+	local CoreGui=not IsStudio and GetService("CoreGui")
+	if gethui then
+		Rayfield.Parent=gethui()
+	elseif syn and syn.protect_gui then 
+		syn.protect_gui(Rayfield)
+		Rayfield.Parent=CoreGui
+	elseif not IsStudio then
+		Rayfield.Parent=CoreGui
+	else
+		Rayfield.Parent=Players.LocalPlayer:WaitForChild("PlayerGui")
+	end
+
+	if gethui then
+		for _,interface in ipairs(gethui():GetChildren()) do
+			if interface.Name==WindowInfo.Name and interface~=Rayfield then
+				interface:Destroy()
+			end
+		end
+	elseif not IsStudio then
+		for _,interface in ipairs(CoreGui:GetChildren()) do
+			if interface.Name==Rayfield.Name and interface~=Rayfield then
+				interface:Destroy()
+			end
+		end
+	end
+	if Rayfield.AbsoluteSize.X<BaseSize.X and Rayfield.AbsoluteSize.Y<BaseSize.Y then
+		UseMobileSizing=true
+	end
+	Main=Rayfield:FindFirstChild("Main") or Rayfield:WaitForChild("Main",5)
+	MPrompt=Rayfield:FindFirstChild("Prompt") or Rayfield:WaitForChild("Prompt",5)
+	Notifications=Rayfield:FindFirstChild("Notifications") or Rayfield:WaitForChild("Notifications",5)
+	DragBar=Rayfield:FindFirstChild("Drag") or Rayfield:WaitForChild("Drag",5)
+	Elements=Main:FindFirstChild("Elements") or Main:WaitForChild("Elements",5)
+	LoadingFrame=Main:FindFirstChild("LoadingFrame") or Main:WaitForChild("LoadingFrame",5)
+	Topbar=Main:FindFirstChild("Topbar") or Main:WaitForChild("Topbar",5)
+	TabList=Main:FindFirstChild("TabList") or Main:WaitForChild("TabList",5)
+	if DragBar then
+		DragBarInteract=DragBar:FindFirstChild("Interact") or DragBar:WaitForChild("Interact",5)
+		DragBarCosmetic=DragBar:FindFirstChild("Drag") or DragBar:WaitForChild("Drag",5)
+	end
+	Rayfield.Name=WindowInfo.Name
+	Rayfield.DisplayOrder=100
+	Main.Visible=false
+	LoadingFrame.Version.Text=Release
+	Topbar.ChangeSize.MouseButton1Click:Connect(function()
+		if Debounce then return end
+		if Minimised then
+			Minimised=false
+			Maximise()
+		else
+			Minimised=true
+			Minimise()
+		end
+	end)
+	Main.Search.Input:GetPropertyChangedSignal("Text"):Connect(function()
+		if #Main.Search.Input.Text>0 then
+			if not Elements.UIPageLayout.CurrentPage:FindFirstChild("SearchTitle-fsefsefesfsefesfesfThanks") then 
+				local searchTitle=Elements.Template.SectionTitle:Clone()
+				searchTitle.Parent=Elements.UIPageLayout.CurrentPage
+				searchTitle.Name="SearchTitle-fsefsefesfsefesfesfThanks"
+				searchTitle.LayoutOrder=-100
+				searchTitle.Title.Text="Results from '"..Elements.UIPageLayout.CurrentPage.Name.."'"
+				searchTitle.Visible=true
+			end
+		else
+			local searchTitle=Elements.UIPageLayout.CurrentPage:FindFirstChild("SearchTitle-fsefsefesfsefesfesfThanks")
+			if searchTitle then
+				searchTitle:Destroy()
+			end
+		end
+		for _,element in ipairs(Elements.UIPageLayout.CurrentPage:GetChildren()) do
+			if element.ClassName~="UIListLayout" and element.Name~="Placeholder" and element.Name~="SearchTitle-fsefsefesfsefesfesfThanks" then
+				if element.Name=='SectionTitle' then
+					if #Main.Search.Input.Text==0 then
+						element.Visible=true
+					else
+						element.Visible=false
+					end
+				else
+					if string.lower(element.Name):find(string.lower(Main.Search.Input.Text),1,true) then
+						element.Visible=true
+					else
+						element.Visible=false
+					end
+				end
+			end
+		end
+	end)
+	Main.Search.Input.FocusLost:Connect(function(enterPressed)
+		if #Main.Search.Input.Text==0 and SearchOpen then
+			FastWait(0.12)
+			CloseSearch()
+		end
+	end)
+	Topbar.Search.MouseButton1Click:Connect(function()
+		task.spawn(function()
+			if SearchOpen then
+				CloseSearch()
+			else
+				OpenSearch()
+			end
+		end)
+	end)
+	if Topbar:FindFirstChild("Settings") then
+		Topbar.Settings.MouseButton1Click:Connect(function()
+			task.spawn(function()
+				for _,OtherTabButton in ipairs(TabList:GetChildren()) do
+					if OtherTabButton.Name~="Template" and OtherTabButton.ClassName=="Frame" and OtherTabButton.Name~="Placeholder" then
+						Tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.TabBackground})
+						Tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextColor3=SelectedTheme.TabTextColor})
+						Tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageColor3=SelectedTheme.TabTextColor})
+						Tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
+						Tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
+						Tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
+						Tween(OtherTabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0.5})
+					end
+				end
+
+				Elements.UIPageLayout:JumpTo(Elements['Rayfield Settings'])
+			end)
+		end)
+	end
+	Topbar.Hide.MouseButton1Click:Connect(function()
+		SetVisibility(Hidden,not UseMobileSizing)
+	end)
+	HideHotkeyConnection=UserInputService.InputBegan:Connect(function(input,processed)
+		if (input.KeyCode==Enum.KeyCode[GetSetting("General","rayfieldOpen")]) and not processed then
+			if Debounce then return end
+			if Hidden then
+				Hidden=false
+				Unhide()
+			else
+				Hidden=true
+				Hide()
+			end
+		end
+	end)
+	if MPrompt then
+		MPrompt.Interact.MouseButton1Click:Connect(function()
+			if Debounce then return end
+			if Hidden then
+				Hidden=false
+				Unhide()
+			end
+		end)
+	end
+	for _,TopbarButton in ipairs(Topbar:GetChildren()) do
+		if TopbarButton.ClassName=="ImageButton" and TopbarButton.Name~='Icon' then
+			TopbarButton.MouseEnter:Connect(function()
+				Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
+			end)
+
+			TopbarButton.MouseLeave:Connect(function()
+				Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
+			end)
+		end
+	end
 	local introInfo=WindowInfo.IntroInfo
 	if introInfo==nil or type(introInfo)~="table" then introInfo={Enabled=true} end
 	local introFrame=Rayfield:FindFirstChild("Loading")
@@ -1539,7 +1970,7 @@ function Library:CreateWindow(WindowInfo)
 			if getgenv and not getgenv().rayfieldCached then
 				Rayfield.Enabled=true
 				introFrame.Visible=true
-				task.wait(1.4)
+				FastWait(1.4)
 				introFrame.Visible=false
 			end
 		else
@@ -1548,7 +1979,7 @@ function Library:CreateWindow(WindowInfo)
 		end
 	end
 	if getgenv then getgenv().rayfieldCached=true end
-	if not correctBuild and not WindowInfo.DisableBuildWarnings then
+	if not CorrectBuild and not WindowInfo.NoBuildWarnings then
 		task.delay(3,function() Library:Notify({Title="Build Mismatch",Content='Rayfield may encounter issues as you are running an incompatible interface version ('.. ((Rayfield:FindFirstChild('Build') and Rayfield.Build.Value) or 'No Build') ..').\n\nThis version of Rayfield is intended for interface build '..InterfaceBuild..'.\n\nTry rejoining and then run the script twice.',Image=4335487866,Duration=15})	end)
 	end
 	if WindowInfo.ToggleUIKeybind then -- Can either be a string or an Enum.KeyCode
@@ -1596,10 +2027,10 @@ function Library:CreateWindow(WindowInfo)
 			Topbar.Icon.Image=""
 		end
 	end
-	if dragBar then
-		dragBar.Visible=false
-		dragBarCosmetic.BackgroundTransparency=1
-		dragBar.Visible=true
+	if DragBar then
+		DragBar.Visible=false
+		DragBarCosmetic.BackgroundTransparency=1
+		DragBar.Visible=true
 	end
 	if WindowInfo.Theme then
 		local success1,result=pcall(ChangeTheme,WindowInfo.Theme)
@@ -1630,17 +2061,13 @@ function Library:CreateWindow(WindowInfo)
 		if savingInfo.Enabled then EnsureFolder(ConfigFolder) end
 	end
 	WindowInfo.SavingInfo=savingInfo
-	MakeDraggable(Main,Topbar,false,{dragOffset,dragOffsetMobile})
-	if dragBar then 
-		dragBar.Position=useMobileSizing and UDim2.new(0.5,0,0.5,dragOffsetMobile) or UDim2.new(0.5,0,0.5,dragOffset) 
-		MakeDraggable(Main,dragInteract,true,{dragOffset,dragOffsetMobile}) 
-	end
-	for _,TabButton in ipairs(TabList:GetChildren()) do
-		if TabButton.ClassName=="Frame" and TabButton.Name~="Placeholder" then
-			TabButton.BackgroundTransparency=1
-			TabButton.Title.TextTransparency=1
-			TabButton.Image.ImageTransparency=1
-			TabButton.UIStroke.Transparency=1
+	Library:CreateDraggable({["Version"]=1,["Main"]=Main})
+	for _,tabButton in ipairs(TabList:GetChildren()) do
+		if tabButton.ClassName=="Frame" and tabButton.Name~="Placeholder" then
+			tabButton.BackgroundTransparency=1
+			tabButton.Title.TextTransparency=1
+			tabButton.Image.ImageTransparency=1
+			tabButton.UIStroke.Transparency=1
 		end
 	end
 	local discordInfo=WindowInfo.Discord
@@ -1702,14 +2129,14 @@ function Library:CreateWindow(WindowInfo)
 		if not Pass then
 			local AttemptsRemaining=keyInfo.MaxAttempts or 5
 			Rayfield.Enabled=false
-			local keyUI=UseStudio and script.Parent:FindFirstChild("Key") or game:GetObjects("rbxassetid://11380036235")[1]
+			local keyUI=IsStudio and script.Parent:FindFirstChild("Key") or game:GetObjects("rbxassetid://11380036235")[1]
 			keyUI.Enabled=true
 			if gethui then
 				keyUI.Parent=gethui()
 			elseif syn and syn.protect_gui then 
 				syn.protect_gui(keyUI)
 				keyUI.Parent=CoreGui
-			elseif not UseStudio then
+			elseif not IsStudio then
 				keyUI.Parent=CoreGui
 			end
 			if gethui then
@@ -1719,7 +2146,7 @@ function Library:CreateWindow(WindowInfo)
 						interface.Name="KeyUI-Old"
 					end
 				end
-			elseif not UseStudio then
+			elseif not IsStudio then
 				for _,interface in ipairs(CoreGui:GetChildren()) do
 					if interface.Name==keyUI.Name and interface~=KeyUI then
 						interface.Enabled=false
@@ -1746,18 +2173,18 @@ function Library:CreateWindow(WindowInfo)
 			Tween(keyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 			Tween(keyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,187)})
 			Tween(keyMain.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.5})
-			task.wait(0.05)
+			FastWait(0.05)
 			Tween(keyMain.Title,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0})
 			Tween(keyMain.Subtitle,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
-			task.wait(0.05)
+			FastWait(0.05)
 			Tween(keyMain.KeyNote,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
 			Tween(keyMain.Input,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 			Tween(keyMain.Input.UIStroke,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Transparency=0})
 			Tween(keyMain.Input.InputBox,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{TextTransparency=0})
-			task.wait(0.05)
+			FastWait(0.05)
 			Tween(keyMain.NoteTitle,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0})
 			Tween(keyMain.NoteMessage,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{TextTransparency=0})
-			task.wait(0.15)
+			FastWait(0.15)
 			Tween(keyMain.Hide,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{ImageTransparency=0.3})
 			keyUI.Main.Input.InputBox.FocusLost:Connect(function(enter)
 				if Strs.IsEmpty(keyMain.Input.InputBox.Text) or not enter then return end
@@ -1771,7 +2198,7 @@ function Library:CreateWindow(WindowInfo)
 				end
 				if keyFound then
 					FadeOutKeyUI(keyMain)
-					task.wait(0.51)
+					FastWait(0.51)
 					Pass=true
 					keyMain.Visible=false
 					if keyInfo.SaveKey and writefile then
@@ -1781,7 +2208,7 @@ function Library:CreateWindow(WindowInfo)
 				else
 					if AttemptsRemaining==0 then
 						FadeOutKeyUI(keyMain)
-						task.wait(0.45)
+						FastWait(0.45)
 						Players.LocalPlayer:Kick("No Attempts Remaining")
 						game:Shutdown()
 					end
@@ -1789,16 +2216,16 @@ function Library:CreateWindow(WindowInfo)
 					AttemptsRemaining=AttemptsRemaining-1
 					Tween(keyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,467,0,175)})
 					Tween(keyMain,TweenInfo.new(0.4,Enum.EasingStyle.Elastic),{Position=UDim2.new(0.495,0,0.5,0)})
-					task.wait(0.1)
+					FastWait(0.1)
 					Tween(keyMain,TweenInfo.new(0.4,Enum.EasingStyle.Elastic),{Position=UDim2.new(0.505,0,0.5,0)})
-					task.wait(0.1)
+					FastWait(0.1)
 					Tween(keyMain,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Position=UDim2.new(0.5,0,0.5,0)})
 					Tween(keyMain,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,500,0,187)})
 				end
 			end)
 			keyMain.Hide.MouseButton1Click:Connect(function()
 				FadeOutKeyUI(keyMain)
-				task.wait(0.51)
+				FastWait(0.51)
 				Pass=true
 				Library:Destroy()
 				keyUI:Destroy()
@@ -1806,22 +2233,22 @@ function Library:CreateWindow(WindowInfo)
 		else
 			Pass=true
 		end
-		repeat task.wait() until Pass
-		task.wait(0.2)
+		repeat FastWait() until Pass
+		FastWait(0.2)
 		-- Prevents animation from trying to play if the button's callback called Library:Destroy()
 		if rayfieldDestroyed then return end
 	end
 	Notifications.Template.Visible=false
 	Notifications.Visible=true
 	Rayfield.Enabled=true
-	task.wait(0.5)
+	FastWait(0.5)
 	Tween(Main,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 	Tween(Main.Shadow.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
-	task.wait(0.1)
+	FastWait(0.1)
 	Tween(LoadingFrame.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
-	task.wait(0.05)
+	FastWait(0.05)
 	Tween(LoadingFrame.Subtitle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
-	task.wait(0.05)
+	FastWait(0.05)
 	Tween(LoadingFrame.Version,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
 	Elements.Template.LayoutOrder=100000
 	Elements.Template.Visible=false
@@ -1836,10 +2263,10 @@ function Library:CreateWindow(WindowInfo)
 		local Tab={Order=0}
 		local TabButton=TabList.Template:Clone()
 		TabButton.Name=name
-		TabButton.Title.Text=name
 		TabButton.Parent=TabList
+		TabButton.Title.Text=name
 		TabButton.Title.TextWrapped=false
-		TabButton.Size=UDim2.new(0,TabButton.Title.TextBounds.X+30,0,30)
+		TabButton.Size=UDim2.fromOffset(TabButton.Title.TextBounds.X+30,0,30)
 		if image and image~=0 then
 			local img,rectOffset,rectSize=ResolveIcon(image)
 			TabButton.Image.Image=img
@@ -1856,10 +2283,12 @@ function Library:CreateWindow(WindowInfo)
 		TabButton.Image.ImageTransparency=1
 		TabButton.UIStroke.Transparency=1
 		TabButton.Visible=not Ext or false
+		Tab.Interact=TabButton
 		local TabPage=Elements.Template:Clone()
 		TabPage.Name=name
 		TabPage.Visible=true
 		TabPage.LayoutOrder=Ext and 10000 or #Elements:GetChildren()
+		Tab.Page=TabPage
 		for _,TemplateElement in ipairs(TabPage:GetChildren()) do
 			if TemplateElement.ClassName=="Frame" and TemplateElement.Name~="Placeholder" then
 				TemplateElement:Destroy()
@@ -1882,7 +2311,7 @@ function Library:CreateWindow(WindowInfo)
 			TabButton.Title.TextColor3=SelectedTheme.TabTextColor
 		end
 		-- Animate
-		task.wait(0.1)
+		FastWait(0.1)
 		if FirstTab or Ext then
 			TabButton.BackgroundColor3=SelectedTheme.TabBackground
 			TabButton.Image.ImageColor3=SelectedTheme.TabTextColor
@@ -1928,58 +2357,54 @@ function Library:CreateWindow(WindowInfo)
 		local DefaultData={
 			["Toggle"]={Type="Toggle",Name="Toggle Here",Value=false,Ext=false,Callback=function(Value) end},
 			["Button"]={Type="Button",Name="Button Here",Callback=function() end,Set=function(Value) end},
-			["Selector"]={Type="Selector",Name="Selector Here",Value="Option 1",Options={"Option 1","Option 2","Option 3","Option 4"},NoCap=true,Callback=function(Value) end,Set=function(Value,Index) end,Add=function(Value) end,Remove=function(Value) end},
+			["Selector"]={Type="Selector",Name="Selector Here",Value="Option 1",Options={},NoCap=true,Callback=function(Value) end,Set=function(Value,Index) end,Add=function(Value) end,Remove=function(Value) end},
 			["Expand"]={Type="Expand",Name="Events",Active=false,List={},Callback=function() end,Add=function() end,Remove=function() end},
 			["ColorPicker"]={Type="ColorPicker",Name="Color Picker Here",Color=Color3.fromRGB(163,162,165),Ext=false,Callback=function(Color) end},
 			["Section"]={Type="Section",Name="Section Here",Set=function(Value) end},
 			["Label"]={Type="Label",Text="Label Here",Icon=nil,Color=nil,IgnoreTheme=false},
 			["Paragraph"]={Type="Paragraph",Title="Paragraph Here",["Content"]="Long Text Here",Ext=false,Set=function(Value) end},
 			["Input"]={Type="Input",Name="Input Here",PlaceholderText="Type here",Value="",Ext=false,Callback=function(InputText) end},
-			["Dropdown"]={Type="Dropdown",Name="Dropdown Here",Options={"Option 1","Option 2","Option 3","Option 4","Option 5","Option 6"},MultipleOptions=false,CurrentOption={},Ext=false,Callback=function(Value) end},
+			["Dropdown"]={Type="Dropdown",Name="Dropdown Here",Options={},MultipleOptions=false,CurrentOption={},Ext=false,Callback=function(Value) end},
 			["Slider"]={Type="Slider",Name="Slider Here",["Version"]=1,Increment=1,Value=1,Range={1,10},Ext=false,Callback=function(Value) end},
 			["Keybind"]={Type="Keybind",Name="Keybind Here",Keybind="E",Value="E",Ext=false,Callback=function(Value) end}
 		}
-		local function PackTab(options,defaults,disabled)
-			if not disabled then
-				options=type(options)=="table" and options or {}
-			end
-			for k,v in pairs(defaults) do 
-				local x=options[k]
-				if x==nil then 
-					options[k]=v 
-				elseif v~=nil and typeof(x)~=typeof(v) then
-					options[k]=v
-				end 
-			end
-			return options
-		end
+		--local function ToDefaults(options,defaults,disabled)
+		--	if not disabled then
+		--		options=type(options)=="table" and options or {}
+		--	end
+		--	for k,v in pairs(defaults) do 
+		--		local x=options[k]
+		--		if x==nil then 
+		--			options[k]=v 
+		--		elseif v~=nil and typeof(x)~=typeof(v) then
+		--			options[k]=v
+		--		end 
+		--	end
+		--	return options
+		--end
 		-- Button
 		function Tab:CreateButton(ButtonInfo)
-			ButtonInfo=PackTab(ButtonInfo,DefaultData.Button)
+			warn(ButtonInfo.Name)
+			ButtonInfo=ToDefaults(ButtonInfo,DefaultData.Button)
 			local Button=Elements.Template.Button:Clone()
-			local ButtonTitle=Button:FindFirstChild("Title")
-			local ButtonIcon=Button:WaitForChild("Icon",5)
-			local ButtonElementIndicator=Button:WaitForChild("ElementIndicator",5)
 			ButtonInfo.Template=Button
 			Tab.Order+=1
-			ButtonTitle.TextColor3=SelectedTheme.TextColor
-            task.delay(1,function()
-              ButtonElementIndicator.Visible=false
-			  ButtonIcon.Visible=true
-            end)
+			Button.Title.TextColor3=SelectedTheme.TextColor
+			Button.ElementIndicator.Visible=false
+			Button.Icon.Visible=true
 			Button.LayoutOrder=Tab.Order
 			Button.Name=ButtonInfo.Name
-			ButtonTitle.Text=ButtonInfo.Name
+			Button.Title.Text=ButtonInfo.Name
 			Button.Visible=true
 			Button.Parent=TabPage
 			Button.BackgroundTransparency=1
 			Button.UIStroke.Transparency=1
-			ButtonTitle.TextTransparency=1
+			Button.Title.TextTransparency=1
 			Tween(Button,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 			Tween(Button.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0})
 			Tween(Button.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})	
 			function ButtonInfo:Set(NewButton)
-				ButtonTitle.Text=NewButton
+				Button.Title.Text=NewButton
 				Button.Name=NewButton
 			end
 			Button.Interact.MouseButton1Click:Connect(function()
@@ -1991,19 +2416,19 @@ function Library:CreateWindow(WindowInfo)
 					Button.Title.Text="Callback Error"
 					print("Rayfield | "..ButtonInfo.Name.." Callback Error " ..tostring(Response))
 					warn('Check docs.sirius.menu for help with Rayfield specific development.')
-					task.wait(0.5)
+					FastWait(0.5)
 					Button.Title.Text=ButtonInfo.Name
 					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
 					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				else
 					if not ButtonInfo.Ext then
-						SaveConfig(ButtonInfo.Name..'\n')
+						SaveConfiguration(ButtonInfo.Name..'\n')
 					end
 					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=1})
 					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					task.wait(0.2)
+					FastWait(0.2)
 					Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 					Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
 					Tween(Button.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
@@ -2017,16 +2442,16 @@ function Library:CreateWindow(WindowInfo)
 				Tween(Button,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 				Tween(Button.ElementIndicator,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0.9})
 			end)
-			if ButtonIcon then ButtonIcon.ImageColor3=SelectedTheme.TextColor end
+			Button.Icon.ImageColor3=SelectedTheme.TextColor
 			Button:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
-				ButtonTitle.TextColor3=SelectedTheme.TextColor
-				if ButtonIcon then ButtonIcon.ImageColor3=SelectedTheme.TextColor end
+				Button.Title.TextColor3=SelectedTheme.TextColor
+				Button.Icon.ImageColor3=SelectedTheme.TextColor
 			end)
 			return ButtonInfo
 		end
 		-- Selector
 		function Tab:CreateSelector(SelectorInfo)
-			SelectorInfo=PackTab(SelectorInfo,DefaultData.Selector)
+			SelectorInfo=ToDefaults(SelectorInfo,DefaultData.Selector)
 			if not Elements:FindFirstChild("Template") or not Elements.Template:FindFirstChild("Selector") then warn("Rayfield | Selector not found.") return SelectorInfo end
 			local Selector=Elements.Template.Selector:Clone()
 			SelectorInfo.Template=Selector
@@ -2046,28 +2471,38 @@ function Library:CreateWindow(WindowInfo)
 			local NextButton=Selector:FindFirstChild("Next")
 			local Information=Selector:FindFirstChild("Information")
 			local Index=1
-			if type(SelectorInfo.Options)~="table" then
+			if type(SelectorInfo.Options)~="table" or #SelectorInfo.Options<=0 then
 				SelectorInfo.Options={"Option 1","Option 2"}
 			end
 			SelectorInfo.Index=type(SelectorInfo.Index)=="number" and SelectorInfo.Index or 0
 			Information.Text=tostring(SelectorInfo.Value or SelectorInfo.Options[1])
-			function SelectorInfo:Set(value,index)
-				SelectorInfo.Value=value
-				Information.Text=tostring(value)
-				if index then SelectorInfo.Index=index end
-				local Success,Response=pcall(function()
-					if SelectorInfo.Callback then SelectorInfo.Callback(value,index) end
+			local function ConnectHover(frame,object)
+				frame.MouseEnter:Connect(function()
+					Tween(object,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.4})
 				end)
-				if not Success then
-					Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
-					Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					SelectorInfo.Title.Text="Callback Error"
-					print("Rayfield | "..SelectorInfo.Name.." Callback Error " ..tostring(Response))
-					warn('Check docs.sirius.menu for help with Rayfield specific development.')
-					task.wait(0.5)
-					SelectorInfo.Title.Text=SelectorInfo.Name
-					Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
-					Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+				frame.MouseLeave:Connect(function()
+					Tween(object,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
+				end)
+			end
+			function SelectorInfo:Set(value,index)
+				if SelectorInfo.Value~=value then
+					SelectorInfo.Value=value
+					Information.Text=tostring(value)
+					if index then SelectorInfo.Index=index end
+					local Success,Response=pcall(function()
+						if SelectorInfo.Callback then SelectorInfo.Callback(value,index) end
+					end)
+					if not Success then
+						Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=Color3.fromRGB(85,0,0)})
+						Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
+						SelectorInfo.Title.Text="Callback Error"
+						print("Rayfield | "..SelectorInfo.Name.." Callback Error " ..tostring(Response))
+						warn('Check docs.sirius.menu for help with Rayfield specific development.')
+						FastWait(0.5)
+						SelectorInfo.Title.Text=SelectorInfo.Name
+						Tween(Selector,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
+						Tween(Selector.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
+					end
 				end
 			end
 			function SelectorInfo:Add(value)
@@ -2083,6 +2518,8 @@ function Library:CreateWindow(WindowInfo)
 					if SelectorInfo.Removing then CallSafely(SelectorInfo.Removing,value) end
 				end
 			end
+			ConnectHover(PreviousButton,PreviousButton.Title)
+			ConnectHover(NextButton,NextButton.Title)
 			PreviousButton.Activated:Connect(function()
 				local index,optionList=SelectorInfo.Index,SelectorInfo.Options
 				if SelectorInfo.NoCap then
@@ -2113,7 +2550,7 @@ function Library:CreateWindow(WindowInfo)
 		end
 		-- Expand
 		function Tab:CreateExpand(ExpandInfo)
-			ExpandInfo=PackTab(ExpandInfo,DefaultData.Expand)
+			ExpandInfo=ToDefaults(ExpandInfo,DefaultData.Expand)
 			if Elements.Template:FindFirstChild("Expand") then 
 				local List={}
 				local Expand=Elements.Template.Expand:Clone()
@@ -2165,7 +2602,7 @@ function Library:CreateWindow(WindowInfo)
 		end
 		-- ColorPicker
 		function Tab:CreateColorPicker(ColorPickerInfo) -- by Throit
-			ColorPickerInfo=PackTab(ColorPickerInfo,DefaultData.ColorPicker)
+			ColorPickerInfo=ToDefaults(ColorPickerInfo,DefaultData.ColorPicker)
 			local ColorPicker=Elements.Template.ColorPicker:Clone()
 			local Background=ColorPicker.CPBackground
 			local Display=Background.Display
@@ -2198,14 +2635,14 @@ function Library:CreateWindow(WindowInfo)
 				task.spawn(function()
 					Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 					Tween(ColorPicker.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=1})
-					task.wait(0.2)
+					FastWait(0.2)
 					Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 					Tween(ColorPicker.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end)
 				if not opened then
 					opened=true 
 					Tween(Background,TweenInfo.new(0.45,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,18,0,15)})
-					task.wait(0.1)
+					FastWait(0.1)
 					Tween(ColorPicker,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,120)})
 					Tween(Background,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Size=UDim2.new(0,173,0,86)})
 					Tween(Display,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=1})
@@ -2367,7 +2804,7 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end
 			end)
-			ColorPicker.Destroying:Connect(function()
+			ConnectDestroying(ColorPicker,function()
 				if colorPickerLooped then colorPickerLooped:Disconnect() end
 				if colorPickerInputEnded then colorPickerInputEnded:Disconnect() end
 			end)
@@ -2390,7 +2827,7 @@ function Library:CreateWindow(WindowInfo)
 		local SectionDone=false
 		function Tab:CreateSection(SectionName)
 			local SectionInfo={Name=SectionName}
-			SectionInfo=PackTab(SectionInfo,DefaultData.Section)
+			SectionInfo=ToDefaults(SectionInfo,DefaultData.Section)
 			if SectionDone then
 				local SectionSpace=Elements.Template.SectionSpacing:Clone()
 				Tab.Order+=1
@@ -2433,7 +2870,7 @@ function Library:CreateWindow(WindowInfo)
 		-- Label
 		function Tab:CreateLabel(Text,Icon,Color,IgnoreTheme)
 			local LabelInfo={Text=Text,Icon=Icon,Color=Color,IgnoreTheme=IgnoreTheme}
-			LabelInfo=PackTab(LabelInfo,DefaultData.Label)
+			LabelInfo=ToDefaults(LabelInfo,DefaultData.Label)
 			local Label=Elements.Template.Label:Clone()
 			LabelInfo.Template=Label
 			Tab.Order+=1
@@ -2495,7 +2932,7 @@ function Library:CreateWindow(WindowInfo)
 		end
 		-- Paragraph
 		function Tab:CreateParagraph(ParagraphInfo)
-			ParagraphInfo=PackTab(ParagraphInfo,DefaultData.Paragraph)
+			ParagraphInfo=ToDefaults(ParagraphInfo,DefaultData.Paragraph)
 			local Paragraph=Elements.Template.Paragraph:Clone()
 			ParagraphInfo.Template=Paragraph
 			Tab.Order+=1
@@ -2528,7 +2965,7 @@ function Library:CreateWindow(WindowInfo)
 		function Tab:CreateInput(InputInfo)
 			InputInfo=type(InputInfo)=="table" and InputInfo or {}
 			if InputInfo.CurrentValue then InputInfo.Value=InputInfo.CurrentValue InputInfo.CurrentValue=nil end
-			InputInfo=PackTab(InputInfo,DefaultData.Input,true)
+			InputInfo=ToDefaults(InputInfo,DefaultData.Input,true)
 			local Input=Elements.Template.Input:Clone()
 			InputInfo.Template=Input
 			Tab.Order+=1
@@ -2557,13 +2994,13 @@ function Library:CreateWindow(WindowInfo)
 					Input.Title.Text="Callback Error"
 					print("Rayfield | "..InputInfo.Name.." Callback Error " ..tostring(Response))
 					warn("Check docs.sirius.menu for help with Rayfield specific development.")
-					task.wait(0.5)
+					FastWait(0.5)
 					Input.Title.Text=InputInfo.Name
 					Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 					Tween(Input.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
 				if InputInfo.RemoveTextAfterFocusLost then Input.InputFrame.InputBox.Text="" end
-				if not InputInfo.Ext then SaveConfig() end
+				if not InputInfo.Ext then SaveConfiguration() end
 			end)
 			Input.MouseEnter:Connect(function()
 				Tween(Input,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
@@ -2578,14 +3015,14 @@ function Library:CreateWindow(WindowInfo)
 				if InputInfo.Value~=text then
 					InputInfo.Value=text
 					Input.InputFrame.InputBox.Text=text
-					if not InputInfo.Ext then SaveConfig() end
+					if not InputInfo.Ext then SaveConfiguration() end
 				end
 			end
 			function InputInfo:Set(text)
 				Input.InputFrame.InputBox.Text=text
 				InputInfo.Value=text
 				CallSafely(InputInfo.Callback,text)
-				if not InputInfo.Ext then SaveConfig() end
+				if not InputInfo.Ext then SaveConfiguration() end
 			end
 			if savingInfo and savingInfo.Enabled and InputInfo.Flag then
 				Library.Flags[InputInfo.Flag]=InputInfo
@@ -2598,7 +3035,7 @@ function Library:CreateWindow(WindowInfo)
 		end
 		-- Dropdown
 		function Tab:CreateDropdown(DropdownInfo)
-			DropdownInfo=PackTab(DropdownInfo,DefaultData.Dropdown)
+			DropdownInfo=ToDefaults(DropdownInfo,DefaultData.Dropdown)
 			local Dropdown=Elements.Template.Dropdown:Clone()
 			local InputBox=Dropdown:FindFirstChild("InputBox")
 			if InputBox then
@@ -2613,6 +3050,9 @@ function Library:CreateWindow(WindowInfo)
 			Dropdown.Visible=true
 			Dropdown.Parent=TabPage
 			Dropdown.List.Visible=false
+			if type(DropdownInfo.Options)~="table" or #DropdownInfo.Options<=0 then
+				DropdownInfo.Options={"Option 1","Option 2"}
+			end
 			if DropdownInfo.Option then
 				if type(DropdownInfo.Option)=="string" then
 					DropdownInfo.Option={DropdownInfo.Option}
@@ -2688,7 +3128,7 @@ function Library:CreateWindow(WindowInfo)
 			Dropdown.Interact.MouseButton1Click:Connect(function()
 				Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackgroundHover})
 				Tween(Dropdown.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=1})
-				task.wait(0.1)
+				FastWait(0.1)
 				Tween(Dropdown,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 				Tween(Dropdown.UIStroke,TweenInfo.new(0.4,Enum.EasingStyle.Exponential),{Transparency=0})
 				if Dropdown.List.Visible then
@@ -2705,7 +3145,7 @@ function Library:CreateWindow(WindowInfo)
 					end
 					Tween(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=1})
 					Tween(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=180})	
-					task.wait(0.35)
+					FastWait(0.35)
 					Dropdown.List.Visible=false
 					Debounce=false
 				else
@@ -2787,14 +3227,14 @@ function Library:CreateWindow(WindowInfo)
 							Dropdown.Title.Text="Callback Error"
 							print("Rayfield | "..DropdownInfo.Name.." Callback Error " ..tostring(Response))
 							warn("Check docs.sirius.menu for help with Rayfield specific development.")
-							task.wait(0.5)
+							FastWait(0.5)
 							Dropdown.Title.Text=DropdownInfo.Name
 							Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 							Tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 						end
 						for _,droption in ipairs(Dropdown.List:GetChildren()) do if droption.ClassName=="Frame" and droption.Name~="Placeholder" and not table.find(DropdownInfo.Option,droption.Name) then Tween(droption,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.DropdownUnselected}) end end
 						if not DropdownInfo.MultipleOptions then
-							task.wait(0.1)
+							FastWait(0.1)
 							SetInputVisible(true)
 							Tween(Dropdown,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,-10,0,45)})
 							for _,droption in ipairs(Dropdown.List:GetChildren()) do
@@ -2807,11 +3247,11 @@ function Library:CreateWindow(WindowInfo)
 							end
 							Tween(Dropdown.List,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{ScrollBarImageTransparency=1})
 							Tween(Dropdown.Toggle,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Rotation=180})	
-							task.wait(0.35)
+							FastWait(0.35)
 							Dropdown.List.Visible=false
 						end
 						Debounce=false
-						if not DropdownInfo.Ext then SaveConfig() end
+						if not DropdownInfo.Ext then SaveConfiguration() end
 					end)
 					Rayfield.Main:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
 						DropdownOption.UIStroke.Color=SelectedTheme.ElementStroke
@@ -2846,7 +3286,7 @@ function Library:CreateWindow(WindowInfo)
 					Dropdown.Title.Text="Callback Error"
 					print("Rayfield | "..DropdownInfo.Name.." Callback Error " ..tostring(Response))
 					warn("Check docs.sirius.menu for help with Rayfield specific development.")
-					task.wait(0.5)
+					FastWait(0.5)
 					Dropdown.Title.Text=DropdownInfo.Name
 					Tween(Dropdown,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 					Tween(Dropdown.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
@@ -2898,7 +3338,7 @@ function Library:CreateWindow(WindowInfo)
 		function Tab:CreateKeybind(KeybindInfo)
 			KeybindInfo=type(KeybindInfo)=="table" and KeybindInfo or {}
 			if KeybindInfo.CurrentKeybind then KeybindInfo.Keybind=KeybindInfo.CurrentKeybind KeybindInfo.CurrentKeybind=nil end
-			KeybindInfo=PackTab(KeybindInfo,DefaultData.Keybind,true)
+			KeybindInfo=ToDefaults(KeybindInfo,DefaultData.Keybind,true)
 			local CheckingForKey=false
 			local Keybind=Elements.Template.Keybind:Clone()
 			KeybindInfo.Template=Keybind
@@ -2919,14 +3359,14 @@ function Library:CreateWindow(WindowInfo)
 			Keybind.KeybindFrame.KeybindBox.Text=KeybindInfo.Keybind
 			Keybind.KeybindFrame.Size=UDim2.new(0,Keybind.KeybindFrame.KeybindBox.TextBounds.X+24,0,30)
 			Keybind.KeybindFrame.KeybindBox.Focused:Connect(function()
-				CheckingForKey=true Keybind.KeybindFrame.KeybindBox.Text=""
+				CheckingForKey=true Keybind.KeybindFrame.KeybindBox.Text="..."
 			end)
 			Keybind.KeybindFrame.KeybindBox.FocusLost:Connect(function()
 				CheckingForKey=false
 				local inputText=Keybind.KeybindFrame.KeybindBox.Text
-				if inputText==nil or inputText=="" then
+				if Strs.IsEmpty(inputText) or inputText=="..." then
 					Keybind.KeybindFrame.KeybindBox.Text=KeybindInfo.Keybind
-					if not KeybindInfo.Ext then SaveConfig() end
+					if not KeybindInfo.Ext then SaveConfiguration() end
 				end
 			end)
 			Keybind.MouseEnter:Connect(function()
@@ -2944,7 +3384,7 @@ function Library:CreateWindow(WindowInfo)
 						KeybindInfo.Keybind=tostring(NewKeyNoEnum)
 						KeybindInfo.Value=tostring(NewKeyNoEnum)
 						Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
-						if not KeybindInfo.Ext then SaveConfig() end
+						if not KeybindInfo.Ext then SaveConfiguration() end
 						if KeybindInfo.CallOnChange then KeybindInfo.Callback(tostring(NewKeyNoEnum)) end
 					end
 				elseif not KeybindInfo.CallOnChange and KeybindInfo.Keybind~=nil and (input.KeyCode==Enum.KeyCode[KeybindInfo.Keybind] and not processed) then -- Test
@@ -2964,13 +3404,13 @@ function Library:CreateWindow(WindowInfo)
 							Keybind.Title.Text="Callback Error"
 							print("Rayfield | "..KeybindInfo.Name.." Callback Error " ..tostring(Response))
 							warn('Check docs.sirius.menu for help with Rayfield specific development.')
-							task.wait(0.5)
+							FastWait(0.5)
 							Keybind.Title.Text=KeybindInfo.Name
 							Tween(Keybind,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 							Tween(Keybind.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 						end
 					else
-						task.wait(0.25)
+						FastWait(0.25)
 						if Held then
 							local Loop
 							Loop=RunService.Stepped:Connect(function()
@@ -2985,7 +3425,7 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end
 			end)
-			table.insert(keybindConnections,keybindInputBegan)
+			table.insert(Connections,keybindInputBegan)
 			Keybind.KeybindFrame.KeybindBox:GetPropertyChangedSignal("Text"):Connect(function()
 				Tween(Keybind.KeybindFrame,TweenInfo.new(0.55,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=UDim2.new(0,Keybind.KeybindFrame.KeybindBox.TextBounds.X+24,0,30)})
 			end)
@@ -2996,7 +3436,7 @@ function Library:CreateWindow(WindowInfo)
 				if KeybindInfo.CurrentKeybind then KeybindInfo.Keybind=KeybindInfo.CurrentKeybind KeybindInfo.CurrentKeybind=nil end
 				if KeybindInfo.Value then KeybindInfo.Keybind=KeybindInfo.Value KeybindInfo.Value=nil end
 				Keybind.KeybindFrame.KeybindBox:ReleaseFocus()
-				if not KeybindInfo.Ext then SaveConfig() end
+				if not KeybindInfo.Ext then SaveConfiguration() end
 				if KeybindInfo.CallOnChange then CallSafely(KeybindInfo.Callback,tostring(NewKeybind)) end
 			end
 			if savingInfo and savingInfo.Enabled and KeybindInfo.Flag then
@@ -3010,7 +3450,7 @@ function Library:CreateWindow(WindowInfo)
 		end
 		-- Toggle
 		function Tab:CreateToggle(ToggleInfo)
-			ToggleInfo=PackTab(ToggleInfo,DefaultData.Toggle)
+			ToggleInfo=ToDefaults(ToggleInfo,DefaultData.Toggle)
 			local Toggle=Elements.Template.Toggle:Clone()
 			ToggleInfo.Template=Toggle
 			Tab.Order+=1
@@ -3078,12 +3518,12 @@ function Library:CreateWindow(WindowInfo)
 					Toggle.Title.Text="Callback Error"
 					print("Rayfield | "..ToggleInfo.Name.." Callback Error " ..tostring(Response))
 					warn("Check docs.sirius.menu for help with Rayfield specific development.")
-					task.wait(0.5)
+					FastWait(0.5)
 					Toggle.Title.Text=ToggleInfo.Name
 					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
-				if not ToggleInfo.Ext then SaveConfig() end
+				if not ToggleInfo.Ext then SaveConfiguration() end
 			end)
 			function ToggleInfo:Replace(NewValue)
 				if NewValue then NewValue=true else NewValue=false end
@@ -3112,7 +3552,7 @@ function Library:CreateWindow(WindowInfo)
 						Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 						Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})	
 					end
-					if not ToggleInfo.Ext then SaveConfig() end
+					if not ToggleInfo.Ext then SaveConfiguration() end
 				end
 			end
 			function ToggleInfo:Set(NewValue)
@@ -3148,12 +3588,12 @@ function Library:CreateWindow(WindowInfo)
 					Toggle.Title.Text="Callback Error"
 					print("Rayfield | "..ToggleInfo.Name.." Callback Error " ..tostring(Response))
 					warn('Check docs.sirius.menu for help with Rayfield specific development.')
-					task.wait(0.5)
+					FastWait(0.5)
 					Toggle.Title.Text=ToggleInfo.Name
 					Tween(Toggle,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 					Tween(Toggle.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 				end
-				if not ToggleInfo.Ext then SaveConfig() end
+				if not ToggleInfo.Ext then SaveConfiguration() end
 			end
 			if savingInfo and savingInfo.Enabled and ToggleInfo.Flag then
 				Library.Flags[ToggleInfo.Flag]=ToggleInfo
@@ -3179,7 +3619,7 @@ function Library:CreateWindow(WindowInfo)
 		function Tab:CreateSlider(SliderInfo) -- V1 by Rayfield, V2, by Paazlis
 			SliderInfo=type(SliderInfo)=="table" and SliderInfo or {}
 			if SliderInfo.CurrentValue then SliderInfo.Value=SliderInfo.CurrentValue SliderInfo.CurrentValue=nil end
-			SliderInfo=PackTab(SliderInfo,DefaultData.Slider,true)
+			SliderInfo=ToDefaults(SliderInfo,DefaultData.Slider,true)
 			local SLDragging,Slider,total=false,nil,10
 			local ApplyPercent=function(value)
 				local percent,multi=SliderInfo.Percent,1
@@ -3208,6 +3648,14 @@ function Library:CreateWindow(WindowInfo)
 				local Bars,List={},{}
 				SliderTextBox.Text=""
 				SliderIndicator.Bar.Visible=false
+				local ConnectHover=function(frame,object)
+					frame.MouseEnter:Connect(function()
+						Tween(object,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.4})
+					end)
+					frame.MouseLeave:Connect(function()
+						Tween(object,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0})
+					end)
+				end
 				local ApplyTheme=function()
 					local textColor=SelectedTheme.TextColor
 					SliderPlus.TextColor3=textColor
@@ -3227,10 +3675,15 @@ function Library:CreateWindow(WindowInfo)
 						bar.Visible=true
 						bar.Parent=SliderIndicator
 						local nextValue=0
-						if SliderInfo.Reverse then
-							nextValue=min-(max-min)*(i/total)
+						if i~=1 then
+							i=i-1
+							if SliderInfo.Reverse then
+								nextValue=min-(max-min)*(i/total)
+							else
+								nextValue=min+(max-min)*(i/total)
+							end
 						else
-							nextValue=min+(max-min)*(i/total)
+							nextValue=SliderInfo.Value
 						end
 						if not SliderInfo.NoCap then
 							nextValue=math.clamp(nextValue,min,max)
@@ -3252,6 +3705,8 @@ function Library:CreateWindow(WindowInfo)
 					if not trying then return 1,List[1] end
 					return newIndex,newValue
 				end
+				ConnectHover(SliderPlus,SliderPlus)
+				ConnectHover(SliderMinus,SliderMinus)
 				UpdateBar()
 				local ThisIndex,ThisValue=GetIndex(SliderInfo.Value)
 				SliderInfo.Index=ThisIndex
@@ -3264,7 +3719,7 @@ function Library:CreateWindow(WindowInfo)
 						SLDragging=false
 					end
 				end)
-				table.insert(keybindConnections,sliderInputEnded)
+				table.insert(Connections,sliderInputEnded)
 				function SliderInfo:Set(value,index)
 					if SliderInfo.Index~=index then
 						SliderInfo.Index=index
@@ -3274,6 +3729,35 @@ function Library:CreateWindow(WindowInfo)
 						ApplyTextLabel(Slider.TextBox,nextValue)
 						CallSafely(SliderInfo.Callback,nextValue)
 					end
+				end
+				function SliderInfo:Refresh()
+					local NewValue=SliderInfo.Value
+					if SliderInfo.Percent then
+						ApplyPercent(NewValue)
+					else
+						if type(SliderInfo.Range)~="table" then SliderInfo.Range={10,100} end
+						for i=1,2 do if SliderInfo.Range[i]==nil then if i==1 then SliderInfo.Range[1]=10 else SliderInfo.Range[2]=100 end end end
+					end
+					local min,max=SliderInfo.Range[1],SliderInfo.Range[2]
+					for i,v in ipairs(List) do
+						local nextValue=0
+						if i~=1 then
+							i=i-1
+							if SliderInfo.Reverse then
+								nextValue=min-(max-min)*(i/total)
+							else
+								nextValue=min+(max-min)*(i/total)
+							end
+						else
+							nextValue=NewValue
+						end
+						if not SliderInfo.NoCap then
+							nextValue=math.clamp(nextValue,min,max)
+						end
+						List[i]=nextValue
+					end
+					UpdateMinusOrPlus()
+					ApplyTextLabel(Slider.TextBox,NewValue)
 				end
 				for i,v in ipairs(Bars) do
 					v.MouseButton1Down:Connect(function(input)
@@ -3422,13 +3906,13 @@ function Library:CreateWindow(WindowInfo)
 									Slider.Title.Text="Callback Error"
 									print("Rayfield | "..SliderInfo.Name.." Callback Error " ..tostring(Response))
 									warn("Check docs.sirius.menu for help with Rayfield specific development.")
-									task.wait(0.5)
+									FastWait(0.5)
 									Slider.Title.Text=SliderInfo.Name
 									Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 									Tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 								end
 								if not SliderInfo.Ext then
-									SaveConfig()
+									SaveConfiguration()
 								end
 							end
 						else
@@ -3448,14 +3932,14 @@ function Library:CreateWindow(WindowInfo)
 						Slider.Title.Text="Callback Error"
 						print("Rayfield | "..SliderInfo.Name.." Callback Error " ..tostring(Response))
 						warn('Check docs.sirius.menu for help with Rayfield specific development.')
-						task.wait(0.5)
+						FastWait(0.5)
 						Slider.Title.Text=SliderInfo.Name
 						Tween(Slider,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 						Tween(Slider.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
 					end
 					SliderInfo.Value=NewValue
 					if not SliderInfo.Ext then
-						SaveConfig()
+						SaveConfiguration()
 					end
 				end
 				if savingInfo and savingInfo.Enabled and SliderInfo.Flag then
@@ -3503,7 +3987,7 @@ function Library:CreateWindow(WindowInfo)
 						Select.Title.Text="Callback Error"
 						print("Rayfield | "..SelectInfo.Name.." Callback Error " ..tostring(Response))
 						warn("Check docs.sirius.menu for help with Rayfield specific development.")
-						task.wait(0.5)
+						FastWait(0.5)
 						Select.Title.Text=SelectInfo.Name
 						Tween(Select,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.ElementBackground})
 						Tween(Select.UIStroke,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{Transparency=0})
@@ -3884,7 +4368,7 @@ function Library:CreateWindow(WindowInfo)
 				SetPlayerFrame(ThisPlayer.UserId)
 				PlayerPicker:GetPropertyChangedSignal("BackgroundColor3"):Connect(ApplyTheme)
 				local cleanObservePlayer=ObservePlayer(function(player)
-					task.wait(1)
+					FastWait(1)
 					if player and player.Parent then
 						local index=#PlayerCache+1
 						PlayerCache[index]={["Index"]=index,["Value"]=player,["UserId"]=player.UserId,["Name"]=player.Name,["DisplayName"]=player.DisplayName,["Age"]=player.AccountAge}
@@ -3901,7 +4385,7 @@ function Library:CreateWindow(WindowInfo)
 						end
 					end
 				end)
-				PlayerPicker.Destroying:Connect(function()
+				ConnectDestroying(PlayerPicker,function()
 					cleanObservePlayer() table.clear(PlayerCache) table.clear(PlayerTitles) 
 				end)
 			end)
@@ -3909,33 +4393,42 @@ function Library:CreateWindow(WindowInfo)
 			return PlayerPickerInfo
 		end
 		-- ThemeButton
-		local FirstThemeButton=false
-		function Tab:CreateThemeButton(ThemeButtonInfo) 
-			if FirstThemeButton then warn("Rayfield | You can only have one ThemeButton in a single tab") return end
-			FirstThemeButton=true
-			ThemeButtonInfo=type(ThemeButtonInfo)=="table" and ThemeButtonInfo or {}
-			ThemeButtonInfo.Type="ThemeButton"
+		local FirstThemePicker=false
+		function Tab:CreateThemePicker(ThemePickerInfo) 
+			if FirstThemePicker then warn("Rayfield | You can only have one ThemeButton in a single tab") return end
+			FirstThemePicker=true
+			ThemePickerInfo=type(ThemePickerInfo)=="table" and ThemePickerInfo or {}
+			ThemePickerInfo.Type="ThemePicker"
 			local list,index={},1
-			for k,v in pairs(Library.Theme) do table.insert(list,k) end
-			for i,v in ipairs(list) do local newTheme=Library.Theme[v] if newTheme and SelectedTheme==newTheme then index=i break end end
-			ThemeButtonInfo.Value=list[index]
+			for k,v in next,Library.Theme do 
+				table.insert(list,k) 
+			end
+			for i,v in ipairs(list) do 
+				local newTheme=Library.Theme[v] 
+				if newTheme and SelectedTheme==newTheme then 
+					index=i 
+					break 
+				end 
+			end
+			ThemePickerInfo.Value=list[index]
 			local ButtonInfo
 			ButtonInfo=Tab:CreateButton({
-				Name="Change Theme: "..list[index],
+				Name="Modify Theme: "..list[index],
 				Callback=function()
-					index=index+1
-					if index>#list then index=1 end
-					Window:ModifyTheme(list[index])
-					ButtonInfo:Set(`Change Theme: {list[index]}`)
-					ThemeButtonInfo.Value=list[index]
-					if not ThemeButtonInfo.Ext then SaveConfig() end
-					table.clear(list)
-					for k,v in pairs(Library.Theme) do table.insert(list,k) end
+					Window:ModifyTheme("Light")
+					--index=index+1
+					--if index>#list then index=1 end
+					--Window:ModifyTheme(list[index])
+					--ButtonInfo:Set(`Change Theme: {list[index]}`)
+					--ThemePickerInfo.Value=list[index]
+					--if not ThemePickerInfo.Ext then pcall(SaveConfiguration) end
+					--table.clear(list)
+					--for k,v in pairs(Library.Theme) do table.insert(list,k) end
 				end,
 			})
-			function ThemeButtonInfo:Set(NewTheme)
+			function ThemePickerInfo:Set(NewTheme)
 				if type(NewTheme)=="string" then
-					ThemeButtonInfo.Value=NewTheme
+					ThemePickerInfo.Value=NewTheme
 					local newIndex=table.find(list,NewTheme)
 					if not newIndex then
 						newIndex=index
@@ -3948,10 +4441,10 @@ function Library:CreateWindow(WindowInfo)
 					end
 				end
 			end
-			if savingInfo and savingInfo.Enabled and ThemeButtonInfo.Flag then
-				Library.Flags[ThemeButtonInfo.Flag]=ThemeButtonInfo
+			if savingInfo and savingInfo.Enabled and ThemePickerInfo.Flag then
+				Library.Flags[ThemePickerInfo.Flag]=ThemePickerInfo
 			end
-			return ThemeButtonInfo
+			return ThemePickerInfo
 		end
 
 		local ListOfTab={
@@ -3968,7 +4461,7 @@ function Library:CreateWindow(WindowInfo)
 			["Slider"]=Tab.CreateSlider,
 			["Select"]=Tab.CreateSelect,
 			["PlayerPicker"]=Tab.CreatePlayerPicker,
-			["ThemeButton"]=Tab.CreateThemeButton,
+			["ThemePicker"]=Tab.CreateThemePicker,
 			["Expand"]=Tab.CreateExpand,
 			["Selector"]=Tab.CreateSelector,
 		}
@@ -4047,13 +4540,13 @@ function Library:CreateWindow(WindowInfo)
 		return Tab
 	end
 	Elements.Visible=true
-	task.wait(1.1)
+	FastWait(1.1)
 	Tween(Main,TweenInfo.new(0.7,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,390,0,90)})
-	task.wait(0.3)
+	FastWait(0.3)
 	Tween(LoadingFrame.Title,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{TextTransparency=1})
 	Tween(LoadingFrame.Subtitle,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{TextTransparency=1})
 	Tween(LoadingFrame.Version,TweenInfo.new(0.2,Enum.EasingStyle.Exponential),{TextTransparency=1})
-	task.wait(0.1)
+	FastWait(0.1)
 	Tween(Main,TweenInfo.new(0.6,Enum.EasingStyle.Exponential,Enum.EasingDirection.Out),{Size=useMobileSizing and UDim2.new(0,500,0,275) or UDim2.new(0,500,0,475)})
 	Tween(Main.Shadow.Image,TweenInfo.new(0.5,Enum.EasingStyle.Exponential),{ImageTransparency=0.6})
 	Topbar.BackgroundTransparency=1
@@ -4062,35 +4555,36 @@ function Library:CreateWindow(WindowInfo)
 	Topbar.CornerRepair.BackgroundTransparency=1
 	Topbar.Title.TextTransparency=1
 	Topbar.Search.ImageTransparency=1
-	if Topbar:FindFirstChild('Settings') then
+	if Topbar:FindFirstChild("Settings") then
 		Topbar.Settings.ImageTransparency=1
 	end
 	Topbar.ChangeSize.ImageTransparency=1
 	Topbar.Hide.ImageTransparency=1
-	task.wait(0.5)
+	FastWait(0.5)
 	Topbar.Visible=true
 	Tween(Topbar,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
 	Tween(Topbar.CornerRepair,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0})
-	task.wait(0.1)
+	FastWait(0.1)
 	Tween(Topbar.Divider,TweenInfo.new(1,Enum.EasingStyle.Exponential),{Size=UDim2.new(1,0,0,1)})
 	Tween(Topbar.Title,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{TextTransparency=0})
-	task.wait(0.05)
+	FastWait(0.05)
 	Tween(Topbar.Search,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
-	task.wait(0.05)
-	if Topbar:FindFirstChild('Settings') then
+	FastWait(0.05)
+	if Topbar:FindFirstChild("Settings") then
 		Tween(Topbar.Settings,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
-		task.wait(0.05)
+		FastWait(0.05)
 	end
 	Tween(Topbar.ChangeSize,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
-	task.wait(0.05)
+	FastWait(0.05)
 	Tween(Topbar.Hide,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
-	task.wait(0.3)
+	FastWait(0.3)
 
-	if dragBar then
-		Tween(dragBarCosmetic,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
+	if DragBar then
+		Tween(DragBarCosmetic,TweenInfo.new(0.6,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
 	end
 
 	function Window:ModifyTheme(NewTheme)
+		if debugX then warn("Rayfiled | Modify Theme") end
 		local success=pcall(ChangeTheme,NewTheme)
 		if not success then
 			Library:Notify({Title='Unable to Change Theme',Content='We are unable find a theme on file.',Image=4400704299})
@@ -4098,223 +4592,88 @@ function Library:CreateWindow(WindowInfo)
 			Library:Notify({Title='Theme Changed',Content='Successfully changed theme to '..(typeof(NewTheme)=='string' and NewTheme or 'Custom Theme')..'.',Image=4483362748})
 		end
 	end
-	
+
 	local settingsTab=Window:CreateTab("Rayfield Settings",0,true)
 	local success,result=pcall(CreateSettings,settingsTab)
 	Window.SettingsTab=settingsTab
+	
 	if not success then warn('Rayfield had an issue creating settings.') end
 	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
-	if Reporter and GetSetting("System","usageAnalytics") then
-		local themeName="Default"
-		local newTheme=WindowInfo.Theme
-		if newTheme then
-			if type(newTheme)=="string" then
-				themeName=newTheme
-			elseif type(newTheme)=="table" then
-				themeName="Custom"
-			end
-		end
+	--if Reporter and GetSetting("System","usageAnalytics") then
+	--	local themeName="Default"
+	--	local newTheme=WindowInfo.Theme
+	--	if newTheme then
+	--		if type(newTheme)=="string" then
+	--			themeName=newTheme
+	--		elseif type(newTheme)=="table" then
+	--			themeName="Custom"
+	--		end
+	--	end
 
-		local discordInvite=nil
-		if discordInfo and discordInfo.Enabled and discordInfo.Invite and discordInfo.Invite~="" then
-			local raw=tostring(discordInfo.Invite)
-			-- Normalize: strip URL prefixes to extract just the invite code
-			discordInvite=(raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1,32)
-		end
+	--	local discordInvite=nil
+	--	if discordInfo and discordInfo.Enabled and discordInfo.Invite and discordInfo.Invite~="" then
+	--		local raw=tostring(discordInfo.Invite)
+	--		-- Normalize: strip URL prefixes to extract just the invite code
+	--		discordInvite=(raw:match("discord%.gg/([%w%-]+)") or raw:match("discord%.com/invite/([%w%-]+)") or raw):sub(1,32)
+	--	end
 
-		local sampleSend=false
+	--	local sampleSend=false
 
-		-- Random Sampling Test
-		if not WindowInfo.ScriptID and math.random()>0.4 then
-			sampleSend=true
-		end
+	--	-- Random Sampling Test
+	--	if not WindowInfo.ScriptID and math.random()>0.4 then
+	--		sampleSend=true
+	--	end
 
-		if WindowInfo.ScriptID then
-			Reporter:windowCreated({
-				script_name=WindowInfo.Name or "Unknown",
-				script_version=Release,
-				interface_version=InterfaceBuild,
-				theme=themeName,
-				is_mobile=useMobileSizing and true or false,
-				has_key_system=(keyInfo and keyInfo.Enabled) and true or false,
-				discord_invite=discordInvite,
-				config_saving=(savingInfo and savingInfo.Enabled) and true or false,
-				script_id=WindowInfo.ScriptID or sampleSend and 'sid_tzfyxawonjx9' or nil,
-				verification_token=WindowInfo.VerificationToken,
-			})
-		end
-	end
+	--	--if WindowInfo.ScriptID then
+	--	--	Reporter:windowCreated({
+	--	--		script_name=WindowInfo.Name or "Unknown",
+	--	--		script_version=Release,
+	--	--		interface_version=InterfaceBuild,
+	--	--		theme=themeName,
+	--	--		is_mobile=useMobileSizing and true or false,
+	--	--		has_key_system=(keyInfo and keyInfo.Enabled) and true or false,
+	--	--		discord_invite=discordInvite,
+	--	--		config_saving=(savingInfo and savingInfo.Enabled) and true or false,
+	--	--		script_id=WindowInfo.ScriptID or sampleSend and 'sid_tzfyxawonjx9' or nil,
+	--	--		verification_token=WindowInfo.VerificationToken,
+	--	--	})
+	--	--end
+	--end
+	Library.Gui=Rayfield
 	return Window
 end
 
-local function setVisibility(visibility,notify)
-	if Debounce then return end
-	if visibility then
-		Hidden=false
-		Unhide()
-	else
-		Hidden=true
-		Hide(notify)
-	end
-end
-
-function Library:SetVisibility(visibility: boolean)
-	setVisibility(visibility,false)
-end
-
-function Library:IsVisible(): boolean
+function Library:IsVisible()
 	return not Hidden
 end
 
-local hideHotkeyConnection -- Has to be initialized here since the connection is made later in the script
 function Library:Destroy()
+	if not Rayfield then return end
+	Main=nil Topbar=nil TabList=nil Elements=nil
 	rayfieldDestroyed=true
-	if hideHotkeyConnection then
-		hideHotkeyConnection:Disconnect()
+	if HideHotkeyConnection then
+		HideHotkeyConnection:Disconnect()
 	end
-	for _,connection in keybindConnections do
+	for _,connection in Connections do
 		connection:Disconnect()
 	end
 	Rayfield:Destroy()
 end
 
-Topbar.ChangeSize.MouseButton1Click:Connect(function()
-	if Debounce then return end
-	if Minimised then
-		Minimised=false
-		Maximise()
-	else
-		Minimised=true
-		Minimise()
-	end
-end)
-
-Main.Search.Input:GetPropertyChangedSignal("Text"):Connect(function()
-	if #Main.Search.Input.Text>0 then
-		if not Elements.UIPageLayout.CurrentPage:FindFirstChild("SearchTitle-fsefsefesfsefesfesfThanks") then 
-			local searchTitle=Elements.Template.SectionTitle:Clone()
-			searchTitle.Parent=Elements.UIPageLayout.CurrentPage
-			searchTitle.Name="SearchTitle-fsefsefesfsefesfesfThanks"
-			searchTitle.LayoutOrder=-100
-			searchTitle.Title.Text="Results from '"..Elements.UIPageLayout.CurrentPage.Name.."'"
-			searchTitle.Visible=true
-		end
-	else
-		local searchTitle=Elements.UIPageLayout.CurrentPage:FindFirstChild("SearchTitle-fsefsefesfsefesfesfThanks")
-		if searchTitle then
-			searchTitle:Destroy()
-		end
-	end
-	for _,element in ipairs(Elements.UIPageLayout.CurrentPage:GetChildren()) do
-		if element.ClassName~="UIListLayout" and element.Name~="Placeholder" and element.Name~="SearchTitle-fsefsefesfsefesfesfThanks" then
-			if element.Name=='SectionTitle' then
-				if #Main.Search.Input.Text==0 then
-					element.Visible=true
-				else
-					element.Visible=false
-				end
-			else
-				if string.lower(element.Name):find(string.lower(Main.Search.Input.Text),1,true) then
-					element.Visible=true
-				else
-					element.Visible=false
-				end
-			end
-		end
-	end
-end)
-
-Main.Search.Input.FocusLost:Connect(function(enterPressed)
-	if #Main.Search.Input.Text==0 and searchOpen then
-		task.wait(0.12)
-		CloseSearch()
-	end
-end)
-
-Topbar.Search.MouseButton1Click:Connect(function()
-	task.spawn(function()
-		if searchOpen then
-			CloseSearch()
-		else
-			OpenSearch()
-		end
-	end)
-end)
-
-if Topbar:FindFirstChild("Settings") then
-	Topbar.Settings.MouseButton1Click:Connect(function()
-		task.spawn(function()
-			for _,OtherTabButton in ipairs(TabList:GetChildren()) do
-				if OtherTabButton.Name~="Template" and OtherTabButton.ClassName=="Frame" and OtherTabButton.Name~="Placeholder" then
-					Tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundColor3=SelectedTheme.TabBackground})
-					Tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextColor3=SelectedTheme.TabTextColor})
-					Tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageColor3=SelectedTheme.TabTextColor})
-					Tween(OtherTabButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{BackgroundTransparency=0.7})
-					Tween(OtherTabButton.Title,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{TextTransparency=0.2})
-					Tween(OtherTabButton.Image,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.2})
-					Tween(OtherTabButton.UIStroke,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{Transparency=0.5})
-				end
-			end
-
-			Elements.UIPageLayout:JumpTo(Elements['Rayfield Settings'])
-		end)
-	end)
-
-end
-
-Topbar.Hide.MouseButton1Click:Connect(function()
-	setVisibility(Hidden,not useMobileSizing)
-end)
-
-hideHotkeyConnection=UserInputService.InputBegan:Connect(function(input,processed)
-	if (input.KeyCode==Enum.KeyCode[GetSetting("General","rayfieldOpen")]) and not processed then
-		if Debounce then return end
-		if Hidden then
-			Hidden=false
-			Unhide()
-		else
-			Hidden=true
-			Hide()
-		end
-	end
-end)
-
-if MPrompt then
-	MPrompt.Interact.MouseButton1Click:Connect(function()
-		if Debounce then return end
-		if Hidden then
-			Hidden=false
-			Unhide()
-		end
-	end)
-end
-
-for _,TopbarButton in ipairs(Topbar:GetChildren()) do
-	if TopbarButton.ClassName=="ImageButton" and TopbarButton.Name~='Icon' then
-		TopbarButton.MouseEnter:Connect(function()
-			Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0})
-		end)
-
-		TopbarButton.MouseLeave:Connect(function()
-			Tween(TopbarButton,TweenInfo.new(0.7,Enum.EasingStyle.Exponential),{ImageTransparency=0.8})
-		end)
-	end
-end
-
-function Library:LoadConfig()
+function Library:LoadConfiguration()
 	local config
 	if debugX then warn("Loading Configuration") end
-	if UseStudio then config=[[{"Toggle1adwawd":true,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}]] end
+	if IsStudio then config=[[{"Toggle1adwawd":true,"ColorPicker1awd":{"B":255,"G":255,"R":255},"Slider1dawd":100,"ColorPicfsefker1":{"B":255,"G":255,"R":255},"Slidefefsr1":80,"dawdawd":"","Input1":"hh","Keybind1":"B","Dropdown1":["Ocean"]}]] end
 	if CEnabled then
 		local notified,data=false,nil
 		local success,result=pcall(function()
-			if UseStudio and config then
-				data=LoadConfig(config)
+			if IsStudio and config then
+				data=LoadConfiguration(config)
 				return
 			end
 			if isfile then 
 				if CallSafely(isfile,ConfigFolder .. "/" .. CFileName .. ConfigExtension) and readfile then
-					data=LoadConfig(CallSafely(readfile,ConfigFolder .. "/" .. CFileName .. ConfigExtension))
+					data=LoadConfiguration(CallSafely(readfile,ConfigFolder .. "/" .. CFileName .. ConfigExtension))
 				end
 			else
 				notified=true
@@ -4328,7 +4687,7 @@ function Library:LoadConfig()
 			Library:Notify({Title="Rayfield Configurations",Content="We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.",Image=4384402990})
 		end
 	end
-	globalLoaded=true
+	GlobalLoaded=true
 end
 
 if CEnabled and Main:FindFirstChild("Notice") then
@@ -4342,14 +4701,13 @@ if CEnabled and Main:FindFirstChild("Notice") then
 end
 
 task.delay(5,function()
-	Library:LoadConfig()
+	Library:LoadConfiguration()
 	if Main:FindFirstChild("Notice") and Main.Notice.Visible then
 		Tween(Main.Notice,TweenInfo.new(0.5,Enum.EasingStyle.Exponential,Enum.EasingDirection.InOut),{Size=UDim2.new(0,100,0,25),Position=UDim2.new(0.5,0,0,-100),BackgroundTransparency=1})
 		Tween(Main.Notice.Title,TweenInfo.new(0.3,Enum.EasingStyle.Exponential),{TextTransparency=1})
-		task.wait(0.5)
+		FastWait(0.5)
 		Main.Notice.Visible=false
 	end
 end)
 
-Library.Gui=Rayfield
 return Library
